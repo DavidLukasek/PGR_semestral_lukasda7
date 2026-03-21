@@ -3,20 +3,26 @@
 #include "object.h"
 #include "triangle.h"
 #include "singlemesh.h"
+#include "camera.h"
 
 #define VS_PATH "data/shaders/simple-vs.glsl"
 #define FS_PATH "data/shaders/simple-fs.glsl"
+
+#define CAM_SPEED 5.0
 
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 500
 #define WINDOW_TITLE "PGR: Application lukasda7"
 
 ObjectList objects;
-
-// shared shader programs
 ShaderProgram commonShaderProgram;
+Camera camera;
+glm::vec3 cameraMovement(0.0f);
+glm::vec2 cameraRotation(0.0f);
 
-// -----------------------  OpenGL stuff ---------------------------------
+// ############################################################################
+//                               OpenGL Stuff
+// ############################################################################
 
 /**
  * \brief Load and compile shader programs. Get attribute locations.
@@ -60,8 +66,8 @@ void cleanupShaderPrograms(void) {
  */
 void drawScene(void)
 {
-    glm::mat4 viewMatrix = glm::mat4(1.0f);
-    glm::mat4 projectionMatrix = glm::mat4(1.0f);
+    glm::mat4 viewMatrix = camera.getViewMatrix();
+    glm::mat4 projectionMatrix = camera.getProjectionMatrix(1.0);
 
     for (ObjectInstance* object : objects) {
         if (object != nullptr)
@@ -69,8 +75,19 @@ void drawScene(void)
     }
 }
 
+void updateCamera(float deltaTime) {
+    float speed = CAM_SPEED * deltaTime;
 
-// -----------------------  Window callbacks ---------------------------------
+    camera.moveForward(-cameraMovement.z * speed);
+    camera.moveRight(cameraMovement.x * speed);
+    camera.moveUp(cameraMovement.y * speed);
+
+    camera.rotate(cameraRotation.x * speed, cameraRotation.y * speed);
+}
+
+// ############################################################################
+//                                Callbacks
+// ############################################################################
 
 /**
  * \brief Draw the window contents.
@@ -97,8 +114,6 @@ void reshapeCb(int newWidth, int newHeight) {
     // glViewport(...);
 };
 
-// -----------------------  Keyboard ---------------------------------
-
 /**
  * \brief Handle the key pressed event.
  * Called whenever a key on the keyboard was pressed. The key is given by the "keyPressed"
@@ -110,11 +125,23 @@ void reshapeCb(int newWidth, int newHeight) {
  */
 void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
     switch (keyPressed) {
-    case 27:
-        glutLeaveMainLoop();
-        exit(EXIT_SUCCESS);
-        break;
+        case 27:
+            glutLeaveMainLoop();
+            exit(EXIT_SUCCESS);
+            break;
+        // movement cases
+        case 'w': case 'W': cameraMovement.z = -1.0f; break;
+        case 's': case 'S': cameraMovement.z =  1.0f; break;
+        case 'a': case 'A': cameraMovement.x = -1.0f; break;
+        case 'd': case 'D': cameraMovement.x =  1.0f; break;
+        case 'q': case 'Q': cameraMovement.y =  1.0f; break;
+        case 'e': case 'E': cameraMovement.y = -1.0f; break;
+        // TEMP rotation TEMP
+        case 'r': case 'R': cameraRotation = glm::vec2(1.0f, 0.0f); break;
+        case 't': case 'T': cameraRotation = glm::vec2(-1.0f, 0.0f); break;
     }
+
+    glutPostRedisplay();
 }
 
 // Called whenever a key on the keyboard was released. The key is given by
@@ -126,6 +153,14 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
  * \param mouseY mouse (cursor) Y position
  */
 void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
+    switch (keyReleased) {
+        case 'w': case 'W': case 's': case 'S': cameraMovement.z = 0.0f; break;
+        case 'a': case 'A': case 'd': case 'D': cameraMovement.x = 0.0f; break;
+        case 'q': case 'Q': case 'e': case 'E': cameraMovement.y = 0.0f; break;
+        case 'r': case 'R': case 't': case 'T': cameraRotation = glm::vec2(0.0f); break;
+    }
+
+    glutPostRedisplay();
 }
 
 //
@@ -182,24 +217,25 @@ void passiveMouseMotionCb(int mouseX, int mouseY) {
     // glutPostRedisplay();
 }
 
-// -----------------------  Timer ---------------------------------
-
 /**
  * \brief Callback responsible for the scene update.
  */
 void timerCb(int)
 {
-#ifndef SKELETON // @task_1_0
     const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);
-
-    float elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // milliseconds => seconds
+    
+    // getting current time and time from last frame
+    static float lastTime = 0.0f;
+    float elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
+    float deltaTime = elapsedTime - lastTime;
+    lastTime = elapsedTime;
 
     // update the application state
     for (ObjectInstance* object : objects) {
         if (object != nullptr)
             object->update(elapsedTime, &sceneRootMatrix);
     }
-#endif // task_1_0
+    updateCamera(deltaTime);
 
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);
@@ -208,8 +244,9 @@ void timerCb(int)
     glutPostRedisplay();
 }
 
-
-// -----------------------  Application ---------------------------------
+// ############################################################################
+//                                 Application
+// ############################################################################
 
 /**
  * \brief Initialize application data and OpenGL stuff.
@@ -219,11 +256,7 @@ void initApplication() {
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
 
-    objects.push_back(new Triangle(&commonShaderProgram));
-    // objects.push_back(new SingleMesh(&commonShaderProgram));
-
-    // init your Application
-    // - setup the initial application state
+    objects.push_back(new SingleMesh(&commonShaderProgram));
 }
 
 /**
@@ -239,7 +272,6 @@ void finalizeApplication(void) {
     // delete shaders
     cleanupShaderPrograms();
 }
-
 
 /**
  * \brief Entry point of the application.
@@ -267,16 +299,13 @@ int main(int argc, char** argv) {
         glutDisplayFunc(displayCb);
         glutReshapeFunc(reshapeCb);
         glutKeyboardFunc(keyboardCb);
-        // glutKeyboardUpFunc(keyboardUpCb);
+        glutKeyboardUpFunc(keyboardUpCb);
         // glutSpecialFunc(specialKeyboardCb);     // key pressed
         // glutSpecialUpFunc(specialKeyboardUpCb); // key released
         // glutMouseFunc(mouseCb);
         // glutMotionFunc(mouseMotionCb);
-#ifndef SKELETON // @task_1_0
+
         glutTimerFunc(33, timerCb, 0);
-#else
-        // glutTimerFunc(33, timerCb, 0);
-#endif // task_1_0
 
     }
     // end for each window 

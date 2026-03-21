@@ -4,11 +4,13 @@
     <ClCompile Include="singlemesh.cpp" />
     <ClCompile Include="lukasda7.cpp" />
     <ClCompile Include="triangle.cpp" />
+    <ClCompile Include="camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="object.h" />
     <ClInclude Include="singlemesh.h" />
     <ClInclude Include="triangle.h" />
+    <ClInclude Include="camera.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

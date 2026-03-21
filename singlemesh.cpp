@@ -14,7 +14,8 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
     if (initialized && (shaderProgram != nullptr)) {
         glUseProgram(shaderProgram->program);
 
-        glUniformMatrix4fv(shaderProgram->locations.PVMmatrix, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
+        const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
+        glUniformMatrix4fv(shaderProgram->locations.PVMmatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
 
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawElements(GL_TRIANGLES, geometry->numTriangles * 3, GL_UNSIGNED_INT, 0);
