@@ -51,9 +51,8 @@ void Camera::moveDown(float distance) {
 }
 
 void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
-    yaw += yawOffsetDegrees * ROT_SPEED;
-    pitch = glm::clamp(pitch + pitchOffsetDegrees * ROT_SPEED, -89.0f, 89.0f);
-
+    yaw += yawOffsetDegrees;
+    pitch = glm::clamp(pitch + pitchOffsetDegrees, -89.0f, 89.0f);
     updateVectors();
 }
 
@@ -62,7 +61,7 @@ void Camera::setPosition(const glm::vec3& newPosition) {
 }
 
 void Camera::setFieldOfView(float newFieldOfViewDegrees) {
-    fieldOfViewDegrees = glm::clamp(newFieldOfViewDegrees, 1.0f, 120.0f);
+    fieldOfViewDegrees = glm::clamp(newFieldOfViewDegrees, 1.0f, 240.0f);
 }
 
 const glm::vec3& Camera::getPosition() const {

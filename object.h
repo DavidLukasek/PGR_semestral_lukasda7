@@ -20,6 +20,7 @@ typedef struct _ShaderProgram {
         GLint texCoord;
         // uniforms locations
         GLint PVMmatrix;
+        GLint elapsedTime;
     } locations;
 
     // ...

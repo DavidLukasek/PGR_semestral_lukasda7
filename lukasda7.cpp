@@ -10,16 +10,22 @@
 #define VS_PATH "data/shaders/simple-vs.glsl"
 #define FS_PATH "data/shaders/simple-fs.glsl"
 
-#define WINDOW_WIDTH 500
-#define WINDOW_HEIGHT 500
 #define WINDOW_TITLE "PGR: Application lukasda7"
+int windowWidth = 500;
+int windowHeight = 500;
 
 ObjectList objects;
 ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
+
 Camera camera;
 glm::vec3 cameraMovement(0.0f);
 glm::vec2 cameraRotation(0.0f);
+
+bool RMBPressed = false;
+int ogMouseX = -1;
+int ogMouseY = -1;
+float mouseSensitivity = 0.3f;
 
 // ############################################################################
 //                               OpenGL Stuff
@@ -49,6 +55,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.texCoord = glGetAttribLocation(prog.program, "texCoord");
 
     prog.locations.PVMmatrix = glGetUniformLocation(prog.program, "PVM");
+    prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
 
     prog.initialized = true;
 
@@ -76,10 +83,10 @@ void cleanupShaderPrograms(void) {
 /**
  * \brief Draw all scene objects.
  */
-void drawScene(void)
-{
+void drawScene(void) {
     glm::mat4 viewMatrix = camera.getViewMatrix();
-    glm::mat4 projectionMatrix = camera.getProjectionMatrix(1.0);
+    glm::mat4 projectionMatrix =
+        camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 
     for (ObjectInstance* object : objects) {
         if (object != nullptr)
@@ -119,11 +126,11 @@ void displayCb() {
  * \param newHeight New window height
  */
 void reshapeCb(int newWidth, int newHeight) {
-    // TODO: Take new window size and update the application state,
-    // window and projection.
+    windowWidth = newWidth;
+    windowHeight = newHeight;
 
-    // glViewport(...);
-};
+    glViewport(0, 0, newWidth, newHeight);
+}
 
 /**
  * \brief Handle the key pressed event.
@@ -145,14 +152,9 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 's': case 'S': cameraMovement.z =  1.0f; break;
         case 'a': case 'A': cameraMovement.x = -1.0f; break;
         case 'd': case 'D': cameraMovement.x =  1.0f; break;
-        case 'q': case 'Q': cameraMovement.y =  1.0f; break;
-        case 'e': case 'E': cameraMovement.y = -1.0f; break;
-        // TEMP rotation TEMP
-        case 'r': case 'R': cameraRotation = glm::vec2(1.0f, 0.0f); break;
-        case 't': case 'T': cameraRotation = glm::vec2(-1.0f, 0.0f); break;
+        case 'q': case 'Q': cameraMovement.y = -1.0f; break;
+        case 'e': case 'E': cameraMovement.y =  1.0f; break;
     }
-
-    glutPostRedisplay();
 }
 
 // Called whenever a key on the keyboard was released. The key is given by
@@ -168,10 +170,7 @@ void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
         case 'w': case 'W': case 's': case 'S': cameraMovement.z = 0.0f; break;
         case 'a': case 'A': case 'd': case 'D': cameraMovement.x = 0.0f; break;
         case 'q': case 'Q': case 'e': case 'E': cameraMovement.y = 0.0f; break;
-        case 'r': case 'R': case 't': case 'T': cameraRotation = glm::vec2(0.0f); break;
     }
-
-    glutPostRedisplay();
 }
 
 //
@@ -204,6 +203,9 @@ void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
  * \param mouseY mouse (cursor) Y position
  */
 void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
+    RMBPressed = buttonPressed;
+    ogMouseX = mouseX;
+    ogMouseY = mouseY;
 }
 
 /**
@@ -213,6 +215,15 @@ void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
  * \param mouseY mouse (cursor) Y position
  */
 void mouseMotionCb(int mouseX, int mouseY) {
+    if (RMBPressed) {
+        int deltaX = (ogMouseX - mouseX);
+        int deltaY = (ogMouseY - mouseY);
+
+        camera.rotate(-deltaX * mouseSensitivity, deltaY * mouseSensitivity);
+
+        ogMouseX = mouseX;
+        ogMouseY = mouseY;
+    }
 }
 
 /**
@@ -231,8 +242,7 @@ void passiveMouseMotionCb(int mouseX, int mouseY) {
 /**
  * \brief Callback responsible for the scene update.
  */
-void timerCb(int)
-{
+void timerCb(int) {
     const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);
     
     // getting current time and time from last frame
@@ -240,6 +250,9 @@ void timerCb(int)
     float elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
     float deltaTime = elapsedTime - lastTime;
     lastTime = elapsedTime;
+
+    // update time in the animated Mandelbrot shader
+    glUniform1f(mandelrotShaderProgram.locations.elapsedTime, elapsedTime);
 
     // update the application state
     for (ObjectInstance* object : objects) {
@@ -307,8 +320,8 @@ int main(int argc, char** argv) {
 
     // for each window
     {
-        //   initial window size + title
-        glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        // initial window size + title
+        glutInitWindowSize(windowWidth, windowHeight);
         glutCreateWindow(WINDOW_TITLE);
 
         // callbacks - use only those you need
@@ -318,8 +331,8 @@ int main(int argc, char** argv) {
         glutKeyboardUpFunc(keyboardUpCb);
         // glutSpecialFunc(specialKeyboardCb);     // key pressed
         // glutSpecialUpFunc(specialKeyboardUpCb); // key released
-        // glutMouseFunc(mouseCb);
-        // glutMotionFunc(mouseMotionCb);
+        glutMouseFunc(mouseCb);
+        glutMotionFunc(mouseMotionCb);
 
         glutTimerFunc(33, timerCb, 0);
 

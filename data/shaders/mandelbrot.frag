@@ -5,6 +5,8 @@
 #define TAU 6.28318
 #define MAX_ITER 1000
 
+uniform float elapsedTime;
+
 in vec2 UV;
 
 out vec4 fragmentColor;
@@ -21,18 +23,18 @@ vec3 palette(float t) {
 }
 
 void main() {
-	const float WIN_HEIGHT = 500.0;
+    const float WIN_HEIGHT = 500.0;
     
     //center coordinates scaled up to <-2;2>
     vec2 uv = UV * 3.0;
-    uv -= 1.5;
+    uv.x -= 2.0;
+    uv.y -= 1.5;
     
     //slow zoom
-    vec2 target = vec2(-1.2506715, 0.0201205);
-    //target = vec2(-1.810156, 0.0);
-    float zoom = 1.0;
+    //vec2 target = vec2(-1.2506715, 0.0201205);
+    //float zoom = 1.0;
     //zoom = exp(-0.2 * iTime);
-    uv = target + uv * zoom;
+    //uv = target + uv * zoom;
     
     float real          = uv.x;
     float imaginary     = uv.y;
@@ -56,8 +58,8 @@ void main() {
     
     if(dist_sq > 4.0) {
         float t = float(iterations) / 20.0;
-        color = palette(t /*+ iTime*0.5*/);
+        color = palette(t + elapsedTime*0.2);
     } else color = vec3(0.0);
 
-	fragmentColor = vec4(color, 1.0);
+    fragmentColor = vec4(color, 1.0);
 }

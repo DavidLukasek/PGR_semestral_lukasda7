@@ -35,7 +35,6 @@ public:
     float getFieldOfView() const;
 
     const float MOVE_SPEED = 5.0f;
-    const float ROT_SPEED = 90.0f;
 
 private:
     void updateVectors();
