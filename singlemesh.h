@@ -6,7 +6,7 @@ class SingleMesh : public ObjectInstance
 {
 public:
 
-    SingleMesh(ShaderProgram* shdrPrg = nullptr);
+    SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg = nullptr);
     ~SingleMesh();
 
     void update(float elapsedTime, const glm::mat4* parentModelMatrix) override;

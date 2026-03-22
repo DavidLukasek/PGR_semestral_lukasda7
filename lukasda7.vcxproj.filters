@@ -5,12 +5,18 @@
     <ClCompile Include="lukasda7.cpp" />
     <ClCompile Include="triangle.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="data\square.cpp">
+      <Filter>data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="object.h" />
     <ClInclude Include="singlemesh.h" />
     <ClInclude Include="triangle.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="data\square.h">
+      <Filter>data</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">
@@ -25,6 +31,9 @@
       <Filter>data\shaders</Filter>
     </None>
     <None Include="data\shaders\simple-vs.glsl">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\shaders\mandelbrot.frag">
       <Filter>data\shaders</Filter>
     </None>
   </ItemGroup>

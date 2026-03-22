@@ -1,9 +1,14 @@
 #version 140
 
-in vec2 position;
-
 uniform mat4 PVM;
 
+in vec3 position;
+in vec2 texCoord;
+
+out vec2 UV;
+
+
 void main() {
-	gl_Position = PVM * vec4(position, 0.0, 1.0);
+	gl_Position = PVM * vec4(position, 1.0);
+	UV = texCoord;
 }

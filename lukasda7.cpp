@@ -4,11 +4,11 @@
 #include "triangle.h"
 #include "singlemesh.h"
 #include "camera.h"
+#include "data/square.h"
 
+#define SHADER_PATH "data/shaders/"
 #define VS_PATH "data/shaders/simple-vs.glsl"
 #define FS_PATH "data/shaders/simple-fs.glsl"
-
-#define CAM_SPEED 5.0
 
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 500
@@ -16,6 +16,7 @@
 
 ObjectList objects;
 ShaderProgram commonShaderProgram;
+ShaderProgram mandelrotShaderProgram;
 Camera camera;
 glm::vec3 cameraMovement(0.0f);
 glm::vec2 cameraRotation(0.0f);
@@ -25,32 +26,42 @@ glm::vec2 cameraRotation(0.0f);
 // ############################################################################
 
 /**
+ * \brief Load and compile single shader program from the given shader paths.
+ * \param vs Vertex shader path
+ * \param fs Fragment shader path
+ */
+ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
+    GLuint shaders[] = {
+        pgr::createShaderFromFile(GL_VERTEX_SHADER, SHADER_PATH + vs),
+        pgr::createShaderFromFile(GL_FRAGMENT_SHADER, SHADER_PATH + fs),
+        0
+    };
+
+    if (shaders[0] == 0)
+        fprintf(stderr, "ERROR: Could not load shader: %s!\n", vs.c_str());
+    else if (shaders[1] == 0)
+        fprintf(stderr, "ERROR: Could not load shader: %s!\n", fs.c_str());
+
+    ShaderProgram prog;
+    prog.program = pgr::createProgram(shaders);
+
+    prog.locations.position = glGetAttribLocation(prog.program, "position");
+    prog.locations.texCoord = glGetAttribLocation(prog.program, "texCoord");
+
+    prog.locations.PVMmatrix = glGetUniformLocation(prog.program, "PVM");
+
+    prog.initialized = true;
+
+    return prog;
+}
+
+/**
  * \brief Load and compile shader programs. Get attribute locations.
  */
 void loadShaderPrograms()
 {
-    GLuint shaders[] = {
-        pgr::createShaderFromFile(GL_VERTEX_SHADER, VS_PATH),
-        pgr::createShaderFromFile(GL_FRAGMENT_SHADER, FS_PATH),
-        0,
-    };
-
-    if (shaders[0] == 0)
-        fprintf(stderr, "ERROR: Could not load shader: %s!\n", VS_PATH);
-    else if (shaders[1] == 0)
-        fprintf(stderr, "ERROR: Could not load shader: %s!\n", FS_PATH);
-
-    commonShaderProgram.program = pgr::createProgram(shaders);
-    commonShaderProgram.locations.position = glGetAttribLocation(commonShaderProgram.program, "position");
-
-    // other attributes and uniforms
-    commonShaderProgram.locations.PVMmatrix = glGetUniformLocation(commonShaderProgram.program, "PVM");
-
-    assert(commonShaderProgram.locations.PVMmatrix != -1);
-    assert(commonShaderProgram.locations.position != -1);
-    // ...
-
-    commonShaderProgram.initialized = true;
+    commonShaderProgram = loadShaderProgram("simple-vs.glsl", "simple-fs.glsl");
+    mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
 }
 
 /**
@@ -59,6 +70,7 @@ void loadShaderPrograms()
 void cleanupShaderPrograms(void) {
 
     pgr::deleteProgramAndShaders(commonShaderProgram.program);
+    pgr::deleteProgramAndShaders(mandelrotShaderProgram.program);
 }
 
 /**
@@ -76,13 +88,12 @@ void drawScene(void)
 }
 
 void updateCamera(float deltaTime) {
-    float speed = CAM_SPEED * deltaTime;
+    camera.moveForward(-cameraMovement.z * deltaTime);
+    camera.moveRight(cameraMovement.x * deltaTime);
+    camera.moveUp(cameraMovement.y * deltaTime);
 
-    camera.moveForward(-cameraMovement.z * speed);
-    camera.moveRight(cameraMovement.x * speed);
-    camera.moveUp(cameraMovement.y * speed);
-
-    camera.rotate(cameraRotation.x * speed, cameraRotation.y * speed);
+    camera.rotate(cameraRotation.x * deltaTime,
+                  cameraRotation.y * deltaTime);
 }
 
 // ############################################################################
@@ -256,7 +267,12 @@ void initApplication() {
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
 
-    objects.push_back(new SingleMesh(&commonShaderProgram));
+    // enable backface culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    objects.push_back(new SingleMesh("data/shape.obj", &commonShaderProgram));
+    objects.push_back(new Square(&mandelrotShaderProgram));
 }
 
 /**

@@ -123,11 +123,9 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
 }
 
 
-SingleMesh::SingleMesh(ShaderProgram* shdrPrg) : ObjectInstance(shdrPrg), initialized(false)
+SingleMesh::SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg) : ObjectInstance(shdrPrg), initialized(false)
 {
-    const char* MODEL_FILE_NAME = "data/shape.obj";
-
-    if (!loadSingleMesh(MODEL_FILE_NAME, shdrPrg, &geometry)) {
+    if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
         if (geometry == nullptr) {
             std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
         }

@@ -27,32 +27,33 @@ glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
 }
 
 void Camera::moveForward(float distance) {
-    position += front * distance;
+    position += front * distance * MOVE_SPEED;
 }
 
 void Camera::moveBackward(float distance) {
-    position -= front * distance;
+    position -= front * distance * MOVE_SPEED;
 }
 
 void Camera::moveRight(float distance) {
-    position += right * distance;
+    position += right * distance * MOVE_SPEED;
 }
 
 void Camera::moveLeft(float distance) {
-    position -= right * distance;
+    position -= right * distance * MOVE_SPEED;
 }
 
 void Camera::moveUp(float distance) {
-    position += worldUp * distance;
+    position += worldUp * distance * MOVE_SPEED;
 }
 
 void Camera::moveDown(float distance) {
-    position -= worldUp * distance;
+    position -= worldUp * distance * MOVE_SPEED;
 }
 
 void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
-    yaw += yawOffsetDegrees;
-    pitch = glm::clamp(pitch + pitchOffsetDegrees, -89.0f, 89.0f);
+    yaw += yawOffsetDegrees * ROT_SPEED;
+    pitch = glm::clamp(pitch + pitchOffsetDegrees * ROT_SPEED, -89.0f, 89.0f);
+
     updateVectors();
 }
 

@@ -17,6 +17,7 @@ typedef struct _ShaderProgram {
     struct {
         // vertex attributes locations
         GLint position;
+        GLint texCoord;
         // uniforms locations
         GLint PVMmatrix;
     } locations;
@@ -71,7 +72,11 @@ public:
      * \brief ObjectInstance constructor. Takes a pointer to the shader and must create object resources (VBO and VAO)
      * \param shdrPrg pointer to the shader program for rendering objects data
      */
-    ObjectInstance(ShaderProgram* shdrPrg = nullptr) : geometry(nullptr), shaderProgram(shdrPrg) {}
+    ObjectInstance(ShaderProgram* shdrPrg = nullptr)
+        : geometry(nullptr)
+        , localModelMatrix(1.0f)
+        , globalModelMatrix(1.0f)
+        , shaderProgram(shdrPrg) {}
     ~ObjectInstance() {}
 
     /**

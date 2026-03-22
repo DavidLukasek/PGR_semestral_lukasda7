@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -153,17 +153,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="data\square.cpp" />
     <ClCompile Include="singlemesh.cpp" />
     <ClCompile Include="lukasda7.cpp" />
     <ClCompile Include="triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="data\square.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="singlemesh.h" />
     <ClInclude Include="triangle.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\shaders\mandelbrot.frag" />
     <None Include="data\shaders\simple-fs.glsl" />
     <None Include="data\shaders\simple-vs.glsl" />
   </ItemGroup>
