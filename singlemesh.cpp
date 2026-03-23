@@ -1,12 +1,45 @@
 #include <iostream>
 #include "singlemesh.h"
 
+SingleMesh::SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg) : RenderableObject(shdrPrg), initialized(false)
+{
+    if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
+        if (geometry == nullptr) {
+            std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
+        }
+        else {
+            std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
+        }
+    }
+    else {
+        if ((shaderProgram != nullptr) && shaderProgram->initialized && (shaderProgram->locations.PVMmatrix != -1)) {
+            initialized = true;
+        }
+        else {
+            std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
+        }
+    }
+}
+
+SingleMesh::~SingleMesh() {
+
+    if (geometry != nullptr) {
+        glDeleteVertexArrays(1, &(geometry->vertexArrayObject));
+        glDeleteBuffers(1, &(geometry->elementBufferObject));
+        glDeleteBuffers(1, &(geometry->vertexBufferObject));
+
+        delete geometry;
+        geometry = nullptr;
+    }
+
+    initialized = false;
+}
 
 void SingleMesh::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
     // instance specific stuff
 
     // propagate the update to children
-    ObjectInstance::update(elapsedTime, parentModelMatrix);
+    RenderableObject::update(elapsedTime, parentModelMatrix);
 }
 
 void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
@@ -24,8 +57,9 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
     else {
         std::cerr << "SingleMesh::draw(): Can't draw, mesh not initialized properly!" << std::endl;
     }
-}
 
+    RenderableObject::draw(viewMatrix, projectionMatrix);
+}
 
 /** Load one mesh using assimp library (vertices only, for more attributes see method extended version in Asteroids)
  * \param fileName [in] file to open/load
@@ -105,7 +139,7 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
 
     bool validInit = false;
 
-    if ((shaderProgram != nullptr) && shaderProgram->initialized && (shaderProgram->locations.position != -1)) {
+    if ((shader != nullptr) && shader->initialized && (shader->locations.position != -1)) {
 
         glEnableVertexAttribArray(shader->locations.position);
         glVertexAttribPointer(shader->locations.position, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -120,39 +154,4 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     (*geometry)->numTriangles = mesh->mNumFaces;
 
     return validInit;
-}
-
-
-SingleMesh::SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg) : ObjectInstance(shdrPrg), initialized(false)
-{
-    if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
-        if (geometry == nullptr) {
-            std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
-        }
-        else {
-            std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
-        }
-    }
-    else {
-        if ((shaderProgram != nullptr) && shaderProgram->initialized && (shaderProgram->locations.PVMmatrix != -1)) {
-            initialized = true;
-        }
-        else {
-            std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
-        }
-    }
-}
-
-SingleMesh::~SingleMesh() {
-
-    if (geometry != nullptr) {
-        glDeleteVertexArrays(1, &(geometry->vertexArrayObject));
-        glDeleteBuffers(1, &(geometry->elementBufferObject));
-        glDeleteBuffers(1, &(geometry->vertexBufferObject));
-
-        delete geometry;
-        geometry = nullptr;
-    }
-
-    initialized = false;
 }

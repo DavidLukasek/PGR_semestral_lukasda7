@@ -1,18 +1,16 @@
 #include <iostream>
 #include "pgr.h"
 #include "object.h"
-#include "triangle.h"
 #include "singlemesh.h"
 #include "camera.h"
 #include "data/square.h"
 
 #define SHADER_PATH "data/shaders/"
-#define VS_PATH "data/shaders/simple-vs.glsl"
-#define FS_PATH "data/shaders/simple-fs.glsl"
 
 #define WINDOW_TITLE "PGR: Application lukasda7"
-int windowWidth = 500;
-int windowHeight = 500;
+
+int windowWidth = 1920;
+int windowHeight = 1080;
 
 ObjectList objects;
 ShaderProgram commonShaderProgram;
@@ -88,7 +86,7 @@ void drawScene(void) {
     glm::mat4 projectionMatrix =
         camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
 
-    for (ObjectInstance* object : objects) {
+    for (Object* object : objects) {
         if (object != nullptr)
             object->draw(viewMatrix, projectionMatrix);
     }
@@ -255,7 +253,7 @@ void timerCb(int) {
     glUniform1f(mandelrotShaderProgram.locations.elapsedTime, elapsedTime);
 
     // update the application state
-    for (ObjectInstance* object : objects) {
+    for (Object* object : objects) {
         if (object != nullptr)
             object->update(elapsedTime, &sceneRootMatrix);
     }
@@ -285,6 +283,13 @@ void initApplication() {
     glCullFace(GL_BACK);
 
     objects.push_back(new SingleMesh("data/shape.obj", &commonShaderProgram));
+    SingleMesh *monke = new SingleMesh("data/monke.obj", &commonShaderProgram);
+    monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                              glm::vec3(-2.0f, 0.0f, 1.0f)) *
+                               glm::rotate(glm::mat4(1.0f),
+                                           glm::radians(90.0f),
+                                           glm::vec3(0.0f, 1.0f, 0.0f)));
+    objects.push_back(monke);
     objects.push_back(new Square(&mandelrotShaderProgram));
 }
 

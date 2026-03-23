@@ -1,6 +1,4 @@
 #include "camera.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 Camera::Camera(
     glm::vec3 position,
@@ -16,6 +14,16 @@ Camera::Camera(
     , nearPlane(nearPlane)
     , farPlane(farPlane) {
     updateVectors();
+}
+
+void Camera::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
+    (void)elapsedTime;
+    (void)parentModelMatrix;
+}
+
+void Camera::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+    (void)viewMatrix;
+    (void)projectionMatrix;
 }
 
 glm::mat4 Camera::getViewMatrix() const {

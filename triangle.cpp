@@ -8,7 +8,7 @@ void Triangle::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
     // ========  END OF SOLUTION - TASK 1_0-3  ======== //
 
     // propagate the update to children
-    ObjectInstance::update(elapsedTime, parentModelMatrix);
+    RenderableObject::update(elapsedTime, parentModelMatrix);
 }
 
 void Triangle::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
@@ -26,9 +26,11 @@ void Triangle::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatr
     else {
         std::cerr << "Triangle::draw(): Can't draw, triangle not initialized properly!" << std::endl;
     }
+
+    RenderableObject::draw(viewMatrix, projectionMatrix);
 }
 
-Triangle::Triangle(ShaderProgram* shdrPrg) : ObjectInstance(shdrPrg), initialized(false)
+Triangle::Triangle(ShaderProgram* shdrPrg) : RenderableObject(shdrPrg), initialized(false)
 {
     geometry = new ObjectGeometry;
 

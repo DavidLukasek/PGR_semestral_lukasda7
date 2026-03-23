@@ -1,16 +1,23 @@
 #pragma once
 
+#include "object.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-class Camera {
+class Camera : public Object {
 public:
+    const float MOVE_SPEED = 5.0f;
+
     Camera(
         glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f),
         float fieldOfViewDegrees = 90.0f,
-        float nearPlane = 0.1f,
+        float nearPlane = 0.01f,
         float farPlane = 100.0f
     );
+    ~Camera() override = default;
+
+    void update(float elapsedTime, const glm::mat4* parentModelMatrix) override;
+    void draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) override;
 
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjectionMatrix(float aspectRatio) const;
@@ -34,10 +41,7 @@ public:
     float getPitch() const;
     float getFieldOfView() const;
 
-    const float MOVE_SPEED = 5.0f;
-
 private:
-    void updateVectors();
     glm::vec3 position;
     glm::vec3 front;
     glm::vec3 up;
@@ -48,5 +52,7 @@ private:
     float fieldOfViewDegrees;
     float nearPlane;
     float farPlane;
+
+    void updateVectors();
 };
 

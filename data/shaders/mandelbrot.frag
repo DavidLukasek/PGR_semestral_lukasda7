@@ -33,7 +33,7 @@ void main() {
     //slow zoom
     //vec2 target = vec2(-1.2506715, 0.0201205);
     //float zoom = 1.0;
-    //zoom = exp(-0.2 * iTime);
+    // zoom = exp(-0.2 * elapsedTime);
     //uv = target + uv * zoom;
     
     float real          = uv.x;

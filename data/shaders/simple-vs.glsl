@@ -7,7 +7,6 @@ in vec2 texCoord;
 
 out vec2 UV;
 
-
 void main() {
     gl_Position = PVM * vec4(position, 1.0);
     UV = texCoord;

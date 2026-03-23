@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../object.h"
+#include "../renderableObject.h"
 
-class Square : public ObjectInstance
+class Square : public RenderableObject
 {
 public:
     Square(ShaderProgram* shdrPrg = nullptr);
@@ -15,4 +15,6 @@ public:
 private:
     bool initialized;
     static const float vertices[30];
+
+    void initializeSquare();
 };

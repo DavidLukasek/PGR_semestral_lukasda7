@@ -1,8 +1,8 @@
 #pragma once
 
-#include "object.h"
+#include "renderableObject.h"
 
-class Triangle : public ObjectInstance
+class Triangle : public RenderableObject
 {
 public:
 
