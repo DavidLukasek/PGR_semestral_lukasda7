@@ -1,32 +1,23 @@
 #include "camera.h"
 
 Camera::Camera(
-    glm::vec3 position,
+    glm::vec3 initialPosition,
     float fieldOfViewDegrees,
     float nearPlane,
     float farPlane
 )
-    : position(position)
-    , worldUp(0.0f, 1.0f, 0.0f)
+    : worldUp(0.0f, 1.0f, 0.0f)
     , yaw(-90.0f)
     , pitch(0.0f)
     , fieldOfViewDegrees(fieldOfViewDegrees)
     , nearPlane(nearPlane)
     , farPlane(farPlane) {
+    setPosition(initialPosition);
     updateVectors();
 }
 
-void Camera::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
-    (void)elapsedTime;
-    (void)parentModelMatrix;
-}
-
-void Camera::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
-    (void)viewMatrix;
-    (void)projectionMatrix;
-}
-
 glm::mat4 Camera::getViewMatrix() const {
+    const glm::vec3 position = getPosition();
     return glm::lookAt(position, position + front, up);
 }
 
@@ -35,27 +26,27 @@ glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
 }
 
 void Camera::moveForward(float distance) {
-    position += front * distance * MOVE_SPEED;
+    translate(front * distance * MOVE_SPEED);
 }
 
 void Camera::moveBackward(float distance) {
-    position -= front * distance * MOVE_SPEED;
+    translate(-front * distance * MOVE_SPEED);
 }
 
 void Camera::moveRight(float distance) {
-    position += right * distance * MOVE_SPEED;
+    translate(right * distance * MOVE_SPEED);
 }
 
 void Camera::moveLeft(float distance) {
-    position -= right * distance * MOVE_SPEED;
+    translate(-right * distance * MOVE_SPEED);
 }
 
 void Camera::moveUp(float distance) {
-    position += worldUp * distance * MOVE_SPEED;
+    translate(worldUp * distance * MOVE_SPEED);
 }
 
 void Camera::moveDown(float distance) {
-    position -= worldUp * distance * MOVE_SPEED;
+    translate(-worldUp * distance * MOVE_SPEED);
 }
 
 void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
@@ -64,16 +55,8 @@ void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
     updateVectors();
 }
 
-void Camera::setPosition(const glm::vec3& newPosition) {
-    position = newPosition;
-}
-
 void Camera::setFieldOfView(float newFieldOfViewDegrees) {
     fieldOfViewDegrees = glm::clamp(newFieldOfViewDegrees, 1.0f, 240.0f);
-}
-
-const glm::vec3& Camera::getPosition() const {
-    return position;
 }
 
 const glm::vec3& Camera::getFront() const {

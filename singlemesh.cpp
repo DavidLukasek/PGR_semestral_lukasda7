@@ -1,8 +1,7 @@
 #include <iostream>
 #include "singlemesh.h"
 
-SingleMesh::SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg) : RenderableObject(shdrPrg), initialized(false)
-{
+SingleMesh::SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg) : RenderableObject(shdrPrg), initialized(false) {
     if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
         if (geometry == nullptr) {
             std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
@@ -35,15 +34,7 @@ SingleMesh::~SingleMesh() {
     initialized = false;
 }
 
-void SingleMesh::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
-    // instance specific stuff
-
-    // propagate the update to children
-    RenderableObject::update(elapsedTime, parentModelMatrix);
-}
-
-void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
-{
+void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     if (initialized && (shaderProgram != nullptr)) {
         glUseProgram(shaderProgram->program);
 
@@ -58,7 +49,7 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         std::cerr << "SingleMesh::draw(): Can't draw, mesh not initialized properly!" << std::endl;
     }
 
-    RenderableObject::draw(viewMatrix, projectionMatrix);
+    Object::draw(viewMatrix, projectionMatrix);
 }
 
 /** Load one mesh using assimp library (vertices only, for more attributes see method extended version in Asteroids)

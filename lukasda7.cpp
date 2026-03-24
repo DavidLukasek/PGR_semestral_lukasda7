@@ -1,29 +1,25 @@
 #include <iostream>
-#include "pgr.h"
-#include "object.h"
-#include "singlemesh.h"
+
 #include "camera.h"
-#include "data/square.h"
-
-#define SHADER_PATH "data/shaders/"
-
-#define WINDOW_TITLE "PGR: Application lukasda7"
-
-int windowWidth = 1920;
-int windowHeight = 1080;
+#include "data/models/square.h"
+#include "gameState.h"
+#include "light.h"
+#include "object.h"
+#include "pgr.h"
+#include "singlemesh.h"
 
 ObjectList objects;
 ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 
 Camera camera;
-glm::vec3 cameraMovement(0.0f);
-glm::vec2 cameraRotation(0.0f);
+glm::vec2 cameraRotation = glm::vec2(0.0);
 
-bool RMBPressed = false;
 int ogMouseX = -1;
 int ogMouseY = -1;
-float mouseSensitivity = 0.3f;
+const float mouseSensitivity = 0.3f;
+
+GameState gameState;
 
 // ############################################################################
 //                               OpenGL Stuff
@@ -84,7 +80,8 @@ void cleanupShaderPrograms(void) {
 void drawScene(void) {
     glm::mat4 viewMatrix = camera.getViewMatrix();
     glm::mat4 projectionMatrix =
-        camera.getProjectionMatrix((float)windowWidth / (float)windowHeight);
+        camera.getProjectionMatrix((float)gameState.windowWidth /
+                                   (float)gameState.windowHeight);
 
     for (Object* object : objects) {
         if (object != nullptr)
@@ -93,9 +90,12 @@ void drawScene(void) {
 }
 
 void updateCamera(float deltaTime) {
-    camera.moveForward(-cameraMovement.z * deltaTime);
-    camera.moveRight(cameraMovement.x * deltaTime);
-    camera.moveUp(cameraMovement.y * deltaTime);
+    camera.moveForward((gameState.keyMap[KEY_W]) * deltaTime);
+    camera.moveBackward((gameState.keyMap[KEY_S]) * deltaTime);
+    camera.moveRight((gameState.keyMap[KEY_D]) * deltaTime);
+    camera.moveLeft((gameState.keyMap[KEY_A]) * deltaTime);
+    camera.moveUp((gameState.keyMap[KEY_E]) * deltaTime);
+    camera.moveDown((gameState.keyMap[KEY_Q]) * deltaTime);
 
     camera.rotate(cameraRotation.x * deltaTime,
                   cameraRotation.y * deltaTime);
@@ -124,8 +124,8 @@ void displayCb() {
  * \param newHeight New window height
  */
 void reshapeCb(int newWidth, int newHeight) {
-    windowWidth = newWidth;
-    windowHeight = newHeight;
+    gameState.windowWidth = newWidth;
+    gameState.windowHeight = newHeight;
 
     glViewport(0, 0, newWidth, newHeight);
 }
@@ -141,17 +141,18 @@ void reshapeCb(int newWidth, int newHeight) {
  */
 void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
     switch (keyPressed) {
+        // exit
         case 27:
             glutLeaveMainLoop();
             exit(EXIT_SUCCESS);
             break;
         // movement cases
-        case 'w': case 'W': cameraMovement.z = -1.0f; break;
-        case 's': case 'S': cameraMovement.z =  1.0f; break;
-        case 'a': case 'A': cameraMovement.x = -1.0f; break;
-        case 'd': case 'D': cameraMovement.x =  1.0f; break;
-        case 'q': case 'Q': cameraMovement.y = -1.0f; break;
-        case 'e': case 'E': cameraMovement.y =  1.0f; break;
+        case 'w': case 'W': gameState.keyMap[KEY_W] = true; break;
+        case 's': case 'S': gameState.keyMap[KEY_S] = true; break;
+        case 'a': case 'A': gameState.keyMap[KEY_A] = true; break;
+        case 'd': case 'D': gameState.keyMap[KEY_D] = true; break;
+        case 'q': case 'Q': gameState.keyMap[KEY_Q] = true; break;
+        case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
     }
 }
 
@@ -165,9 +166,15 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
  */
 void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
     switch (keyReleased) {
-        case 'w': case 'W': case 's': case 'S': cameraMovement.z = 0.0f; break;
-        case 'a': case 'A': case 'd': case 'D': cameraMovement.x = 0.0f; break;
-        case 'q': case 'Q': case 'e': case 'E': cameraMovement.y = 0.0f; break;
+        case 'w': case 'W': case 's': case 'S':
+            gameState.keyMap[KEY_W] = false;
+            gameState.keyMap[KEY_S] = false; break;
+        case 'a': case 'A': case 'd': case 'D':
+            gameState.keyMap[KEY_A] = false;
+            gameState.keyMap[KEY_D] = false; break;
+        case 'q': case 'Q': case 'e': case 'E':
+            gameState.keyMap[KEY_Q] = false;
+            gameState.keyMap[KEY_E] = false; break;
     }
 }
 
@@ -201,7 +208,18 @@ void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
  * \param mouseY mouse (cursor) Y position
  */
 void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
-    RMBPressed = buttonPressed;
+    switch (buttonPressed) {
+        case GLUT_LEFT_BUTTON:
+            gameState.keyMap[LMB] = (buttonState == GLUT_DOWN);
+            break;
+        case GLUT_MIDDLE_BUTTON:
+            gameState.keyMap[MMB] = (buttonState == GLUT_DOWN);
+            break;
+        case GLUT_RIGHT_BUTTON:
+            gameState.keyMap[RMB] = (buttonState == GLUT_DOWN);
+            break;
+    }
+    
     ogMouseX = mouseX;
     ogMouseY = mouseY;
 }
@@ -213,7 +231,7 @@ void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
  * \param mouseY mouse (cursor) Y position
  */
 void mouseMotionCb(int mouseX, int mouseY) {
-    if (RMBPressed) {
+    if (gameState.keyMap[RMB]) {
         int deltaX = (ogMouseX - mouseX);
         int deltaY = (ogMouseY - mouseY);
 
@@ -278,12 +296,15 @@ void initApplication() {
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
 
-    // enable backface culling
+    // enable depth test and backface culling
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    objects.push_back(new SingleMesh("data/shape.obj", &commonShaderProgram));
-    SingleMesh *monke = new SingleMesh("data/monke.obj", &commonShaderProgram);
+    objects.push_back(new SingleMesh(MODELS_PATH + (std::string)"shape.obj",
+                                     &commonShaderProgram));
+    SingleMesh *monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
+                                       &commonShaderProgram);
     monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                               glm::vec3(-2.0f, 0.0f, 1.0f)) *
                                glm::rotate(glm::mat4(1.0f),
@@ -326,7 +347,7 @@ int main(int argc, char** argv) {
     // for each window
     {
         // initial window size + title
-        glutInitWindowSize(windowWidth, windowHeight);
+        glutInitWindowSize(gameState.windowWidth, gameState.windowHeight);
         glutCreateWindow(WINDOW_TITLE);
 
         // callbacks - use only those you need

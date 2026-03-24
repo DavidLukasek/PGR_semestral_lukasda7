@@ -153,15 +153,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
-    <ClCompile Include="data\square.cpp" />
-    <ClCompile Include="renderableObject.cpp" />
+    <ClCompile Include="data\models\square.cpp" />
+    <ClCompile Include="object.cpp" />
     <ClCompile Include="singlemesh.cpp" />
     <ClCompile Include="lukasda7.cpp" />
     <ClCompile Include="triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
-    <ClInclude Include="data\square.h" />
+    <ClInclude Include="data\models\square.h" />
+    <ClInclude Include="gameState.h" />
+    <ClInclude Include="light.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="renderableObject.h" />
     <ClInclude Include="singlemesh.h" />
@@ -169,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\mandelbrot.frag" />
+    <None Include="data\shaders\phong.vert" />
     <None Include="data\shaders\simple-fs.glsl" />
     <None Include="data\shaders\simple-vs.glsl" />
   </ItemGroup>

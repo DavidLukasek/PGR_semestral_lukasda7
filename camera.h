@@ -6,18 +6,15 @@
 
 class Camera : public Object {
 public:
-    const float MOVE_SPEED = 5.0f;
+    static constexpr float MOVE_SPEED = 5.0f;
 
     Camera(
-        glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f),
+        glm::vec3 initialPosition = glm::vec3(0.0f, 0.0f, 3.0f),
         float fieldOfViewDegrees = 90.0f,
         float nearPlane = 0.01f,
         float farPlane = 100.0f
     );
     ~Camera() override = default;
-
-    void update(float elapsedTime, const glm::mat4* parentModelMatrix) override;
-    void draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) override;
 
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjectionMatrix(float aspectRatio) const;
@@ -31,10 +28,8 @@ public:
 
     void rotate(float yawOffsetDegrees, float pitchOffsetDegrees);
 
-    void setPosition(const glm::vec3& newPosition);
     void setFieldOfView(float newFieldOfViewDegrees);
 
-    const glm::vec3& getPosition() const;
     const glm::vec3& getFront() const;
     const glm::vec3& getUp() const;
     float getYaw() const;
@@ -42,7 +37,6 @@ public:
     float getFieldOfView() const;
 
 private:
-    glm::vec3 position;
     glm::vec3 front;
     glm::vec3 up;
     glm::vec3 right;
@@ -55,4 +49,3 @@ private:
 
     void updateVectors();
 };
-

@@ -2,7 +2,7 @@
 #include "square.h"
 
 const float Square::vertices[30] = {
-    //  X   Y   Z   U   V
+    // X     Y     Z     U     V
     0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
     1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
     1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
@@ -29,13 +29,6 @@ Square::~Square() {
     initialized = false;
 }
 
-void Square::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
-    // instance specific stuff
-
-    // propagate the update to children
-    RenderableObject::update(elapsedTime, parentModelMatrix);
-}
-
 void Square::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     if (initialized && (shaderProgram != nullptr)) {
         glUseProgram(shaderProgram->program);
@@ -46,11 +39,11 @@ void Square::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix
 
 
         glBindVertexArray(geometry->vertexArrayObject);
-        glDrawArrays(GL_TRIANGLES, 0, geometry->numTriangles*3);
+        glDrawArrays(GL_TRIANGLES, 0, geometry->numTriangles * 3);
         glBindVertexArray(0);
     }
 
-    RenderableObject::draw(viewMatrix, projectionMatrix);
+    Object::draw(viewMatrix, projectionMatrix);
 }
 
 void Square::initializeSquare() {
@@ -88,10 +81,10 @@ void Square::initializeSquare() {
         initialized = true;
     }
 
-    //REMOVE
-    localModelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 0.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 2.0f));
+    setLocalModelMatrix(
+        glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, -1.0f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 2.0f))
+    );
 
     glBindVertexArray(0);
 }
-
