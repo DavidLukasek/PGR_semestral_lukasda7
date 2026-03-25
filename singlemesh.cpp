@@ -24,6 +24,7 @@ SingleMesh::~SingleMesh() {
 
     if (geometry != nullptr) {
         glDeleteVertexArrays(1, &(geometry->vertexArrayObject));
+        glDeleteBuffers(1, &(geometry->normalBufferObject));
         glDeleteBuffers(1, &(geometry->elementBufferObject));
         glDeleteBuffers(1, &(geometry->vertexBufferObject));
 
@@ -95,6 +96,11 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(float) * mesh->mNumVertices, 0, GL_STATIC_DRAW);     // allocate memory for vertices
     glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * sizeof(float) * mesh->mNumVertices, mesh->mVertices); // store all vertices
 
+    // normal buffer object, store all normals
+    glGenBuffers(1, &((*geometry)->normalBufferObject));
+    glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->normalBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(float) * mesh->mNumVertices, mesh->mNormals, GL_STATIC_DRAW);
+
     // copy all mesh faces into one big array (assimp supports faces with ordinary number of vertices, we use only 3 -> triangles)
     unsigned int* indices = new unsigned int[mesh->mNumFaces * 3];
     for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
@@ -125,18 +131,26 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     glGenVertexArrays(1, &((*geometry)->vertexArrayObject));
     glBindVertexArray((*geometry)->vertexArrayObject);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*geometry)->elementBufferObject); // bind our element array buffer (indices) to vao
-    glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->vertexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (*geometry)->elementBufferObject);
 
     bool validInit = false;
 
-    if ((shader != nullptr) && shader->initialized && (shader->locations.position != -1)) {
+    if ((shader != nullptr) && shader->initialized) {
+        // position
+        if (shader->locations.position != -1) {
+            glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->vertexBufferObject);
+            glEnableVertexAttribArray(shader->locations.position);
+            glVertexAttribPointer(shader->locations.position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        }
 
-        glEnableVertexAttribArray(shader->locations.position);
-        glVertexAttribPointer(shader->locations.position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        // normal
+        if (shader->locations.normal != -1) {
+            glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->normalBufferObject);
+            glEnableVertexAttribArray(shader->locations.normal);
+            glVertexAttribPointer(shader->locations.normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        }
 
         CHECK_GL_ERROR();
-
         validInit = true;
     }
 

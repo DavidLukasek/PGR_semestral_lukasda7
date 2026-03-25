@@ -30,6 +30,7 @@ public:
     void setLocalModelMatrix(const glm::mat4& matrix);
     const glm::mat4& getLocalModelMatrix() const;
     const glm::mat4& getGlobalModelMatrix() const;
+    const ObjectList& getChildren() const;
     void setPosition(const glm::vec3& position);
     glm::vec3 getPosition() const;
     void translate(const glm::vec3& offset);

@@ -46,6 +46,10 @@ const glm::mat4& Object::getGlobalModelMatrix() const {
     return globalModelMatrix;
 }
 
+const ObjectList& Object::getChildren() const {
+    return children;
+}
+
 void Object::setPosition(const glm::vec3& position) {
     localModelMatrix[3] = glm::vec4(position, 1.0f);
 }

@@ -18,4 +18,8 @@ public:
         , lightType(lightType) {
     }
     ~Light() override = default;
+
+    float getIntensity() const { return intensity; }
+    const glm::vec3& getColor() const { return color; }
+    LightType getLightType() const { return lightType; }
 };

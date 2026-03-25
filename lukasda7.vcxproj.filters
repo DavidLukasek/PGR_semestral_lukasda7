@@ -39,5 +39,8 @@
     <None Include="data\shaders\phong.vert">
       <Filter>data\shaders</Filter>
     </None>
+    <None Include="data\shaders\phong.frag">
+      <Filter>data\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

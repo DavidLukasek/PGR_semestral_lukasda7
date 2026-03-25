@@ -17,15 +17,21 @@ typedef struct _ShaderProgram {
     struct {
         // vertex attributes locations
         GLint position;
+        GLint normal;
         GLint texCoord;
         // uniforms locations
         GLint PVMmatrix;
         GLint elapsedTime;
+        GLint light;
     } locations;
 
     _ShaderProgram() : program(0), initialized(false) {
         locations.position = -1;
+        locations.normal = -1;
+        locations.texCoord = -1;
         locations.PVMmatrix = -1;
+        locations.elapsedTime = -1;
+        locations.light = -1;
     }
 
 } ShaderProgram;
@@ -35,6 +41,7 @@ typedef struct _ShaderProgram {
  */
 typedef struct _ObjectGeometry {
     GLuint        vertexBufferObject;   ///< identifier for the vertex buffer object
+    GLuint        normalBufferObject;   ///< identifier for the normal buffer object
     GLuint        elementBufferObject;  ///< identifier for the element buffer object
     GLuint        vertexArrayObject;    ///< identifier for the vertex array object
     unsigned int  numTriangles;         ///< number of triangles in the mesh

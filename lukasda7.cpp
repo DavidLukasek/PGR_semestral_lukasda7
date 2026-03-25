@@ -1,4 +1,7 @@
 #include <iostream>
+#include <algorithm>
+#include <string>
+#include <vector>
 
 #include "camera.h"
 #include "data/models/square.h"
@@ -11,6 +14,7 @@
 ObjectList objects;
 ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
+ShaderProgram phongShaderProgram;
 
 Camera camera;
 glm::vec2 cameraRotation = glm::vec2(0.0);
@@ -20,6 +24,9 @@ int ogMouseY = -1;
 const float mouseSensitivity = 0.3f;
 
 GameState gameState;
+
+static constexpr int MAX_SCENE_LIGHTS = 16;
+std::vector<Light*> sceneLightsCache;
 
 // ############################################################################
 //                               OpenGL Stuff
@@ -46,10 +53,12 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.program = pgr::createProgram(shaders);
 
     prog.locations.position = glGetAttribLocation(prog.program, "position");
+    prog.locations.normal = glGetAttribLocation(prog.program, "normal");
     prog.locations.texCoord = glGetAttribLocation(prog.program, "texCoord");
 
     prog.locations.PVMmatrix = glGetUniformLocation(prog.program, "PVM");
     prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
+    prog.locations.light = glGetUniformLocation(prog.program, "light");
 
     prog.initialized = true;
 
@@ -63,6 +72,7 @@ void loadShaderPrograms()
 {
     commonShaderProgram = loadShaderProgram("simple-vs.glsl", "simple-fs.glsl");
     mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
+    phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
 }
 
 /**
@@ -72,6 +82,69 @@ void cleanupShaderPrograms(void) {
 
     pgr::deleteProgramAndShaders(commonShaderProgram.program);
     pgr::deleteProgramAndShaders(mandelrotShaderProgram.program);
+    pgr::deleteProgramAndShaders(phongShaderProgram.program);
+}
+
+void collectLightsRecursive(Object* object, std::vector<Light*>& outLights) {
+    if (object == nullptr)
+        return;
+
+    if (Light* light = dynamic_cast<Light*>(object))
+        outLights.push_back(light);
+
+    const ObjectList& children = object->getChildren();
+    for (Object* child : children)
+        collectLightsRecursive(child, outLights);
+}
+
+void uploadLightsToProgram(const ShaderProgram& shaderProgram,
+                           const std::vector<Light*>& sceneLights) {
+    if (!shaderProgram.initialized) return;
+
+    glUseProgram(shaderProgram.program);
+
+    const GLint lightCountLocation = glGetUniformLocation(shaderProgram.program,
+                                                          "lightCount");
+
+    const int uploadedLightCount = std::min(static_cast<int>(sceneLights.size()),
+                                            MAX_SCENE_LIGHTS);
+
+    if (lightCountLocation != -1) glUniform1i(lightCountLocation, uploadedLightCount);
+
+    for (int i = 0; i < uploadedLightCount; ++i) {
+        const Light* light = sceneLights[i];
+        const std::string lightIndex = std::to_string(i);
+        const glm::vec3 lightPosition = glm::vec3(light->getGlobalModelMatrix()[3]);
+        const glm::vec3 lightColor = light->getColor();
+        const float lightIntensity = light->getIntensity();
+        const int lightType = static_cast<int>(light->getLightType());
+
+        const GLint positionLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightPositions[" + lightIndex + "]").c_str());
+        const GLint colorLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightColors[" + lightIndex + "]").c_str());
+        const GLint intensityLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightIntensities[" + lightIndex + "]").c_str());
+        const GLint typeLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightTypes[" + lightIndex + "]").c_str());
+
+        if (positionLocation != -1)
+            glUniform3fv(positionLocation, 1, glm::value_ptr(lightPosition));
+        if (colorLocation != -1)
+            glUniform3fv(colorLocation, 1, glm::value_ptr(lightColor));
+        if (intensityLocation != -1)
+            glUniform1f(intensityLocation, lightIntensity);
+        if (typeLocation != -1)
+            glUniform1i(typeLocation, lightType);
+    }
+}
+
+void collectSceneLights() {
+    sceneLightsCache.clear();
+    sceneLightsCache.reserve(objects.size());
+
+    for (Object* object : objects)
+        collectLightsRecursive(object, sceneLightsCache);
 }
 
 /**
@@ -304,14 +377,29 @@ void initApplication() {
     objects.push_back(new SingleMesh(MODELS_PATH + (std::string)"shape.obj",
                                      &commonShaderProgram));
     SingleMesh *monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
-                                       &commonShaderProgram);
+                                       &phongShaderProgram);
     monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                               glm::vec3(-2.0f, 0.0f, 1.0f)) *
                                glm::rotate(glm::mat4(1.0f),
                                            glm::radians(90.0f),
                                            glm::vec3(0.0f, 1.0f, 0.0f)));
     objects.push_back(monke);
+
+    Light* pointLight1 = new Light(1.0f, glm::vec3(1.0f), POINT_LIGHT);
+    pointLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                    glm::vec3(-1.0f, 0.0f, 1.0f)));
+    objects.push_back(pointLight1);
+
     objects.push_back(new Square(&mandelrotShaderProgram));
+
+    // Initialize global transforms once, then upload all scene lights once.
+    const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);
+    for (Object* object : objects) {
+        if (object != nullptr)
+            object->update(0.0f, &sceneRootMatrix);
+    }
+    collectSceneLights();
+    uploadLightsToProgram(phongShaderProgram, sceneLightsCache);
 }
 
 /**
