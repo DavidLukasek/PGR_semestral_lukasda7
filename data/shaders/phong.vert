@@ -9,14 +9,14 @@ in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
 
-out vec3 thePosition;
-out vec3 theNormal;
+out vec3 worldPosition;
+out vec3 worldNormal;
 out vec2 theTexCoord;
 
 void main() {
     gl_Position = PVM * vec4(position, 1.0);
 
-    thePosition = vec3(modelMatrix * vec4(position, 1.0));
-    theNormal = normalize(vec3(normalMatrix * vec4(normal, 0.0)));
+    worldPosition = vec3(modelMatrix * vec4(position, 1.0));
+    worldNormal = normalize(vec3(normalMatrix * vec4(normal, 0.0)));
     theTexCoord = texCoord;
 }

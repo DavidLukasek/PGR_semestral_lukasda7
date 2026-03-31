@@ -7,41 +7,21 @@
 
 #define MAX_SCENE_LIGHTS 16
 
-// ------------------------------- Structs ------------------------------------
-
-struct Material {       // structure that describes currently used material
-    vec3  ambient;      // ambient component
-    vec3  diffuse;      // diffuse component
-    vec3  specular;     // specular component
-    float shininess;    // sharpness of specular reflection
-    bool  useTexture;   // defines whether the texture is used or not
-};
-
-struct Light {              // structure describing light parameters
-    int   type;
-    vec3  ambient;          // intensity & color of the ambient component
-    vec3  diffuse;          // intensity & color of the diffuse component
-    vec3  specular;         // intensity & color of the specular component
-    vec3  position;         // light position
-    vec3  spotDirection;    // spotlight direction
-    float spotCosCutOff;    // cosine of the spotlight's half angle
-    float spotExponent;     // distribution of the light energy within the spotlight's cone (center -> cone's edge)
-};
-
 // ------------------------------- Uniforms -----------------------------------
 
 uniform float elapsedTime;      // elapsed application time
-uniform vec3 ambientColor;      // ambient color
-uniform vec3 cameraPosition;    // position of the camera
+uniform vec3  ambientColor;     // ambient color
+uniform vec3  cameraPosition;   // position of the camera
 
-uniform vec3 matDiffuse;
-uniform vec3 matSpecular;
-uniform vec3 matAmbient;
+uniform vec3  matDiffuse;
+uniform vec3  matSpecular;
+uniform vec3  matAmbient;
 uniform float matShininess;
 
-uniform mat4 PVMmatrix;         // Projection * View * Model  --> model to clip coordinates
-uniform mat4 modelMatrix;
-uniform mat4 normalMatrix;      // inverse transposed model matrix
+uniform mat4  PVMmatrix;        // Projection * View * Model  --> model to clip coordinates
+uniform mat4  viewMatrix;       // view matrix
+uniform mat4  modelMatrix;      // model matrix
+uniform mat4  normalMatrix;     // inverse transposed model matrix
 
 // light-related uniforms
 uniform int   lightTypes[MAX_SCENE_LIGHTS];
@@ -56,12 +36,48 @@ uniform float lightSpotExponents[MAX_SCENE_LIGHTS];
 
 // ------------------------- Interpolated variables ---------------------------
 
-in vec3 thePosition;
-in vec3 theNormal;
+in vec3 worldPosition;
+in vec3 worldNormal;
 in vec2 theTexCoord;
 
 out vec4 fragmentColor;
 
+vec3 getColorFromLight(vec3 eyePosition, vec3 eyeNormal, int index) {
+    vec3 ret = vec3(0.0);
+
+    vec3 L = normalize(lightPositions[index] - eyePosition);
+    vec3 R = reflect(-L, eyeNormal);
+    vec3 V = normalize(cameraPosition - eyePosition);
+
+    float NdotL = max(dot(eyeNormal, L), 0.0);
+    float spotCos = dot(normalize(lightSpotDirections[index]), -L);
+    float spotEffect = pow(max(spotCos, 0.0), lightSpotExponents[index]);
+    float cosB = max(dot(R, V), 0.0);
+
+    vec3 ambient = lightAmbients[index] * matAmbient;
+    vec3 diffuse = vec3(0.0);
+    vec3 specular = vec3(0.0);
+
+    // calculating light based on the light type
+    switch (lightTypes[index]) {
+        case POINT_LIGHT:
+            diffuse = NdotL *
+                      lightDiffuses[index] *
+                      matDiffuse;
+            specular = pow(cosB, matShininess) *
+                       lightSpeculars[index] *
+                       matSpecular;
+            break;
+        case SPOT_LIGHT:
+            break;
+        case DIRECTION_LIGHT:
+            break;
+    }
+
+    ret += ambient + diffuse + specular;
+
+    return ret;
+}
 
 // ############################################################################
 //                                  Main
@@ -73,13 +89,19 @@ void main() {
     // - thePosition, theNormal
     // - cameraPosition
     // - light* arrays + lightCount
-    vec3 color = vec3(0.0);
 
-    color += ambientColor;
+    // world-coordinates position and normal of vertex
+    vec3 eyePosition = worldPosition;
+    vec3 eyeNormal = normalize(worldNormal);
 
-    color += matAmbient;
-    color += matDiffuse;
-    color += matSpecular * matShininess;
+    // initialize color with ambient light
+    vec3 color = ambientColor;
+
+    for (int i = 0; i < MAX_SCENE_LIGHTS; i++) {
+        color += getColorFromLight(eyePosition, eyeNormal, i);
+    }
+
+    // color = worldNormal;
 
     fragmentColor = vec4(color, 1.0);
 }

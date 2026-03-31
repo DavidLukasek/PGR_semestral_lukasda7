@@ -44,7 +44,12 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         glUseProgram(shaderProgram->program);
 
         const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
-        glUniformMatrix4fv(shaderProgram->locations.PVMmatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
+
+        if (shaderProgram->locations.PVMmatrix != -1)
+            glUniformMatrix4fv(shaderProgram->locations.PVMmatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
+        
+        if (shaderProgram->locations.viewMatrix != -1)
+            glUniformMatrix4fv(shaderProgram->locations.viewMatrix, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
         if (shaderProgram->locations.modelMatrix != -1)
             glUniformMatrix4fv(shaderProgram->locations.modelMatrix, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
