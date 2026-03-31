@@ -16,16 +16,24 @@ ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
 
+Material material = {
+    glm::vec3(0.0f),                // ambient
+    glm::vec3(0.76f, 0.60f, 0.38f), // diffuse
+    glm::vec3(0.18f, 0.14f, 0.08f), // specular
+    0.3f                            // shininess
+};
+
 Camera camera;
 glm::vec2 cameraRotation = glm::vec2(0.0);
 
 int ogMouseX = -1;
 int ogMouseY = -1;
-const float mouseSensitivity = 0.3f;
+const float mouseSensitivity = 0.25f;
 
 GameState gameState;
 
-static constexpr int MAX_SCENE_LIGHTS = 16;
+float elapsedTime = 0.0f;
+
 std::vector<Light*> sceneLightsCache;
 
 // ############################################################################
@@ -52,13 +60,23 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     ShaderProgram prog;
     prog.program = pgr::createProgram(shaders);
 
+    // getting attribute locations
     prog.locations.position = glGetAttribLocation(prog.program, "position");
     prog.locations.normal = glGetAttribLocation(prog.program, "normal");
     prog.locations.texCoord = glGetAttribLocation(prog.program, "texCoord");
 
+    // getting uniform locations
     prog.locations.PVMmatrix = glGetUniformLocation(prog.program, "PVM");
+    prog.locations.modelMatrix = glGetUniformLocation(prog.program, "modelMatrix");
+    prog.locations.normalMatrix = glGetUniformLocation(prog.program, "normalMatrix");
+    prog.locations.diffuse = glGetUniformLocation(prog.program, "matDiffuse");
+    prog.locations.specular = glGetUniformLocation(prog.program, "matSpecular");
+    prog.locations.ambient = glGetUniformLocation(prog.program, "matAmbient");
+    prog.locations.shininess = glGetUniformLocation(prog.program, "matShininess");
+
     prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
-    prog.locations.light = glGetUniformLocation(prog.program, "light");
+    prog.locations.ambientColor = glGetUniformLocation(prog.program, "ambientColor");
+    prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
 
     prog.initialized = true;
 
@@ -97,11 +115,17 @@ void collectLightsRecursive(Object* object, std::vector<Light*>& outLights) {
         collectLightsRecursive(child, outLights);
 }
 
-void uploadLightsToProgram(const ShaderProgram& shaderProgram,
-                           const std::vector<Light*>& sceneLights) {
-    if (!shaderProgram.initialized) return;
+void collectSceneLights() {
+    sceneLightsCache.clear();
+    sceneLightsCache.reserve(objects.size());
 
-    glUseProgram(shaderProgram.program);
+    for (Object* object : objects)
+        collectLightsRecursive(object, sceneLightsCache);
+}
+
+void setLightUniforms(const ShaderProgram& shaderProgram,
+                                 const std::vector<Light*>& sceneLights) {
+    if (!shaderProgram.initialized) return;
 
     const GLint lightCountLocation = glGetUniformLocation(shaderProgram.program,
                                                           "lightCount");
@@ -111,44 +135,96 @@ void uploadLightsToProgram(const ShaderProgram& shaderProgram,
 
     if (lightCountLocation != -1) glUniform1i(lightCountLocation, uploadedLightCount);
 
+    // getting and setting all light-related uniform arrays
     for (int i = 0; i < uploadedLightCount; ++i) {
         const Light* light = sceneLights[i];
         const std::string lightIndex = std::to_string(i);
         const glm::vec3 lightPosition = glm::vec3(light->getGlobalModelMatrix()[3]);
-        const glm::vec3 lightColor = light->getColor();
-        const float lightIntensity = light->getIntensity();
+        const glm::vec3 lightAmbient = light->getAmbient();
+        const glm::vec3 lightDiffuse = light->getDiffuse();
+        const glm::vec3 lightSpecular = light->getSpecular();
+        const glm::vec3 lightSpotDirection = glm::normalize(
+                                                glm::mat3(light->getGlobalModelMatrix())
+                                                * light->getSpotDirection());
+        const glm::vec3 lightSpotCutOff = light->getSpotCutOff();
+        const float lightSpotExponent = light->getSpotExponent();
         const int lightType = static_cast<int>(light->getLightType());
 
-        const GLint positionLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightPositions[" + lightIndex + "]").c_str());
-        const GLint colorLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightColors[" + lightIndex + "]").c_str());
-        const GLint intensityLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightIntensities[" + lightIndex + "]").c_str());
         const GLint typeLocation = glGetUniformLocation(
             shaderProgram.program, ("lightTypes[" + lightIndex + "]").c_str());
 
-        if (positionLocation != -1)
-            glUniform3fv(positionLocation, 1, glm::value_ptr(lightPosition));
-        if (colorLocation != -1)
-            glUniform3fv(colorLocation, 1, glm::value_ptr(lightColor));
-        if (intensityLocation != -1)
-            glUniform1f(intensityLocation, lightIntensity);
+        const GLint ambientLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightAmbients[" + lightIndex + "]").c_str());
+
+        const GLint diffuseLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightDiffuses[" + lightIndex + "]").c_str());
+
+        const GLint specularLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpeculars[" + lightIndex + "]").c_str());
+
+        const GLint positionLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightPositions[" + lightIndex + "]").c_str());
+
+        const GLint spotDirectionLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpotDirections[" + lightIndex + "]").c_str());
+
+        const GLint spotCutOffLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpotCutOffs[" + lightIndex + "]").c_str());
+
+        const GLint spotExponentLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpotExponents[" + lightIndex + "]").c_str());
+
         if (typeLocation != -1)
             glUniform1i(typeLocation, lightType);
+
+        if (ambientLocation != -1)
+            glUniform3fv(ambientLocation, 1, glm::value_ptr(lightAmbient));
+
+        if (diffuseLocation != -1)
+            glUniform3fv(diffuseLocation, 1, glm::value_ptr(lightDiffuse));
+
+        if (specularLocation != -1)
+            glUniform3fv(specularLocation, 1, glm::value_ptr(lightSpecular));
+
+        if (positionLocation != -1)
+            glUniform3fv(positionLocation, 1, glm::value_ptr(lightPosition));
+
+        if (spotDirectionLocation != -1)
+            glUniform3fv(spotDirectionLocation, 1, glm::value_ptr(lightSpotDirection));
+
+        if (spotCutOffLocation != -1)
+            glUniform3fv(spotCutOffLocation, 1, glm::value_ptr(lightSpotCutOff));
+
+        if (spotExponentLocation != -1)
+            glUniform1f(spotExponentLocation, lightSpotExponent);
     }
 }
 
-void collectSceneLights() {
-    sceneLightsCache.clear();
-    sceneLightsCache.reserve(objects.size());
+void setMaterialUniforms(const ShaderProgram& shaderProgram,
+                         const Material& material) {
+    if (shaderProgram.locations.diffuse != -1)
+        glUniform3fv(shaderProgram.locations.diffuse, 1, glm::value_ptr(material.diffuse));
+    if (shaderProgram.locations.specular != -1)
+        glUniform3fv(shaderProgram.locations.specular, 1, glm::value_ptr(material.specular));
+    if (shaderProgram.locations.ambient != -1)
+        glUniform3fv(shaderProgram.locations.ambient, 1, glm::value_ptr(material.ambient));
+    if (shaderProgram.locations.shininess != -1)
+        glUniform1f(shaderProgram.locations.shininess, material.shininess);
 
-    for (Object* object : objects)
-        collectLightsRecursive(object, sceneLightsCache);
+    /*
+    if (texture != 0) {
+        glUniform1i(shaderProgram.locations.useTexture, 1);
+        // glUniform1i(shaderProgram.texSamplerLocation, 0);
+        glActiveTexture(GL_TEXTURE0 + 0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+    }
+    else {
+        glUniform1i(shaderProgram.locations.useTexture, 0);
+    }*/
 }
 
 /**
- * \brief Draw all scene objects.
+ * \brief Draw all scene objects and update their uniforms
  */
 void drawScene(void) {
     glm::mat4 viewMatrix = camera.getViewMatrix();
@@ -156,6 +232,33 @@ void drawScene(void) {
         camera.getProjectionMatrix((float)gameState.windowWidth /
                                    (float)gameState.windowHeight);
 
+    glUseProgram(phongShaderProgram.program);
+
+    if (phongShaderProgram.locations.elapsedTime != -1)
+        glUniform1f(phongShaderProgram.locations.elapsedTime, elapsedTime);
+
+    if (phongShaderProgram.locations.cameraPosition != -1) {
+        const glm::vec3 cameraPosition = camera.getPosition();
+        glUniform3fv(phongShaderProgram.locations.cameraPosition,
+                     1, glm::value_ptr(cameraPosition));
+    }
+
+    // ambient
+    if (phongShaderProgram.locations.ambientColor != -1)
+        glUniform3fv(phongShaderProgram.locations.ambientColor,
+                     1, glm::value_ptr(gameState.ambientColor));
+
+    // updating light uniforms
+    setLightUniforms(phongShaderProgram, sceneLightsCache);
+
+    // updating material uniforms
+    setMaterialUniforms(phongShaderProgram, material);
+
+    // update time in the animated Mandelbrot shader
+    glUseProgram(mandelrotShaderProgram.program);
+    glUniform1f(mandelrotShaderProgram.locations.elapsedTime, elapsedTime);
+
+    // drawing of all objects
     for (Object* object : objects) {
         if (object != nullptr)
             object->draw(viewMatrix, projectionMatrix);
@@ -336,12 +439,9 @@ void timerCb(int) {
     
     // getting current time and time from last frame
     static float lastTime = 0.0f;
-    float elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
+    elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
     float deltaTime = elapsedTime - lastTime;
     lastTime = elapsedTime;
-
-    // update time in the animated Mandelbrot shader
-    glUniform1f(mandelrotShaderProgram.locations.elapsedTime, elapsedTime);
 
     // update the application state
     for (Object* object : objects) {
@@ -374,10 +474,24 @@ void initApplication() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
+    // 3 triangles shape
     objects.push_back(new SingleMesh(MODELS_PATH + (std::string)"shape.obj",
                                      &commonShaderProgram));
+    // square with mandelbrot set
+    objects.push_back(new Square(&mandelrotShaderProgram));
+
+    // floor mesh
+    SingleMesh *floor = new SingleMesh(MODELS_PATH + (std::string)"floor.obj",
+                                       &phongShaderProgram,
+                                       &material);
+    floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                              glm::vec3(0.0f, -1.0f, 0.0f)));
+    objects.push_back(floor);
+
+    // monkey shape
     SingleMesh *monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
-                                       &phongShaderProgram);
+                                       &phongShaderProgram,
+                                       &material);
     monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                               glm::vec3(-2.0f, 0.0f, 1.0f)) *
                                glm::rotate(glm::mat4(1.0f),
@@ -385,12 +499,17 @@ void initApplication() {
                                            glm::vec3(0.0f, 1.0f, 0.0f)));
     objects.push_back(monke);
 
-    Light* pointLight1 = new Light(1.0f, glm::vec3(1.0f), POINT_LIGHT);
+    // point light
+    Light* pointLight1 = new Light(POINT_LIGHT,
+                                   glm::vec3(0.1f),
+                                   glm::vec3(1.0f),
+                                   glm::vec3(1.0f),
+                                   glm::vec3(0.0f, 0.0f, -1.0f),
+                                   glm::vec3(1.0f),
+                                   1.0f);
     pointLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                    glm::vec3(-1.0f, 0.0f, 1.0f)));
+                                                    glm::vec3(0.0f, 0.0f, 1.0f)));
     objects.push_back(pointLight1);
-
-    objects.push_back(new Square(&mandelrotShaderProgram));
 
     // Initialize global transforms once, then upload all scene lights once.
     const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);
@@ -399,7 +518,6 @@ void initApplication() {
             object->update(0.0f, &sceneRootMatrix);
     }
     collectSceneLights();
-    uploadLightsToProgram(phongShaderProgram, sceneLightsCache);
 }
 
 /**

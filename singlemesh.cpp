@@ -1,7 +1,11 @@
 #include <iostream>
 #include "singlemesh.h"
 
-SingleMesh::SingleMesh(std::string modelFileName, ShaderProgram* shdrPrg) : RenderableObject(shdrPrg), initialized(false) {
+SingleMesh::SingleMesh(std::string modelFileName,
+    ShaderProgram* shdrPrg,
+    Material* mat)
+    : RenderableObject(shdrPrg, mat)
+    , initialized(false) {
     if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
         if (geometry == nullptr) {
             std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
@@ -42,6 +46,14 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
         glUniformMatrix4fv(shaderProgram->locations.PVMmatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
 
+        if (shaderProgram->locations.modelMatrix != -1)
+            glUniformMatrix4fv(shaderProgram->locations.modelMatrix, 1, GL_FALSE, glm::value_ptr(globalModelMatrix));
+
+        if (shaderProgram->locations.normalMatrix != -1) {
+            const glm::mat4 normalMatrix = glm::transpose(glm::inverse(globalModelMatrix));
+            glUniformMatrix4fv(shaderProgram->locations.normalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+        }
+
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawElements(GL_TRIANGLES, geometry->numTriangles * 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -62,7 +74,7 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     Assimp::Importer importer;
 
     // unitize object in size (scale the model to fit into (-1..1)^3)
-    importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
+    // importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
 
     // load asset from the file - you can play with various processing steps
     const aiScene* scn = importer.ReadFile(fileName.c_str(), 0

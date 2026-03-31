@@ -1,26 +1,22 @@
 #version 140
 
-const int MAX_SCENE_LIGHTS = 16;
-
 uniform mat4 PVM;
+uniform mat4 modelMatrix;
+uniform mat4 normalMatrix;
 uniform float elapsedTime;
-uniform int lightCount;
-uniform vec3 lightPositions[MAX_SCENE_LIGHTS];
-uniform vec3 lightColors[MAX_SCENE_LIGHTS];
-uniform float lightIntensities[MAX_SCENE_LIGHTS];
-uniform int lightTypes[MAX_SCENE_LIGHTS];
 
 in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
 
-out vec3 vPosition;
-out vec3 vNormal;
-out vec2 vTexCoord;
+out vec3 thePosition;
+out vec3 theNormal;
+out vec2 theTexCoord;
 
 void main() {
     gl_Position = PVM * vec4(position, 1.0);
-    vPosition = position;
-    vNormal = normalize(normal);
-    vTexCoord = texCoord;
+
+    thePosition = vec3(modelMatrix * vec4(position, 1.0));
+    theNormal = normalize(vec3(normalMatrix * vec4(normal, 0.0)));
+    theTexCoord = texCoord;
 }

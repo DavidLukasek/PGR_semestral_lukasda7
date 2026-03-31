@@ -19,19 +19,42 @@ typedef struct _ShaderProgram {
         GLint position;
         GLint normal;
         GLint texCoord;
-        // uniforms locations
+
+        // uniform matrices locations
         GLint PVMmatrix;
+        GLint modelMatrix;
+        GLint normalMatrix;
+
+        // uniform material locations
+        GLint diffuse;
+        GLint specular;
+        GLint ambient;
+        GLint shininess;
+
+        // uniform misc locations
         GLint elapsedTime;
-        GLint light;
+        GLint ambientColor;
+        GLint cameraPosition;
+        //GLint useTexture;
     } locations;
 
     _ShaderProgram() : program(0), initialized(false) {
         locations.position = -1;
         locations.normal = -1;
         locations.texCoord = -1;
+
         locations.PVMmatrix = -1;
+        locations.modelMatrix = -1;
+        locations.normalMatrix = -1;
+
+        locations.diffuse = -1;
+        locations.specular = -1;
+        locations.ambient = -1;
+        locations.shininess = -1;
+
         locations.elapsedTime = -1;
-        locations.light = -1;
+        locations.ambientColor = -1;
+        locations.cameraPosition = -1;
     }
 
 } ShaderProgram;
@@ -47,6 +70,14 @@ typedef struct _ObjectGeometry {
     unsigned int  numTriangles;         ///< number of triangles in the mesh
 } ObjectGeometry;
 
+typedef struct _Material {  // structure that describes currently used material
+    glm::vec3 ambient;      // ambient component
+    glm::vec3 diffuse;      // diffuse component
+    glm::vec3 specular;     // specular component
+    float     shininess;    // sharpness of specular reflection
+    //bool      useTexture;   // defines whether the texture is used or not
+} Material;
+
 /**
  * \brief Scene object that can be rendered using geometry and shader program.
  */
@@ -54,12 +85,15 @@ class RenderableObject : public Object {
 protected:
     ObjectGeometry* geometry;
     ShaderProgram* shaderProgram;
+    Material* material;
 
 public:
-    explicit RenderableObject(ShaderProgram* shdrPrg = nullptr)
+    explicit RenderableObject(ShaderProgram* shdrPrg = nullptr,
+                              Material* mat = nullptr)
         : Object()
         , geometry(nullptr)
-        , shaderProgram(shdrPrg) {
+        , shaderProgram(shdrPrg)
+        , material(mat) {
     }
     ~RenderableObject() override = default;
 };

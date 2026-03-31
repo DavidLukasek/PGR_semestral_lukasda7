@@ -5,6 +5,8 @@
 
 #define WINDOW_TITLE "PGR: Application lukasda7"
 
+#define MAX_SCENE_LIGHTS 16
+
 enum { KEY_W, KEY_A, KEY_S, KEY_D, KEY_Q, KEY_E, LMB, MMB, RMB, KEYS_COUNT };
 
 typedef struct _GameState {
@@ -13,4 +15,6 @@ public:
     int windowHeight = 1080;
 
     bool keyMap[KEYS_COUNT] = { false };
+
+    glm::vec3 ambientColor = glm::vec3(0.1f);
 } GameState;

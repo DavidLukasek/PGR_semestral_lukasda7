@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="data\models\square.cpp" />
+    <ClCompile Include="light.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="singlemesh.cpp" />
     <ClCompile Include="lukasda7.cpp" />
