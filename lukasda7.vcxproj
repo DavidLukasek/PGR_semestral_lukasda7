@@ -163,6 +163,7 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="data\models\square.h" />
+    <ClInclude Include="data\sceneGraph.h" />
     <ClInclude Include="gameState.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="object.h" />

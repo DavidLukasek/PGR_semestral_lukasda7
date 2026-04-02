@@ -4,27 +4,11 @@
 #include <vector>
 
 #include "camera.h"
-#include "data/models/square.h"
 #include "gameState.h"
 #include "light.h"
 #include "object.h"
 #include "pgr.h"
-#include "singlemesh.h"
-
-ObjectList objects;
-ShaderProgram commonShaderProgram;
-ShaderProgram mandelrotShaderProgram;
-ShaderProgram phongShaderProgram;
-
-Material material = {
-    glm::vec3(0.0f),                // ambient
-    glm::vec3(0.76f, 0.60f, 0.38f), // diffuse
-    glm::vec3(0.18f, 0.14f, 0.08f), // specular
-    0.3f                            // shininess
-};
-
-Camera camera;
-glm::vec2 cameraRotation = glm::vec2(0.0);
+#include "data/sceneGraph.h"
 
 int ogMouseX = -1;
 int ogMouseY = -1;
@@ -147,7 +131,7 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
         const glm::vec3 lightSpotDirection = glm::normalize(
                                                 glm::mat3(light->getGlobalModelMatrix())
                                                 * light->getSpotDirection());
-        const glm::vec3 lightSpotCutOff = light->getSpotCutOff();
+        const float lightSpotCutOff = light->getSpotCutOff();
         const float lightSpotExponent = light->getSpotExponent();
         const int lightType = static_cast<int>(light->getLightType());
 
@@ -194,34 +178,11 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
             glUniform3fv(spotDirectionLocation, 1, glm::value_ptr(lightSpotDirection));
 
         if (spotCutOffLocation != -1)
-            glUniform3fv(spotCutOffLocation, 1, glm::value_ptr(lightSpotCutOff));
+            glUniform1f(spotCutOffLocation, lightSpotCutOff);
 
         if (spotExponentLocation != -1)
             glUniform1f(spotExponentLocation, lightSpotExponent);
     }
-}
-
-void setMaterialUniforms(const ShaderProgram& shaderProgram,
-                         const Material& material) {
-    if (shaderProgram.locations.diffuse != -1)
-        glUniform3fv(shaderProgram.locations.diffuse, 1, glm::value_ptr(material.diffuse));
-    if (shaderProgram.locations.specular != -1)
-        glUniform3fv(shaderProgram.locations.specular, 1, glm::value_ptr(material.specular));
-    if (shaderProgram.locations.ambient != -1)
-        glUniform3fv(shaderProgram.locations.ambient, 1, glm::value_ptr(material.ambient));
-    if (shaderProgram.locations.shininess != -1)
-        glUniform1f(shaderProgram.locations.shininess, material.shininess);
-
-    /*
-    if (texture != 0) {
-        glUniform1i(shaderProgram.locations.useTexture, 1);
-        // glUniform1i(shaderProgram.texSamplerLocation, 0);
-        glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-    }
-    else {
-        glUniform1i(shaderProgram.locations.useTexture, 0);
-    }*/
 }
 
 /**
@@ -252,17 +213,15 @@ void drawScene(void) {
     // updating light uniforms
     setLightUniforms(phongShaderProgram, sceneLightsCache);
 
-    // updating material uniforms
-    setMaterialUniforms(phongShaderProgram, material);
-
     // update time in the animated Mandelbrot shader
     glUseProgram(mandelrotShaderProgram.program);
     glUniform1f(mandelrotShaderProgram.locations.elapsedTime, elapsedTime);
 
     // drawing of all objects
     for (Object* object : objects) {
-        if (object != nullptr)
+        if (object != nullptr) {
             object->draw(viewMatrix, projectionMatrix);
+        }
     }
 }
 
@@ -450,7 +409,7 @@ void timerCb(int) {
             object->update(elapsedTime, &sceneRootMatrix);
     }
     updateCamera(deltaTime);
-
+    
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);
 
@@ -475,42 +434,8 @@ void initApplication() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    // 3 triangles shape
-    objects.push_back(new SingleMesh(MODELS_PATH + (std::string)"shape.obj",
-                                     &commonShaderProgram));
-    // square with mandelbrot set
-    objects.push_back(new Square(&mandelrotShaderProgram));
-
-    // floor mesh
-    SingleMesh *floor = new SingleMesh(MODELS_PATH + (std::string)"floor.obj",
-                                       &phongShaderProgram,
-                                       &material);
-    floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(0.0f, -1.0f, 0.0f)));
-    objects.push_back(floor);
-
-    // monkey shape
-    SingleMesh *monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
-                                       &phongShaderProgram,
-                                       &material);
-    monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(-2.0f, 0.0f, 1.0f)) *
-                               glm::rotate(glm::mat4(1.0f),
-                                           glm::radians(90.0f),
-                                           glm::vec3(0.0f, 1.0f, 0.0f)));
-    objects.push_back(monke);
-
-    // point light
-    Light* pointLight1 = new Light(POINT_LIGHT,
-                                   glm::vec3(0.1f),
-                                   glm::vec3(1.0f),
-                                   glm::vec3(1.0f),
-                                   glm::vec3(0.0f, 0.0f, -1.0f),
-                                   glm::vec3(1.0f),
-                                   1.0f);
-    pointLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                    glm::vec3(0.0f, 0.0f, 1.0f)));
-    objects.push_back(pointLight1);
+    // method from "sceneGraph.h"
+    createObjects();
 
     // Initialize global transforms once, then upload all scene lights once.
     const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);

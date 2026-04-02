@@ -86,15 +86,36 @@ class RenderableObject : public Object {
 protected:
     ObjectGeometry* geometry;
     ShaderProgram* shaderProgram;
-    Material* material;
+    Material material;
+    bool hasMaterial;
+
+    void applyMaterialUniforms() const {
+        if ((shaderProgram == nullptr) || !hasMaterial)
+            return;
+
+        if (shaderProgram->locations.diffuse != -1)
+            glUniform3fv(shaderProgram->locations.diffuse, 1, glm::value_ptr(material.diffuse));
+
+        if (shaderProgram->locations.specular != -1)
+            glUniform3fv(shaderProgram->locations.specular, 1, glm::value_ptr(material.specular));
+
+        if (shaderProgram->locations.ambient != -1)
+            glUniform3fv(shaderProgram->locations.ambient, 1, glm::value_ptr(material.ambient));
+
+        if (shaderProgram->locations.shininess != -1)
+            glUniform1f(shaderProgram->locations.shininess, material.shininess);
+    }
 
 public:
     explicit RenderableObject(ShaderProgram* shdrPrg = nullptr,
-                              Material* mat = nullptr)
+                              const Material* mat = nullptr)
         : Object()
         , geometry(nullptr)
         , shaderProgram(shdrPrg)
-        , material(mat) {
+        , material{glm::vec3(0.0f), glm::vec3(0.8f), glm::vec3(0.0f), 1.0f}
+        , hasMaterial(mat != nullptr) {
+        if (mat != nullptr)
+            material = *mat;
     }
     ~RenderableObject() override = default;
 };

@@ -12,7 +12,7 @@ public:
         glm::vec3 diffuse = glm::vec3(1.0f),
         glm::vec3 specular = glm::vec3(1.0f),
         glm::vec3 spotDirection = glm::vec3(0.0f, 0.0f, -1.0f),
-        glm::vec3 spotCutOff = glm::vec3(1.0f),
+        float spotCutOff = 1.0f,
         float spotExponent = 1.0f
     );
     ~Light() override = default;
@@ -22,7 +22,7 @@ public:
     const glm::vec3& getDiffuse() const;
     const glm::vec3& getSpecular() const;
     const glm::vec3& getSpotDirection() const;
-    const glm::vec3& getSpotCutOff() const;
+    float getSpotCutOff() const;
     float getSpotExponent() const;
 
 private:
@@ -31,6 +31,6 @@ private:
     glm::vec3 diffuse;
     glm::vec3 specular;
     glm::vec3 spotDirection;
-    glm::vec3 spotCutOff;
+    float spotCutOff;
     float spotExponent;
 };

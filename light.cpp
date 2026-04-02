@@ -6,7 +6,7 @@ Light::Light(
     glm::vec3 diffuse,
     glm::vec3 specular,
     glm::vec3 spotDirection,
-    glm::vec3 spotCutOff,
+    float spotCutOff,
     float spotExponent
 )
     : Object()
@@ -39,7 +39,7 @@ const glm::vec3& Light::getSpotDirection() const {
     return spotDirection;
 }
 
-const glm::vec3& Light::getSpotCutOff() const {
+float Light::getSpotCutOff() const {
     return spotCutOff;
 }
 

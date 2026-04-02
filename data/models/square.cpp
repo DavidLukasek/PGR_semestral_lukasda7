@@ -32,6 +32,7 @@ Square::~Square() {
 void Square::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
     if (initialized && (shaderProgram != nullptr)) {
         glUseProgram(shaderProgram->program);
+        applyMaterialUniforms();
 
         const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
         glUniformMatrix4fv(shaderProgram->locations.PVMmatrix,
