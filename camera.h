@@ -7,6 +7,9 @@
 class Camera : public Object {
 public:
     static constexpr float MOVE_SPEED = 5.0f;
+    static constexpr float FOV_SPEED = 100.0f;
+    static constexpr float MIN_FOV = 10.0f;
+    static constexpr float MAX_FOV = 170.0f;
 
     Camera(
         glm::vec3 initialPosition = glm::vec3(0.0f, 0.0f, 3.0f),
@@ -28,7 +31,7 @@ public:
 
     void rotate(float yawOffsetDegrees, float pitchOffsetDegrees);
 
-    void setFieldOfView(float newFieldOfViewDegrees);
+    void changeFieldOfView(float delta);
 
     const glm::vec3& getFront() const;
     const glm::vec3& getUp() const;

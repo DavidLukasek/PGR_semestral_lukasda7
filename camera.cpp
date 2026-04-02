@@ -55,8 +55,9 @@ void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
     updateVectors();
 }
 
-void Camera::setFieldOfView(float newFieldOfViewDegrees) {
-    fieldOfViewDegrees = glm::clamp(newFieldOfViewDegrees, 1.0f, 240.0f);
+void Camera::changeFieldOfView(float delta) {
+    fieldOfViewDegrees = glm::clamp(fieldOfViewDegrees + FOV_SPEED * delta,
+                                    MIN_FOV, MAX_FOV);
 }
 
 const glm::vec3& Camera::getFront() const {

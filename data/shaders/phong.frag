@@ -1,5 +1,7 @@
 #version 140
 
+// -------------------------------- Macros ------------------------------------
+
 // light types for better distinction
 #define POINT_LIGHT 0
 #define SPOT_LIGHT 1
@@ -13,17 +15,19 @@ uniform float elapsedTime;      // elapsed application time
 uniform vec3  ambientColor;     // ambient color
 uniform vec3  cameraPosition;   // position of the camera
 
+uniform mat4  PVM;              // Projection * View * Model -> model to clip coords
+uniform mat4  viewMatrix;       // view matrix
+uniform mat4  modelMatrix;      // model matrix
+uniform mat4  normalMatrix;     // inverse transposed model matrix
+
+// current material parameters
 uniform vec3  matDiffuse;
 uniform vec3  matSpecular;
 uniform vec3  matAmbient;
 uniform float matShininess;
 
-uniform mat4  PVMmatrix;        // Projection * View * Model  --> model to clip coordinates
-uniform mat4  viewMatrix;       // view matrix
-uniform mat4  modelMatrix;      // model matrix
-uniform mat4  normalMatrix;     // inverse transposed model matrix
-
-// light-related uniforms
+// all scene lights parameters
+uniform int   lightCount;
 uniform int   lightTypes[MAX_SCENE_LIGHTS];
 uniform vec3  lightAmbients[MAX_SCENE_LIGHTS];
 uniform vec3  lightDiffuses[MAX_SCENE_LIGHTS];
@@ -34,13 +38,15 @@ uniform float lightSpotCutOffs[MAX_SCENE_LIGHTS];
 uniform float lightSpotExponents[MAX_SCENE_LIGHTS];
 
 
-// ------------------------- Interpolated variables ---------------------------
+// ------------------------------- Attributes ---------------------------------
 
 in vec3 worldPosition;
 in vec3 worldNormal;
 in vec2 theTexCoord;
 
 out vec4 fragmentColor;
+
+// ------------------------------- Functions ----------------------------------
 
 vec3 getColorFromLight(vec3 position, vec3 normal, int index) {
     vec3 ret = vec3(0.0);
@@ -75,6 +81,9 @@ vec3 getColorFromLight(vec3 position, vec3 normal, int index) {
                        matSpecular;
             break;
         case SPOT_LIGHT:
+            if (spotCos < lightSpotCutOffs[index])
+                return vec3(0.0);
+
             diffuse = NdotL *
                       spotEffect *
                       lightDiffuses[index] *
@@ -83,11 +92,6 @@ vec3 getColorFromLight(vec3 position, vec3 normal, int index) {
                        pow(cosB, matShininess) *
                        lightSpeculars[index] *
                        matSpecular;
-
-            if (spotCos < lightSpotCutOffs[index]) {
-                diffuse = vec3(0.0);
-                specular = vec3(0.0);
-            }
             break;
         case DIRECTION_LIGHT:
             break;
@@ -110,7 +114,7 @@ void main() {
     // initialize color with ambient light
     vec3 color = ambientColor;
 
-    for (int i = 0; i < MAX_SCENE_LIGHTS; i++) {
+    for (int i = 0; i < lightCount; i++) {
         color += getColorFromLight(position, normal, i);
     }
 
