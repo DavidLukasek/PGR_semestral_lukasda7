@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "singlemesh.h"
 
 SingleMesh::SingleMesh(std::string modelFileName,
@@ -29,8 +30,10 @@ SingleMesh::~SingleMesh() {
     if (geometry != nullptr) {
         glDeleteVertexArrays(1, &(geometry->vertexArrayObject));
         glDeleteBuffers(1, &(geometry->normalBufferObject));
+        glDeleteBuffers(1, &(geometry->texCoordBufferObject));
         glDeleteBuffers(1, &(geometry->elementBufferObject));
         glDeleteBuffers(1, &(geometry->vertexBufferObject));
+        glDeleteTextures(1, &(geometry->diffuseTextureObject));
 
         delete geometry;
         geometry = nullptr;
@@ -60,9 +63,21 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glUniformMatrix4fv(shaderProgram->locations.normalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         }
 
+        if ((geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0)) {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, geometry->diffuseTextureObject);
+
+            const GLint diffuseTextureLocation = glGetUniformLocation(shaderProgram->program, "diffuseTex");
+            if (diffuseTextureLocation != -1)
+                glUniform1i(diffuseTextureLocation, 0);
+        }
+
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawElements(GL_TRIANGLES, geometry->numTriangles * 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
+        if ((geometry != nullptr) && geometry->hasTexture)
+            glBindTexture(GL_TEXTURE_2D, 0);
     }
     else {
         std::cerr << "SingleMesh::draw(): Can't draw, mesh not initialized properly!" << std::endl;
@@ -107,6 +122,9 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     const aiMesh* mesh = scn->mMeshes[0];
 
     *geometry = new ObjectGeometry;
+    (*geometry)->texCoordBufferObject = 0;
+    (*geometry)->diffuseTextureObject = 0;
+    (*geometry)->hasTexture = false;
 
     // vertex buffer object, store all vertex positions
     glGenBuffers(1, &((*geometry)->vertexBufferObject));
@@ -118,6 +136,24 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     glGenBuffers(1, &((*geometry)->normalBufferObject));
     glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->normalBufferObject);
     glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(float) * mesh->mNumVertices, mesh->mNormals, GL_STATIC_DRAW);
+
+    // texture coordinate buffer object, store all UVs (if available)
+    if (mesh->HasTextureCoords(0)) {
+        std::vector<float> texCoords;
+        texCoords.reserve(mesh->mNumVertices * 2);
+
+        for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+            texCoords.push_back(mesh->mTextureCoords[0][i].x);
+            texCoords.push_back(mesh->mTextureCoords[0][i].y);
+        }
+
+        glGenBuffers(1, &((*geometry)->texCoordBufferObject));
+        glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->texCoordBufferObject);
+        glBufferData(GL_ARRAY_BUFFER,
+                     2 * sizeof(float) * mesh->mNumVertices,
+                     texCoords.data(),
+                     GL_STATIC_DRAW);
+    }
 
     // copy all mesh faces into one big array (assimp supports faces with ordinary number of vertices, we use only 3 -> triangles)
     unsigned int* indices = new unsigned int[mesh->mNumFaces * 3];
@@ -146,6 +182,22 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     if ((retValue = aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &color)) != AI_SUCCESS)
         color = aiColor4D(0.0f, 0.0f, 0.0f, 0.0f);
 
+    aiString texturePath;
+    if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == AI_SUCCESS) {
+        std::string resolvedTexturePath = texturePath.C_Str();
+        const bool isAbsolutePath = (resolvedTexturePath.size() > 1 && resolvedTexturePath[1] == ':')
+                                    || (!resolvedTexturePath.empty() && (resolvedTexturePath[0] == '/' || resolvedTexturePath[0] == '\\'));
+
+        if (!isAbsolutePath) {
+            const size_t lastSlash = fileName.find_last_of("/\\");
+            const std::string modelDir = (lastSlash == std::string::npos) ? "" : fileName.substr(0, lastSlash + 1);
+            resolvedTexturePath = modelDir + resolvedTexturePath;
+        }
+
+        (*geometry)->diffuseTextureObject = pgr::createTexture(resolvedTexturePath.c_str());
+        (*geometry)->hasTexture = ((*geometry)->diffuseTextureObject != 0) && mesh->HasTextureCoords(0);
+    }
+
     glGenVertexArrays(1, &((*geometry)->vertexArrayObject));
     glBindVertexArray((*geometry)->vertexArrayObject);
 
@@ -166,6 +218,13 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
             glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->normalBufferObject);
             glEnableVertexAttribArray(shader->locations.normal);
             glVertexAttribPointer(shader->locations.normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        }
+
+        // texture coordinates
+        if ((shader->locations.texCoord != -1) && mesh->HasTextureCoords(0) && ((*geometry)->texCoordBufferObject != 0)) {
+            glBindBuffer(GL_ARRAY_BUFFER, (*geometry)->texCoordBufferObject);
+            glEnableVertexAttribArray(shader->locations.texCoord);
+            glVertexAttribPointer(shader->locations.texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
         }
 
         CHECK_GL_ERROR();

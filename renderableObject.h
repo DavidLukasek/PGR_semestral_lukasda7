@@ -67,7 +67,10 @@ typedef struct _ObjectGeometry {
     GLuint        vertexBufferObject;   ///< identifier for the vertex buffer object
     GLuint        normalBufferObject;   ///< identifier for the normal buffer object
     GLuint        elementBufferObject;  ///< identifier for the element buffer object
+    GLuint        texCoordBufferObject; ///< identifier for the texture coordinate buffer object
     GLuint        vertexArrayObject;    ///< identifier for the vertex array object
+    GLuint        diffuseTextureObject; ///< identifier for the diffuse texture object
+    bool          hasTexture;           ///< whether has texture coordinates and texture assigned
     unsigned int  numTriangles;         ///< number of triangles in the mesh
 } ObjectGeometry;
 

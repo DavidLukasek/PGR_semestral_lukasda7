@@ -27,5 +27,5 @@ public:
 
     bool keyMap[KEYS_COUNT] = { false };
 
-    glm::vec3 ambientColor = glm::vec3(0.1f);
+    glm::vec3 ambientColor = glm::vec3(0.05f);
 } GameState;

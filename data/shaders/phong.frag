@@ -20,6 +20,8 @@ uniform mat4  viewMatrix;       // view matrix
 uniform mat4  modelMatrix;      // model matrix
 uniform mat4  normalMatrix;     // inverse transposed model matrix
 
+uniform sampler2D diffuseTex;
+
 // current material parameters
 uniform vec3  matDiffuse;
 uniform vec3  matSpecular;
@@ -48,7 +50,7 @@ out vec4 fragmentColor;
 
 // ------------------------------- Functions ----------------------------------
 
-vec3 getColorFromLight(vec3 position, vec3 normal, int index) {
+vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
     vec3 ret = vec3(0.0);
 
     vec3 lightVec = lightPositions[index] - position;
@@ -75,7 +77,8 @@ vec3 getColorFromLight(vec3 position, vec3 normal, int index) {
         case POINT_LIGHT:
             diffuse = NdotL *
                       lightDiffuses[index] *
-                      matDiffuse;
+                      matDiffuse *
+                      albedo;
             specular = pow(cosB, matShininess) *
                        lightSpeculars[index] *
                        matSpecular;
@@ -114,8 +117,11 @@ void main() {
     // initialize color with ambient light
     vec3 color = ambientColor;
 
+    // diffuse texture color
+    vec3 albedo = texture(diffuseTex, theTexCoord).rgb;
+
     for (int i = 0; i < lightCount; i++) {
-        color += getColorFromLight(position, normal, i);
+        color += getColorFromLight(albedo, position, normal, i);
     }
 
     // color = worldNormal;

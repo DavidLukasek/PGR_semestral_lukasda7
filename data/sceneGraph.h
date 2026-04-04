@@ -20,7 +20,7 @@ Material material1 = {
 
 Material material2 = {
     glm::vec3(0.0f),                // ambient
-    glm::vec3(0.73f, 0.30f, 0.85f), // diffuse
+    glm::vec3(1.0f),                // diffuse
     glm::vec3(0.23f, 0.20f, 0.11f), // specular
     10.0f                           // shininess
 };
@@ -40,15 +40,15 @@ void createObjects() {
                                        &phongShaderProgram,
                                        &material1);
     floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(0.0f, -1.0f, 0.0f)));
+                                              glm::vec3(0.0f, -1.0f, 2.0f)));
     objects.push_back(floor);
 
-    // monkey shape
+    // Susanne
     SingleMesh* monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
                                        &phongShaderProgram,
                                        &material2);
     monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(-2.0f, 0.0f, 1.0f)) *
+                                              glm::vec3(-2.0f, 0.0f, 2.0f)) *
                                glm::rotate(glm::mat4(1.0f),
                                            glm::radians(90.0f),
                                            glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -60,39 +60,42 @@ void createObjects() {
                                    glm::vec3(1.0f),     // diffuse
                                    glm::vec3(1.0f));    // specular
     pointLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                     glm::vec3(-1.0f, 0.0f, -1.0f)));
+                                     glm::vec3(-1.5f, 0.0f, 3.5f)));
     objects.push_back(pointLight1);
 
-    Light* spotLight1 = new Light(SPOT_LIGHT,           // light type
-                                   glm::vec3(0.0f),     // ambient
-                                   glm::vec3(1.0f, 0.0f, 0.0f),     // diffuse
-                                   glm::vec3(1.0f, 0.0f, 0.0f),     // specular
-                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
-                                   cos(glm::radians(45.0f)),     // spot cutoff
-                                   5.0f);               // spot exponent
+    // spot light 1
+    Light* spotLight1 = new Light(SPOT_LIGHT,                   // light type
+                                  glm::vec3(0.0f),              // ambient
+                                  glm::vec3(1.0f, 0.0f, 0.0f),  // diffuse
+                                  glm::vec3(1.0f, 0.0f, 0.0f),  // specular
+                                  glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
+                                  cos(glm::radians(45.0f)),     // spot cutoff
+                                  5.0f);                        // spot exponent
     spotLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                     glm::vec3(0.0f, 0.0f, 1.0f)));
+                                    glm::vec3(0.0f, 0.0f, 1.0f)));
     objects.push_back(spotLight1);
 
-    Light* spotLight2 = new Light(SPOT_LIGHT,           // light type
-        glm::vec3(0.0f),     // ambient
-        glm::vec3(0.0f, 1.0f, 0.0f),     // diffuse
-        glm::vec3(0.0f, 1.0f, 0.0f),     // specular
-        glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
-        cos(glm::radians(45.0f)),     // spot cutoff
-        5.0f);               // spot exponent
+    // spot light 2
+    Light* spotLight2 = new Light(SPOT_LIGHT,                   // light type
+                                  glm::vec3(0.0f),              // ambient
+                                  glm::vec3(0.0f, 1.0f, 0.0f),  // diffuse
+                                  glm::vec3(0.0f, 1.0f, 0.0f),  // specular
+                                  glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
+                                  cos(glm::radians(45.0f)),     // spot cutoff
+                                  5.0f);                        // spot exponent
     spotLight2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-        glm::vec3(0.5f, 0.0f, 1.5f)));
+                                    glm::vec3(0.5f, 0.0f, 1.5f)));
     objects.push_back(spotLight2);
 
-    Light* spotLight3 = new Light(SPOT_LIGHT,           // light type
-        glm::vec3(0.0f),     // ambient
-        glm::vec3(0.0f, 0.0f, 1.0f),     // diffuse
-        glm::vec3(0.0f, 0.0f, 1.0f),     // specular
-        glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
-        cos(glm::radians(45.0f)),     // spot cutoff
-        1.0f);               // spot exponent
+    // spot light 3
+    Light* spotLight3 = new Light(SPOT_LIGHT,                   // light type
+                                  glm::vec3(0.0f),              // ambient
+                                  glm::vec3(0.0f, 0.0f, 1.0f),  // diffuse
+                                  glm::vec3(0.0f, 0.0f, 1.0f),  // specular
+                                  glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
+                                  cos(glm::radians(45.0f)),     // spot cutoff
+                                  1.0f);                        // spot exponent
     spotLight3->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-        glm::vec3(-0.5f, 0.0f, 1.5f)));
+                                    glm::vec3(-0.5f, 0.0f, 1.5f)));
     objects.push_back(spotLight3);
 }
