@@ -235,6 +235,9 @@ void updateCamera(float deltaTime) {
     camera.moveUp((gameState.keyMap[KEY_E]) * deltaTime);
     camera.moveDown((gameState.keyMap[KEY_Q]) * deltaTime);
 
+    // toggling camera sprint
+    camera.setSprinting(gameState.keyMap[KEY_SHIFT]);
+
     // camera rotation is handled directly in mouseMotionCb() callback
 
     // camera FOV change
@@ -296,6 +299,12 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = true; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
     }
+
+    // shift detection for sprinting
+    int modifiers = glutGetModifiers();
+    if (modifiers & GLUT_ACTIVE_SHIFT) {
+        gameState.keyMap[KEY_SHIFT] = true;
+    }
 }
 
 // Called whenever a key on the keyboard was released. The key
@@ -314,6 +323,11 @@ void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
         case 'd': case 'D': gameState.keyMap[KEY_D] = false; break;
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = false; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = false; break;
+    }
+
+    int modifiers = glutGetModifiers();
+    if (!(modifiers & GLUT_ACTIVE_SHIFT)) {
+        gameState.keyMap[KEY_SHIFT] = false;
     }
 }
 

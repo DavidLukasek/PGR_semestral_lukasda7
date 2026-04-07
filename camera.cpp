@@ -4,14 +4,16 @@ Camera::Camera(
     glm::vec3 initialPosition,
     float fieldOfViewDegrees,
     float nearPlane,
-    float farPlane
+    float farPlane,
+    bool isSprinting
 )
     : worldUp(0.0f, 1.0f, 0.0f)
     , yaw(-90.0f)
     , pitch(0.0f)
     , fieldOfViewDegrees(fieldOfViewDegrees)
     , nearPlane(nearPlane)
-    , farPlane(farPlane) {
+    , farPlane(farPlane)
+    , isSprinting(isSprinting) {
     setPosition(initialPosition);
     updateVectors();
 }
@@ -26,27 +28,33 @@ glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
 }
 
 void Camera::moveForward(float distance) {
-    translate(front * distance * MOVE_SPEED);
+    float speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+    translate(front * distance * speed);
 }
 
 void Camera::moveBackward(float distance) {
-    translate(-front * distance * MOVE_SPEED);
+    float speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+    translate(-front * distance * speed);
 }
 
 void Camera::moveRight(float distance) {
-    translate(right * distance * MOVE_SPEED);
+    float speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+    translate(right * distance * speed);
 }
 
 void Camera::moveLeft(float distance) {
-    translate(-right * distance * MOVE_SPEED);
+    float speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+    translate(-right * distance * speed);
 }
 
 void Camera::moveUp(float distance) {
-    translate(worldUp * distance * MOVE_SPEED);
+    float speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+    translate(worldUp * distance * speed);
 }
 
 void Camera::moveDown(float distance) {
-    translate(-worldUp * distance * MOVE_SPEED);
+    float speed = isSprinting ? SPRINT_SPEED : MOVE_SPEED;
+    translate(-worldUp * distance * speed);
 }
 
 void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
@@ -58,6 +66,10 @@ void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
 void Camera::changeFieldOfView(float delta) {
     fieldOfViewDegrees = glm::clamp(fieldOfViewDegrees + FOV_SPEED * delta,
                                     MIN_FOV, MAX_FOV);
+}
+
+void Camera::setSprinting(bool value) {
+    isSprinting = value;
 }
 
 const glm::vec3& Camera::getFront() const {

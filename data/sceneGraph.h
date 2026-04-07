@@ -15,14 +15,14 @@ Material material1 = {
     glm::vec3(0.0f),                // ambient
     glm::vec3(1.0f),                // diffuse
     glm::vec3(1.0f),                // specular
-    10.0f                           // shininess
+    1.0f                            // shininess
 };
 
 Material material2 = {
     glm::vec3(0.0f),                // ambient
     glm::vec3(1.0f),                // diffuse
     glm::vec3(0.23f, 0.20f, 0.11f), // specular
-    10.0f                           // shininess
+    2.0f                            // shininess
 };
 
 Camera camera;
@@ -70,7 +70,7 @@ void createObjects() {
                                   glm::vec3(1.0f, 0.0f, 0.0f),  // specular
                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
                                   cos(glm::radians(45.0f)),     // spot cutoff
-                                  5.0f);                        // spot exponent
+                                  8.0f);                        // spot exponent
     spotLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                     glm::vec3(0.0f, 0.0f, 1.0f)));
     objects.push_back(spotLight1);
@@ -82,9 +82,9 @@ void createObjects() {
                                   glm::vec3(0.0f, 1.0f, 0.0f),  // specular
                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
                                   cos(glm::radians(45.0f)),     // spot cutoff
-                                  5.0f);                        // spot exponent
+                                  8.0f);                        // spot exponent
     spotLight2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                    glm::vec3(0.5f, 0.0f, 1.5f)));
+                                    glm::vec3(0.4f, 0.0f, 1.5f)));
     objects.push_back(spotLight2);
 
     // spot light 3
@@ -94,8 +94,8 @@ void createObjects() {
                                   glm::vec3(0.0f, 0.0f, 1.0f),  // specular
                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
                                   cos(glm::radians(45.0f)),     // spot cutoff
-                                  1.0f);                        // spot exponent
+                                  8.0f);                        // spot exponent
     spotLight3->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                    glm::vec3(-0.5f, 0.0f, 1.5f)));
+                                    glm::vec3(-0.4f, 0.0f, 1.5f)));
     objects.push_back(spotLight3);
 }

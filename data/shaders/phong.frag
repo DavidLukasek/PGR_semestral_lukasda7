@@ -23,10 +23,10 @@ uniform mat4  normalMatrix;     // inverse transposed model matrix
 uniform sampler2D diffuseTex;
 
 // current material parameters
-uniform vec3  matDiffuse;
-uniform vec3  matSpecular;
-uniform vec3  matAmbient;
-uniform float matShininess;
+uniform vec3  matDiffuse;       // diffuse parameter of the material
+uniform vec3  matSpecular;      // specular parameter of the material
+uniform vec3  matAmbient;       // ambient parameter of the material
+uniform float matShininess;     // shininess parameter of the material
 
 // all scene lights parameters
 uniform int   lightCount;
@@ -66,7 +66,7 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
     float spotEffect = pow(max(spotCos, 0.0), lightSpotExponents[index]);
     float cosB = max(dot(R, V), 0.0);
 
-    vec3 ambient = lightAmbients[index] * matAmbient;
+    vec3 ambient = lightAmbients[index] * matAmbient * albedo;
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
 
@@ -85,12 +85,13 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
             break;
         case SPOT_LIGHT:
             if (spotCos < lightSpotCutOffs[index])
-                return vec3(0.0);
+                return vec3(lightAmbients[index]);
 
             diffuse = NdotL *
                       spotEffect *
                       lightDiffuses[index] *
-                      matDiffuse;
+                      matDiffuse *
+                      albedo;
             specular = spotEffect *
                        pow(cosB, matShininess) *
                        lightSpeculars[index] *

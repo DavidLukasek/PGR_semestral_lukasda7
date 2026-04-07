@@ -10,7 +10,7 @@
 #define MAX_SCENE_LIGHTS 16
 
 enum { KEY_W, KEY_A, KEY_S, KEY_D,
-       KEY_Q, KEY_E, KEY_ESC,
+       KEY_Q, KEY_E, KEY_ESC, KEY_SHIFT,
        KEY_ARROW_UP, KEY_ARROW_DOWN,
        LMB, MMB, RMB, KEYS_COUNT };
 
