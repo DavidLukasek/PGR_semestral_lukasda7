@@ -8,6 +8,7 @@
 ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
+ShaderProgram rocketFlameShaderProgram;
 
 ObjectList objects;
 std::vector<Light*> sceneLightsCache;
@@ -29,6 +30,13 @@ Material material2 = {
     glm::vec3(1.0f),                // diffuse
     glm::vec3(0.23f, 0.20f, 0.11f), // specular
     2.0f                            // shininess
+};
+
+Material material3 = {
+    glm::vec3(1.0f),                // ambient
+    glm::vec3(1.0f),                // diffuse
+    glm::vec3(0.23f, 0.20f, 0.11f), // specular
+    0.0f                            // shininess
 };
 
 void createObjects() {
@@ -126,4 +134,14 @@ void createObjects() {
                                          glm::vec3(1.0f),               // specular
                                          glm::vec3(0.0f, -1.0f, 0.2f)); // light direction
     //objects.push_back(directionalLight1);
+
+    // ------------------------------------------------------------------------
+
+    // rocket flame
+    SingleMesh* rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
+                                              &rocketFlameShaderProgram,
+                                              &material3);
+    rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     glm::vec3(0.0f, -1.0f, 1.2f)));
+    objects.push_back(rocketFlame1);
 }

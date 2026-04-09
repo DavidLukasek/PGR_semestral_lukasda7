@@ -7,7 +7,7 @@
 #define SPOT_LIGHT 1
 #define DIRECTION_LIGHT 2
 
-#define MAX_SCENE_LIGHTS 16
+#define MAX_SCENE_LIGHTS 8
 
 // ------------------------------- Uniforms -----------------------------------
 

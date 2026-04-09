@@ -175,6 +175,8 @@
     <None Include="data\shaders\mandelbrot.frag" />
     <None Include="data\shaders\phong.frag" />
     <None Include="data\shaders\phong.vert" />
+    <None Include="data\shaders\rocketFlame.frag" />
+    <None Include="data\shaders\rocketFlame.vert" />
     <None Include="data\shaders\simple-fs.glsl" />
     <None Include="data\shaders\simple-vs.glsl" />
   </ItemGroup>

@@ -46,5 +46,11 @@
     <None Include="data\shaders\phong.frag">
       <Filter>data\shaders</Filter>
     </None>
+    <None Include="data\shaders\rocketFlame.frag">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\shaders\rocketFlame.vert">
+      <Filter>data\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

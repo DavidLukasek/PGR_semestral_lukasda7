@@ -67,6 +67,7 @@ void loadShaderPrograms()
     commonShaderProgram = loadShaderProgram("simple-vs.glsl", "simple-fs.glsl");
     mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
+    rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
 }
 
 /**
@@ -77,6 +78,7 @@ void cleanupShaderPrograms(void) {
     pgr::deleteProgramAndShaders(commonShaderProgram.program);
     pgr::deleteProgramAndShaders(mandelrotShaderProgram.program);
     pgr::deleteProgramAndShaders(phongShaderProgram.program);
+    pgr::deleteProgramAndShaders(rocketFlameShaderProgram.program);
 }
 
 void collectLightsRecursive(Object* object, std::vector<Light*>& outLights) {
@@ -214,6 +216,10 @@ void drawScene(void) {
     // update time in the animated Mandelbrot shader
     glUseProgram(mandelrotShaderProgram.program);
     glUniform1f(mandelrotShaderProgram.locations.elapsedTime, gameState.elapsedTime);
+
+    // update time in the animated rocket flame shader
+    glUseProgram(rocketFlameShaderProgram.program);
+    glUniform1f(rocketFlameShaderProgram.locations.elapsedTime, gameState.elapsedTime);
 
     // drawing of all objects
     for (Object* object : objects) {
@@ -453,7 +459,8 @@ void initApplication() {
     // enable depth test and backface culling
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // method from "sceneGraph.h"
     createObjects();
