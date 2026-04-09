@@ -10,7 +10,7 @@ public:
     static constexpr float SPRINT_SPEED = 10.0f;
     static constexpr float FOV_SPEED = 100.0f;
     static constexpr float MIN_FOV = 10.0f;
-    static constexpr float MAX_FOV = 3600.0f;
+    static constexpr float MAX_FOV = 170.0f;
 
     Camera(
         glm::vec3 initialPosition = glm::vec3(0.0f, 0.0f, 3.0f),

@@ -10,16 +10,6 @@
 #include "pgr.h"
 #include "data/sceneGraph.h"
 
-int ogMouseX = -1;
-int ogMouseY = -1;
-const float mouseSensitivity = 0.25f;
-
-GameState gameState;
-
-float elapsedTime = 0.0f;
-
-std::vector<Light*> sceneLightsCache;
-
 // ############################################################################
 //                               OpenGL Stuff
 // ############################################################################
@@ -134,6 +124,7 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
                                                 * light->getSpotDirection());
         const float lightSpotCutOff = light->getSpotCutOff();
         const float lightSpotExponent = light->getSpotExponent();
+        const float lightIntensity = light->getIntensity();
         const int lightType = static_cast<int>(light->getLightType());
 
         const GLint typeLocation = glGetUniformLocation(
@@ -160,6 +151,9 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
         const GLint spotExponentLocation = glGetUniformLocation(
             shaderProgram.program, ("lightSpotExponents[" + lightIndex + "]").c_str());
 
+        const GLint intensityLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightIntensities[" + lightIndex + "]").c_str());
+
         if (typeLocation != -1)
             glUniform1i(typeLocation, lightType);
 
@@ -183,6 +177,9 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
 
         if (spotExponentLocation != -1)
             glUniform1f(spotExponentLocation, lightSpotExponent);
+
+        if (intensityLocation != -1)
+            glUniform1f(intensityLocation, lightIntensity);
     }
 }
 
@@ -198,7 +195,7 @@ void drawScene(void) {
     glUseProgram(phongShaderProgram.program);
 
     if (phongShaderProgram.locations.elapsedTime != -1)
-        glUniform1f(phongShaderProgram.locations.elapsedTime, elapsedTime);
+        glUniform1f(phongShaderProgram.locations.elapsedTime, gameState.elapsedTime);
 
     if (phongShaderProgram.locations.cameraPosition != -1) {
         const glm::vec3 cameraPosition = camera.getPosition();
@@ -216,7 +213,7 @@ void drawScene(void) {
 
     // update time in the animated Mandelbrot shader
     glUseProgram(mandelrotShaderProgram.program);
-    glUniform1f(mandelrotShaderProgram.locations.elapsedTime, elapsedTime);
+    glUniform1f(mandelrotShaderProgram.locations.elapsedTime, gameState.elapsedTime);
 
     // drawing of all objects
     for (Object* object : objects) {
@@ -227,6 +224,9 @@ void drawScene(void) {
 }
 
 void updateCamera(float deltaTime) {
+    // toggling camera sprint
+    camera.setSprinting(gameState.keyMap[KEY_SHIFT]);
+
     // camera movement
     camera.moveForward((gameState.keyMap[KEY_W]) * deltaTime);
     camera.moveBackward((gameState.keyMap[KEY_S]) * deltaTime);
@@ -234,9 +234,6 @@ void updateCamera(float deltaTime) {
     camera.moveLeft((gameState.keyMap[KEY_A]) * deltaTime);
     camera.moveUp((gameState.keyMap[KEY_E]) * deltaTime);
     camera.moveDown((gameState.keyMap[KEY_Q]) * deltaTime);
-
-    // toggling camera sprint
-    camera.setSprinting(gameState.keyMap[KEY_SHIFT]);
 
     // camera rotation is handled directly in mouseMotionCb() callback
 
@@ -300,11 +297,8 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
     }
 
-    // shift detection for sprinting
-    int modifiers = glutGetModifiers();
-    if (modifiers & GLUT_ACTIVE_SHIFT) {
-        gameState.keyMap[KEY_SHIFT] = true;
-    }
+    // keep SHIFT state in sync with current modifiers
+    gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
 // Called whenever a key on the keyboard was released. The key
@@ -325,10 +319,7 @@ void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
         case 'e': case 'E': gameState.keyMap[KEY_E] = false; break;
     }
 
-    int modifiers = glutGetModifiers();
-    if (!(modifiers & GLUT_ACTIVE_SHIFT)) {
-        gameState.keyMap[KEY_SHIFT] = false;
-    }
+    gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
 //
@@ -345,6 +336,8 @@ void specialKeyboardCb(int specKeyPressed, int mouseX, int mouseY) {
         case GLUT_KEY_UP:   gameState.keyMap[KEY_ARROW_UP]   = true; break;
         case GLUT_KEY_DOWN: gameState.keyMap[KEY_ARROW_DOWN] = true; break;
     }
+    
+    gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
 void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
@@ -352,6 +345,8 @@ void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
         case GLUT_KEY_UP:   gameState.keyMap[KEY_ARROW_UP]   = false; break;
         case GLUT_KEY_DOWN: gameState.keyMap[KEY_ARROW_DOWN] = false; break;
     }
+
+    gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
 // -----------------------  Mouse ---------------------------------
@@ -381,8 +376,8 @@ void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
             break;
     }
     
-    ogMouseX = mouseX;
-    ogMouseY = mouseY;
+    gameState.ogMouseX = mouseX;
+    gameState.ogMouseY = mouseY;
 }
 
 /**
@@ -393,14 +388,14 @@ void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
  */
 void mouseMotionCb(int mouseX, int mouseY) {
     if (gameState.keyMap[RMB]) {
-        int deltaX = (ogMouseX - mouseX);
-        int deltaY = (ogMouseY - mouseY);
+        int deltaX = (gameState.ogMouseX - mouseX);
+        int deltaY = (gameState.ogMouseY - mouseY);
 
-        camera.rotate(-deltaX * mouseSensitivity,
-                       deltaY * mouseSensitivity);
+        camera.rotate(-deltaX * gameState.mouseSensitivity,
+                       deltaY * gameState.mouseSensitivity);
 
-        ogMouseX = mouseX;
-        ogMouseY = mouseY;
+        gameState.ogMouseX = mouseX;
+        gameState.ogMouseY = mouseY;
     }
 }
 
@@ -425,14 +420,14 @@ void timerCb(int) {
     
     // getting current time and time from last frame
     static float lastTime = 0.0f;
-    elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
-    float deltaTime = elapsedTime - lastTime;
-    lastTime = elapsedTime;
+    gameState.elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
+    float deltaTime = gameState.elapsedTime - lastTime;
+    lastTime = gameState.elapsedTime;
 
     // update the application state
     for (Object* object : objects) {
         if (object != nullptr)
-            object->update(elapsedTime, &sceneRootMatrix);
+            object->update(gameState.elapsedTime, &sceneRootMatrix);
     }
     updateCamera(deltaTime);
     

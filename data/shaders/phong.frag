@@ -38,6 +38,7 @@ uniform vec3  lightPositions[MAX_SCENE_LIGHTS];
 uniform vec3  lightSpotDirections[MAX_SCENE_LIGHTS];
 uniform float lightSpotCutOffs[MAX_SCENE_LIGHTS];
 uniform float lightSpotExponents[MAX_SCENE_LIGHTS];
+uniform float lightIntensities[MAX_SCENE_LIGHTS];
 
 
 // ------------------------------- Attributes ---------------------------------
@@ -51,13 +52,18 @@ out vec4 fragmentColor;
 // ------------------------------- Functions ----------------------------------
 
 vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
-    vec3 ret = vec3(0.0);
-
     vec3 lightVec = lightPositions[index] - position;
     float lightDist = length(lightVec);
-    float lightFallof = 1.0 / (lightDist*lightDist);
+    float lightFallof = 1.0 / (lightDist * lightDist);
 
     vec3 L = normalize(lightVec);
+
+    // oprava directional light
+    if (lightTypes[index] == DIRECTION_LIGHT) {
+        L = normalize(-lightSpotDirections[index]);
+        lightFallof = 1.0;
+    }
+
     vec3 R = reflect(-L, normal);
     vec3 V = normalize(cameraPosition - position);
 
@@ -70,11 +76,43 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
 
-    if (NdotL <= 0.0) return vec3(0.0);
+    if (NdotL <= 0.0) return ambient;
 
     // calculating light based on the light type
     switch (lightTypes[index]) {
+        // point light calculation
         case POINT_LIGHT:
+            diffuse = NdotL *
+                      lightDiffuses[index] *
+                      matDiffuse *
+                      albedo *
+                      lightFallof;
+            specular = pow(cosB, matShininess) *
+                       lightSpeculars[index] *
+                       matSpecular *
+                       lightFallof;
+            break;
+
+        // spot light calculation
+        case SPOT_LIGHT:
+            if (spotCos < lightSpotCutOffs[index])
+                return ambient;
+
+            diffuse = NdotL *
+                      spotEffect *
+                      lightDiffuses[index] *
+                      matDiffuse *
+                      albedo *
+                      lightFallof;
+            specular = spotEffect *
+                       pow(cosB, matShininess) *
+                       lightSpeculars[index] *
+                       matSpecular *
+                       lightFallof;
+            break;
+
+        // directional light calculation
+        case DIRECTION_LIGHT:
             diffuse = NdotL *
                       lightDiffuses[index] *
                       matDiffuse *
@@ -83,27 +121,9 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
                        lightSpeculars[index] *
                        matSpecular;
             break;
-        case SPOT_LIGHT:
-            if (spotCos < lightSpotCutOffs[index])
-                return vec3(lightAmbients[index]);
-
-            diffuse = NdotL *
-                      spotEffect *
-                      lightDiffuses[index] *
-                      matDiffuse *
-                      albedo;
-            specular = spotEffect *
-                       pow(cosB, matShininess) *
-                       lightSpeculars[index] *
-                       matSpecular;
-            break;
-        case DIRECTION_LIGHT:
-            break;
     }
 
-    ret += ambient + lightFallof*(diffuse + specular);
-
-    return ret;
+    return ambient + lightIntensities[index] * (diffuse + specular);
 }
 
 // ############################################################################
@@ -115,17 +135,14 @@ void main() {
     vec3 position = worldPosition;
     vec3 normal = normalize(worldNormal);
 
-    // initialize color with ambient light
-    vec3 color = ambientColor;
-
     // diffuse texture color
     vec3 albedo = texture(diffuseTex, theTexCoord).rgb;
+
+    vec3 color = ambientColor * matAmbient * albedo;
 
     for (int i = 0; i < lightCount; i++) {
         color += getColorFromLight(albedo, position, normal, i);
     }
-
-    // color = worldNormal;
 
     fragmentColor = vec4(color, 1.0);
 }
