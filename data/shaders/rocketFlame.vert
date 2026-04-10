@@ -9,6 +9,8 @@
 // ------------------------------- Uniforms -----------------------------------
 
 uniform mat4 PVM;
+uniform mat4 viewMatrix;
+uniform mat4 modelMatrix;
 uniform float elapsedTime;
 
 // ------------------------------- Attributes ---------------------------------
@@ -23,12 +25,31 @@ out vec2 theTexCoord;
 //                                  Main
 // ############################################################################
 
+// TODO: SET INVERSES AND STUFF AS UNIFORMS !!!
+
 void main() {
-    gl_Position = PVM * vec4(position, 1.0);
+    // camera-facing billboard constrained to Y axis
+    vec3 objectPosition = modelMatrix[3].xyz;
+    vec3 cameraPosition = inverse(viewMatrix)[3].xyz;
 
+    mat4 PV = PVM * inverse(modelMatrix);
+
+    vec3 toCamera = cameraPosition - objectPosition;
+    toCamera.y = 0.0;
+
+    toCamera = normalize(toCamera);
+
+    vec3 up = vec3(0.0, 1.0, 0.0);
+    vec3 right = normalize(cross(up, toCamera));
+
+    // assumption: quad stays in local XY plane and has z = 0
+    vec3 worldPos = objectPosition
+                  + right * position.x
+                  + up    * position.y;
+
+    gl_Position = PV * vec4(worldPos, 1.0);
+
+    // sprite animation using UV shift
     int frame = int(elapsedTime / FRAME_TIME) % NUM_FRAMES;
-
-    float offsetTexCoordX = texCoord.x + frame*UV_OFFSET;
-
-    theTexCoord = vec2(offsetTexCoordX, texCoord.y);
+    theTexCoord = vec2(texCoord.x + float(frame) * UV_OFFSET, texCoord.y);
 }
