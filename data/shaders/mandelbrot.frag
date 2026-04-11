@@ -3,7 +3,7 @@
 #define HALF 0.5
 #define ONE 1.0
 #define TAU 6.28318
-#define MAX_ITER 1000
+#define MAX_ITER 100
 
 uniform float elapsedTime;
 

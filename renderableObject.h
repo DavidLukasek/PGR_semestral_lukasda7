@@ -21,7 +21,7 @@ typedef struct _ShaderProgram {
         GLint texCoord;
 
         // uniform matrices locations
-        GLint PVMmatrix;
+        GLint projectionMatrix;
         GLint viewMatrix;
         GLint modelMatrix;
         GLint normalMatrix;
@@ -44,7 +44,8 @@ typedef struct _ShaderProgram {
         locations.normal = -1;
         locations.texCoord = -1;
 
-        locations.PVMmatrix = -1;
+        locations.projectionMatrix = -1;
+        locations.viewMatrix = -1;
         locations.modelMatrix = -1;
         locations.normalMatrix = -1;
 

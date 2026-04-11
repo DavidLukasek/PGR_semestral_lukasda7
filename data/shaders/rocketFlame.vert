@@ -8,7 +8,7 @@
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform mat4 PVM;
+uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 uniform float elapsedTime;
@@ -32,7 +32,7 @@ void main() {
     vec3 objectPosition = modelMatrix[3].xyz;
     vec3 cameraPosition = inverse(viewMatrix)[3].xyz;
 
-    mat4 PV = PVM * inverse(modelMatrix);
+    mat4 PV = projectionMatrix * viewMatrix;
 
     vec3 toCamera = cameraPosition - objectPosition;
     toCamera.y = 0.0;

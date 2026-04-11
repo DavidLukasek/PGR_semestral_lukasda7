@@ -52,5 +52,11 @@
     <None Include="data\shaders\rocketFlame.vert">
       <Filter>data\shaders</Filter>
     </None>
+    <None Include="data\shaders\skydome.frag">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\shaders\skydome.vert">
+      <Filter>data\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

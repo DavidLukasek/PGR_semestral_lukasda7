@@ -40,11 +40,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.texCoord = glGetAttribLocation(prog.program, "texCoord");
 
     // getting uniform locations
-    prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
-    prog.locations.ambientColor = glGetUniformLocation(prog.program, "ambientColor");
-    prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
-
-    prog.locations.PVMmatrix = glGetUniformLocation(prog.program, "PVM");
+    prog.locations.projectionMatrix = glGetUniformLocation(prog.program, "projectionMatrix");
     prog.locations.viewMatrix = glGetUniformLocation(prog.program, "viewMatrix");
     prog.locations.modelMatrix = glGetUniformLocation(prog.program, "modelMatrix");
     prog.locations.normalMatrix = glGetUniformLocation(prog.program, "normalMatrix");
@@ -53,6 +49,10 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.specular = glGetUniformLocation(prog.program, "matSpecular");
     prog.locations.ambient = glGetUniformLocation(prog.program, "matAmbient");
     prog.locations.shininess = glGetUniformLocation(prog.program, "matShininess");
+
+    prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
+    prog.locations.ambientColor = glGetUniformLocation(prog.program, "ambientColor");
+    prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
 
     prog.initialized = true;
 
@@ -68,6 +68,7 @@ void loadShaderPrograms()
     mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
     rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
+    skydomeShaderProgram = loadShaderProgram("skydome.vert", "skydome.frag");
 }
 
 /**
@@ -79,6 +80,7 @@ void cleanupShaderPrograms(void) {
     pgr::deleteProgramAndShaders(mandelrotShaderProgram.program);
     pgr::deleteProgramAndShaders(phongShaderProgram.program);
     pgr::deleteProgramAndShaders(rocketFlameShaderProgram.program);
+    pgr::deleteProgramAndShaders(skydomeShaderProgram.program);
 }
 
 void collectLightsRecursive(Object* object, std::vector<Light*>& outLights) {

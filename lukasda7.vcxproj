@@ -179,6 +179,8 @@
     <None Include="data\shaders\rocketFlame.vert" />
     <None Include="data\shaders\simple-fs.glsl" />
     <None Include="data\shaders\simple-vs.glsl" />
+    <None Include="data\shaders\skydome.frag" />
+    <None Include="data\shaders\skydome.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

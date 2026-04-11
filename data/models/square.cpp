@@ -34,9 +34,20 @@ void Square::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix
         glUseProgram(shaderProgram->program);
         applyMaterialUniforms();
 
-        const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
-        glUniformMatrix4fv(shaderProgram->locations.PVMmatrix,
-                           1, GL_FALSE, glm::value_ptr(pvmMatrix));
+        if (shaderProgram->locations.projectionMatrix != -1) {
+            glUniformMatrix4fv(shaderProgram->locations.projectionMatrix,
+                               1, GL_FALSE, glm::value_ptr(projectionMatrix));
+        }
+
+        if (shaderProgram->locations.viewMatrix != -1) {
+            glUniformMatrix4fv(shaderProgram->locations.viewMatrix,
+                               1, GL_FALSE, glm::value_ptr(viewMatrix));
+        }
+
+        if (shaderProgram->locations.modelMatrix != -1) {
+            glUniformMatrix4fv(shaderProgram->locations.modelMatrix,
+                               1, GL_FALSE, glm::value_ptr(globalModelMatrix));
+        }
 
 
         glBindVertexArray(geometry->vertexArrayObject);
@@ -62,22 +73,23 @@ void Square::initializeSquare() {
 
     if ((shaderProgram != nullptr) &&
         shaderProgram->initialized &&
-        (shaderProgram->locations.position != -1) &&
-        (shaderProgram->locations.PVMmatrix != -1)) {
+        (shaderProgram->locations.position != -1)) {
 
-        //enabling vertex position attribute
+        // enabling vertex position attribute
         glEnableVertexAttribArray(shaderProgram->locations.position);
         glVertexAttribPointer(
             shaderProgram->locations.position, 3, GL_FLOAT,
             GL_FALSE, 5 * sizeof(float), (void*)0
         );
 
-        //enabling vertex texture coord attribute
-        glEnableVertexAttribArray(shaderProgram->locations.texCoord);
-        glVertexAttribPointer(
-            shaderProgram->locations.texCoord, 2, GL_FLOAT,
-            GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))
-        );
+        // enabling vertex texture coord attribute
+        if (shaderProgram->locations.texCoord != -1) {
+            glEnableVertexAttribArray(shaderProgram->locations.texCoord);
+            glVertexAttribPointer(
+                shaderProgram->locations.texCoord, 2, GL_FLOAT,
+                GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))
+            );
+        }
 
         initialized = true;
     }

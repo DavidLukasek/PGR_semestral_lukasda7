@@ -7,8 +7,7 @@ void Triangle::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatr
         glUseProgram(shaderProgram->program);
         applyMaterialUniforms();
 
-        const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
-        glUniformMatrix4fv(shaderProgram->locations.PVMmatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
+        glUniformMatrix4fv(shaderProgram->locations.projectionMatrix, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -41,7 +40,7 @@ Triangle::Triangle(ShaderProgram* shdrPrg) : RenderableObject(shdrPrg), initiali
     glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    if ((shaderProgram != nullptr) && shaderProgram->initialized && (shaderProgram->locations.position != -1) && (shaderProgram->locations.PVMmatrix != -1)) {
+    if ((shaderProgram != nullptr) && shaderProgram->initialized && (shaderProgram->locations.position != -1)) {
         glEnableVertexAttribArray(shaderProgram->locations.position);
         glVertexAttribPointer(shaderProgram->locations.position, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
         initialized = true;

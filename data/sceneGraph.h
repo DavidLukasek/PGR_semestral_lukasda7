@@ -9,6 +9,7 @@ ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
 ShaderProgram rocketFlameShaderProgram;
+ShaderProgram skydomeShaderProgram;
 
 ObjectList objects;
 std::vector<Light*> sceneLightsCache;
@@ -45,6 +46,14 @@ void createObjects() {
                                      &commonShaderProgram));
     // square with mandelbrot set
     objects.push_back(new Square(&mandelrotShaderProgram));
+
+    // ------------------------------------------------------------------------
+
+    // skydome
+    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
+                                         &skydomeShaderProgram,
+                                         &material1);
+    objects.push_back(skydome);
 
     // ------------------------------------------------------------------------
 

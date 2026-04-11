@@ -15,7 +15,7 @@ uniform float elapsedTime;      // elapsed application time
 uniform vec3  ambientColor;     // ambient color
 uniform vec3  cameraPosition;   // position of the camera
 
-uniform mat4  PVM;              // Projection * View * Model -> model to clip coords
+uniform mat4  projectionMatrix; // projection matrix
 uniform mat4  viewMatrix;       // view matrix
 uniform mat4  modelMatrix;      // model matrix
 uniform mat4  normalMatrix;     // inverse transposed model matrix
