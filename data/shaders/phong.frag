@@ -11,24 +11,33 @@
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform float elapsedTime;      // elapsed application time
-uniform vec3  ambientColor;     // ambient color
-uniform vec3  cameraPosition;   // position of the camera
+// misc uniforms
+uniform float elapsedTime;          // elapsed application time
+uniform vec3  ambientColor;         // ambient color
+uniform vec3  cameraPosition;       // position of the camera
+uniform int   hasDiffuseTexture;    // flag for texture-less materials
 
-uniform mat4  projectionMatrix; // projection matrix
-uniform mat4  viewMatrix;       // view matrix
-uniform mat4  modelMatrix;      // model matrix
-uniform mat4  normalMatrix;     // inverse transposed model matrix
+// matrix uniforms
+uniform mat4  projectionMatrix;     // projection matrix
+uniform mat4  viewMatrix;           // view matrix
+uniform mat4  modelMatrix;          // model matrix
+uniform mat4  normalMatrix;         // inverse transposed model matrix
 
-uniform sampler2D diffuseTex;
+uniform sampler2D diffuseTex;       // diffuse texture sampler
 
-// current material parameters
-uniform vec3  matDiffuse;       // diffuse parameter of the material
-uniform vec3  matSpecular;      // specular parameter of the material
-uniform vec3  matAmbient;       // ambient parameter of the material
-uniform float matShininess;     // shininess parameter of the material
+// current material uniforms
+uniform vec3  matDiffuse;           // diffuse parameter of the material
+uniform vec3  matSpecular;          // specular parameter of the material
+uniform vec3  matAmbient;           // ambient parameter of the material
+uniform float matShininess;         // shininess parameter of the material
 
-// all scene lights parameters
+// fog uniforms
+uniform vec3  fogCenter;            // fog center
+uniform vec3  fogColor;             // fog color
+uniform float fogRadius;            // fog radius
+uniform float fogDensity;           // fog density
+
+// all scene lights uniforms
 uniform int   lightCount;
 uniform int   lightTypes[MAX_SCENE_LIGHTS];
 uniform vec3  lightAmbients[MAX_SCENE_LIGHTS];
@@ -82,15 +91,10 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
     switch (lightTypes[index]) {
         // point light calculation
         case POINT_LIGHT:
-            diffuse = NdotL *
-                      lightDiffuses[index] *
-                      matDiffuse *
-                      albedo *
-                      lightFallof;
-            specular = pow(cosB, matShininess) *
-                       lightSpeculars[index] *
-                       matSpecular *
-                       lightFallof;
+            diffuse = NdotL * lightDiffuses[index] *
+                      matDiffuse * albedo * lightFallof;
+            specular = pow(cosB, matShininess) * lightSpeculars[index] *
+                       matSpecular * lightFallof;
             break;
 
         // spot light calculation
@@ -98,32 +102,50 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
             if (spotCos < lightSpotCutOffs[index])
                 return ambient;
 
-            diffuse = NdotL *
-                      spotEffect *
-                      lightDiffuses[index] *
-                      matDiffuse *
-                      albedo *
-                      lightFallof;
-            specular = spotEffect *
-                       pow(cosB, matShininess) *
-                       lightSpeculars[index] *
-                       matSpecular *
-                       lightFallof;
+            diffuse = NdotL * spotEffect * lightDiffuses[index] *
+                      matDiffuse * albedo * lightFallof;
+            specular = spotEffect * pow(cosB, matShininess) *
+                       lightSpeculars[index] * matSpecular * lightFallof;
             break;
 
         // directional light calculation
         case DIRECTION_LIGHT:
-            diffuse = NdotL *
-                      lightDiffuses[index] *
-                      matDiffuse *
-                      albedo;
+            diffuse = NdotL * lightDiffuses[index] *
+                      matDiffuse * albedo;
             specular = pow(cosB, matShininess) *
-                       lightSpeculars[index] *
-                       matSpecular;
+                       lightSpeculars[index] * matSpecular;
             break;
     }
 
     return ambient + lightIntensities[index] * (diffuse + specular);
+}
+
+float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance) {
+    vec3 oc = rayOrigin - fogCenter;
+    float b = dot(oc, rayDirection);
+    float c = dot(oc, oc) - fogRadius * fogRadius;
+    float h = b * b - c;
+
+    if (h <= 0.0)
+        return 0.0;
+
+    float sqrtH = sqrt(h);
+    float tNear = -b - sqrtH;
+    float tFar = -b + sqrtH;
+
+    float start = max(tNear, 0.0);
+    float end = tFar;
+
+    if (maxDistance > 0.0)
+        end = min(end, maxDistance);
+
+    return max(end - start, 0.0);
+}
+
+float fogFactorFromLength(float traveledInFog) {
+    float core = clamp(traveledInFog * fogDensity, 0.0, 1.0);
+    float edge = smoothstep(0.0, 1.0, traveledInFog);
+    return core * edge;
 }
 
 // ############################################################################
@@ -131,18 +153,37 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
 // ############################################################################
 
 void main() {
-    // world-coordinates position and normal of vertex
+    // world-coordinates position and normal of fragment
     vec3 position = worldPosition;
     vec3 normal = normalize(worldNormal);
 
     // diffuse texture color
-    vec3 albedo = texture(diffuseTex, theTexCoord).rgb;
+    vec3 albedo = vec3(1.0);
+    if (hasDiffuseTexture != 0)
+        albedo = texture(diffuseTex, theTexCoord).rgb;
 
+    // ambient * diffuse color
     vec3 color = ambientColor * matAmbient * albedo;
 
+    // adding color from all lights in the scene
     for (int i = 0; i < lightCount; i++) {
         color += getColorFromLight(albedo, position, normal, i);
     }
+
+    // setup for fog
+    vec3 viewVector = position - cameraPosition;
+    float maxDistance = length(viewVector);
+    float traveledInFog = 0.0;
+
+    // getting fog view thickness
+    if (maxDistance > 0.0) {
+        vec3 rayDirection = viewVector / maxDistance;
+        traveledInFog = fogSegmentLength(cameraPosition, rayDirection, maxDistance);
+    }
+
+    // adding fog to the color
+    float fogFactor = fogFactorFromLength(traveledInFog);
+    color = mix(color, fogColor, fogFactor);
 
     fragmentColor = vec4(color, 1.0);
 }

@@ -32,11 +32,18 @@ typedef struct _ShaderProgram {
         GLint ambient;
         GLint shininess;
 
+        // uniform fog locations
+        GLint fogCenter;
+        GLint fogColor;
+        GLint fogRadius;
+        GLint fogDensity;
+
         // uniform misc locations
         GLint elapsedTime;
         GLint ambientColor;
         GLint cameraPosition;
-        //GLint useTexture;
+        GLint asteroidLocation;
+        GLint hasDiffuseTexture;
     } locations;
 
     _ShaderProgram() : program(0), initialized(false) {
@@ -57,6 +64,12 @@ typedef struct _ShaderProgram {
         locations.elapsedTime = -1;
         locations.ambientColor = -1;
         locations.cameraPosition = -1;
+        locations.asteroidLocation = -1;
+        locations.hasDiffuseTexture = -1;
+        locations.fogCenter = -1;
+        locations.fogColor = -1;
+        locations.fogRadius = -1;
+        locations.fogDensity = -1;
     }
 
 } ShaderProgram;

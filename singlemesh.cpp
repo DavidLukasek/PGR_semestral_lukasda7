@@ -43,10 +43,13 @@ SingleMesh::~SingleMesh() {
 }
 
 void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+    // updating uniforms
     if (initialized && (shaderProgram != nullptr)) {
+        // material uniforms
         glUseProgram(shaderProgram->program);
         applyMaterialUniforms();
 
+        // matrix uniforms
         if (shaderProgram->locations.projectionMatrix != -1)
             glUniformMatrix4fv(shaderProgram->locations.projectionMatrix, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
         
@@ -61,7 +64,14 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glUniformMatrix4fv(shaderProgram->locations.normalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         }
 
-        if ((geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0)) {
+        const bool hasDiffuseTexture =
+            (geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0);
+
+        if (shaderProgram->locations.hasDiffuseTexture != -1)
+            glUniform1i(shaderProgram->locations.hasDiffuseTexture, hasDiffuseTexture ? 1 : 0);
+
+        // texture uniforms
+        if (hasDiffuseTexture) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, geometry->diffuseTextureObject);
 
@@ -69,12 +79,16 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             if (diffuseTextureLocation != -1)
                 glUniform1i(diffuseTextureLocation, 0);
         }
+        else {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
 
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawElements(GL_TRIANGLES, geometry->numTriangles * 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
-        if ((geometry != nullptr) && geometry->hasTexture)
+        if (hasDiffuseTexture)
             glBindTexture(GL_TEXTURE_2D, 0);
     }
     else {

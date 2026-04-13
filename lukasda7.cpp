@@ -50,9 +50,16 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.ambient = glGetUniformLocation(prog.program, "matAmbient");
     prog.locations.shininess = glGetUniformLocation(prog.program, "matShininess");
 
+    prog.locations.fogCenter = glGetUniformLocation(prog.program, "fogCenter");
+    prog.locations.fogColor = glGetUniformLocation(prog.program, "fogColor");
+    prog.locations.fogRadius = glGetUniformLocation(prog.program, "fogRadius");
+    prog.locations.fogDensity = glGetUniformLocation(prog.program, "fogDensity");
+
     prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
     prog.locations.ambientColor = glGetUniformLocation(prog.program, "ambientColor");
     prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
+    prog.locations.asteroidLocation = glGetUniformLocation(prog.program, "asteroidLocation");
+    prog.locations.hasDiffuseTexture = glGetUniformLocation(prog.program, "hasDiffuseTexture");
 
     prog.initialized = true;
 
@@ -62,9 +69,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
 /**
  * \brief Load and compile shader programs. Get attribute locations.
  */
-void loadShaderPrograms()
-{
-    commonShaderProgram = loadShaderProgram("simple-vs.glsl", "simple-fs.glsl");
+void loadShaderPrograms() {
     mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
     rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
@@ -75,12 +80,26 @@ void loadShaderPrograms()
  * \brief Delete all shader program objects.
  */
 void cleanupShaderPrograms(void) {
-
-    pgr::deleteProgramAndShaders(commonShaderProgram.program);
     pgr::deleteProgramAndShaders(mandelrotShaderProgram.program);
     pgr::deleteProgramAndShaders(phongShaderProgram.program);
     pgr::deleteProgramAndShaders(rocketFlameShaderProgram.program);
     pgr::deleteProgramAndShaders(skydomeShaderProgram.program);
+}
+
+void setFogUniforms(const ShaderProgram& shaderProgram) {
+    if (!shaderProgram.initialized) return;
+
+    if (shaderProgram.locations.fogCenter != -1)
+        glUniform3fv(shaderProgram.locations.fogCenter, 1, glm::value_ptr(fogBall.center));
+
+    if (shaderProgram.locations.fogColor != -1)
+        glUniform3fv(shaderProgram.locations.fogColor, 1, glm::value_ptr(fogBall.color));
+
+    if (shaderProgram.locations.fogRadius != -1)
+        glUniform1f(shaderProgram.locations.fogRadius, fogBall.radius);
+
+    if (shaderProgram.locations.fogDensity != -1)
+        glUniform1f(shaderProgram.locations.fogDensity, fogBall.density);
 }
 
 void collectLightsRecursive(Object* object, std::vector<Light*>& outLights) {
@@ -195,25 +214,36 @@ void drawScene(void) {
     glm::mat4 projectionMatrix =
         camera.getProjectionMatrix((float)gameState.windowWidth /
                                    (float)gameState.windowHeight);
+    const glm::vec3 cameraPosition = camera.getPosition();
 
     glUseProgram(phongShaderProgram.program);
 
+    // elapsed time uniform update
     if (phongShaderProgram.locations.elapsedTime != -1)
         glUniform1f(phongShaderProgram.locations.elapsedTime, gameState.elapsedTime);
 
+    // camera position uniform update
     if (phongShaderProgram.locations.cameraPosition != -1) {
-        const glm::vec3 cameraPosition = camera.getPosition();
         glUniform3fv(phongShaderProgram.locations.cameraPosition,
                      1, glm::value_ptr(cameraPosition));
     }
 
-    // ambient
+    // ambient uniform update
     if (phongShaderProgram.locations.ambientColor != -1)
         glUniform3fv(phongShaderProgram.locations.ambientColor,
                      1, glm::value_ptr(gameState.ambientColor));
 
-    // updating light uniforms
+    // light uniforms update
     setLightUniforms(phongShaderProgram, sceneLightsCache);
+
+    // fog uniforms update
+    setFogUniforms(phongShaderProgram);
+
+    glUseProgram(skydomeShaderProgram.program);
+    if (skydomeShaderProgram.locations.cameraPosition != -1)
+        glUniform3fv(skydomeShaderProgram.locations.cameraPosition,
+                     1, glm::value_ptr(cameraPosition));
+    setFogUniforms(skydomeShaderProgram);
 
     // update time in the animated Mandelbrot shader
     glUseProgram(mandelrotShaderProgram.program);
@@ -474,6 +504,9 @@ void initApplication() {
             object->update(0.0f, &sceneRootMatrix);
     }
     collectSceneLights();
+
+    // fog??
+    
 }
 
 /**

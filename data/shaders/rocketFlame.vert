@@ -2,7 +2,7 @@
 
 // -------------------------------- Macros ------------------------------------
 
-#define FRAME_TIME 0.1
+#define FRAME_TIME 0.01
 #define UV_OFFSET 0.25
 #define NUM_FRAMES 4
 

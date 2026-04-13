@@ -1,15 +1,25 @@
 #version 140
 
+// -------------------------------- Macros ------------------------------------
+
 #define HALF 0.5
 #define ONE 1.0
 #define TAU 6.28318
-#define MAX_ITER 100
+#define MAX_ITER 1000
+
+// ------------------------------- Uniforms -----------------------------------
 
 uniform float elapsedTime;
+uniform vec3  asteroidLocation;
+
+// ------------------------------- Attributes ---------------------------------
 
 in vec2 UV;
 
 out vec4 fragmentColor;
+
+// ------------------------------- Functions ----------------------------------
+
 
 //palette equation:     https://iquilezles.org/articles/palettes/
 //palette parameters:   https://dev.thi.ng/gradients/
@@ -21,6 +31,10 @@ vec3 palette(float t) {
     
     return a + b*cos(TAU*(c*t + d));
 }
+
+// ############################################################################
+//                                  Main
+// ############################################################################
 
 void main() {
     const float WIN_HEIGHT = 500.0;
@@ -56,6 +70,7 @@ void main() {
 
     vec3 color = vec3(1.0);
     
+    // color divergent fragments, if convergent then black
     if(dist_sq > 4.0) {
         float t = float(iterations) / 20.0;
         color = palette(t + elapsedTime*0.2);

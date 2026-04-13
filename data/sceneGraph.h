@@ -5,6 +5,13 @@
 #include "../singlemesh.h"
 #include "models/square.h"
 
+typedef struct FogBall {
+    glm::vec3 center = glm::vec3(0.0f);
+    glm::vec3 color  = glm::vec3(1.0f);
+    float radius     = 10.0f;
+    float density    = 0.1f;
+} FogBall;
+
 ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
@@ -19,13 +26,25 @@ glm::vec2 cameraRotation = glm::vec2(0.0);
 
 GameState gameState;
 
-Material material1 = {
-    glm::vec3(1.0f),                // ambient
-    glm::vec3(1.0f),                // diffuse
-    glm::vec3(1.0f),                // specular
-    0.0f                            // shininess
+glm::vec3 asteroidLocation = glm::vec3(0.0f, 0.0f, -15.0f);
+
+// fog ball
+FogBall fogBall = {
+    asteroidLocation,               // fog center
+    glm::vec3(0.64f, 0.62f, 0.9f),  // fog color
+    13.0f,                          // fog radius
+    0.07f                           // fog density
 };
 
+// grey material
+Material material1 = {
+    glm::vec3(0.3f),                // ambient
+    glm::vec3(0.3f),                // diffuse
+    glm::vec3(0.3f),                // specular
+    2.0f                            // shininess
+};
+
+// white material
 Material material2 = {
     glm::vec3(1.0f),                // ambient
     glm::vec3(1.0f),                // diffuse
@@ -33,17 +52,7 @@ Material material2 = {
     2.0f                            // shininess
 };
 
-Material material3 = {
-    glm::vec3(1.0f),                // ambient
-    glm::vec3(1.0f),                // diffuse
-    glm::vec3(0.23f, 0.20f, 0.11f), // specular
-    0.0f                            // shininess
-};
-
 void createObjects() {
-    // 3 triangles shape
-    objects.push_back(new SingleMesh(MODELS_PATH + (std::string)"shape.obj",
-                                     &commonShaderProgram));
     // square with mandelbrot set
     objects.push_back(new Square(&mandelrotShaderProgram));
 
@@ -52,7 +61,7 @@ void createObjects() {
     // skydome
     SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
                                          &skydomeShaderProgram,
-                                         &material1);
+                                         &material2);
     objects.push_back(skydome);
 
     // ------------------------------------------------------------------------
@@ -142,15 +151,25 @@ void createObjects() {
                                          glm::vec3(0.5f),               // diffuse
                                          glm::vec3(1.0f),               // specular
                                          glm::vec3(0.0f, -1.0f, 0.2f)); // light direction
-    //objects.push_back(directionalLight1);
+    objects.push_back(directionalLight1);
+
+    // ------------------------------------------------------------------------
+
+    // asteroid
+    SingleMesh* asteroid = new SingleMesh(MODELS_PATH + (std::string)"asteroid.obj",
+                                          &phongShaderProgram,
+                                          &material2);
+    asteroid->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                 asteroidLocation));
+    objects.push_back(asteroid);
 
     // ------------------------------------------------------------------------
 
     // rocket flame
     SingleMesh* rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
                                               &rocketFlameShaderProgram,
-                                              &material3);
+                                              &material2);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                     glm::vec3(0.0f, -1.0f, 1.2f)));
+                                                     glm::vec3(0.0, -1.0, 1.2)));
     objects.push_back(rocketFlame1);
 }

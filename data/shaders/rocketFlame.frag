@@ -3,6 +3,7 @@
 // ------------------------------- Uniforms -----------------------------------
 
 uniform sampler2D diffuseTex;
+uniform vec3  asteroidLocation;
 
 // ------------------------------- Attributes ---------------------------------
 
