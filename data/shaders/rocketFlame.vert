@@ -11,6 +11,7 @@
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
+uniform mat4 normalMatrix;
 uniform float elapsedTime;
 
 // ------------------------------- Attributes ---------------------------------
@@ -19,6 +20,8 @@ in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
 
+out vec3 worldPosition;
+out vec3 worldNormal;
 out vec2 theTexCoord;
 
 // ############################################################################
@@ -48,6 +51,8 @@ void main() {
                   + up    * position.y;
 
     gl_Position = PV * vec4(worldPos, 1.0);
+    worldPosition = worldPos;
+    worldNormal = normalize(vec3(normalMatrix * vec4(normal, 0.0)));
 
     // sprite animation using UV shift
     int frame = int(elapsedTime / FRAME_TIME) % NUM_FRAMES;

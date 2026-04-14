@@ -70,10 +70,17 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
  * \brief Load and compile shader programs. Get attribute locations.
  */
 void loadShaderPrograms() {
+    // creating all shader programs
     mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
     rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
     skydomeShaderProgram = loadShaderProgram("skydome.vert", "skydome.frag");
+
+    // pushing them all into the global shader program vector
+    shaderPrograms.push_back(mandelrotShaderProgram);
+    shaderPrograms.push_back(phongShaderProgram);
+    shaderPrograms.push_back(rocketFlameShaderProgram);
+    shaderPrograms.push_back(skydomeShaderProgram);
 }
 
 /**
@@ -88,6 +95,7 @@ void cleanupShaderPrograms(void) {
 
 void setFogUniforms(const ShaderProgram& shaderProgram) {
     if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
 
     if (shaderProgram.locations.fogCenter != -1)
         glUniform3fv(shaderProgram.locations.fogCenter, 1, glm::value_ptr(fogBall.center));
@@ -236,14 +244,14 @@ void drawScene(void) {
     // light uniforms update
     setLightUniforms(phongShaderProgram, sceneLightsCache);
 
-    // fog uniforms update
-    setFogUniforms(phongShaderProgram);
+    // fog uniforms update for all shaders
+    for (const ShaderProgram& prog : shaderPrograms)
+        setFogUniforms(prog);
 
     glUseProgram(skydomeShaderProgram.program);
     if (skydomeShaderProgram.locations.cameraPosition != -1)
         glUniform3fv(skydomeShaderProgram.locations.cameraPosition,
                      1, glm::value_ptr(cameraPosition));
-    setFogUniforms(skydomeShaderProgram);
 
     // update time in the animated Mandelbrot shader
     glUseProgram(mandelrotShaderProgram.program);
@@ -251,6 +259,8 @@ void drawScene(void) {
 
     // update time in the animated rocket flame shader
     glUseProgram(rocketFlameShaderProgram.program);
+    glUniform3fv(rocketFlameShaderProgram.locations.cameraPosition,
+                 1, glm::value_ptr(cameraPosition));
     glUniform1f(rocketFlameShaderProgram.locations.elapsedTime, gameState.elapsedTime);
 
     // drawing of all objects

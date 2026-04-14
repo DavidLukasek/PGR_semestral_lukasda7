@@ -12,6 +12,9 @@ typedef struct FogBall {
     float density    = 0.1f;
 } FogBall;
 
+// array holding all shader programs in the application
+std::vector<ShaderProgram> shaderPrograms;
+
 ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
