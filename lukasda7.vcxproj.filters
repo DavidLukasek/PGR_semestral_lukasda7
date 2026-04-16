@@ -7,7 +7,7 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="object.cpp" />
-    <ClCompile Include="data\models\square.cpp" />
+    <ClCompile Include="square.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="object.h" />
@@ -15,12 +15,12 @@
     <ClInclude Include="singlemesh.h" />
     <ClInclude Include="triangle.h" />
     <ClInclude Include="camera.h" />
-    <ClInclude Include="data\models\square.h" />
     <ClInclude Include="gameState.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="data\sceneGraph.h">
       <Filter>data</Filter>
     </ClInclude>
+    <ClInclude Include="square.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

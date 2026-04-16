@@ -60,6 +60,10 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
     prog.locations.asteroidLocation = glGetUniformLocation(prog.program, "asteroidLocation");
     prog.locations.hasDiffuseTexture = glGetUniformLocation(prog.program, "hasDiffuseTexture");
+    prog.locations.mandelbrotAnimStarted = glGetUniformLocation(prog.program, "mandelbrotAnimStarted");
+    prog.locations.mandelbrotAnimPaused = glGetUniformLocation(prog.program, "mandelbrotAnimPaused");
+    prog.locations.mandelbrotAnimStartTime = glGetUniformLocation(prog.program, "mandelbrotAnimStartTime");
+    prog.locations.mandelbrotAnimPauseTime = glGetUniformLocation(prog.program, "mandelbrotAnimPauseTime");
 
     prog.initialized = true;
 
@@ -253,9 +257,17 @@ void drawScene(void) {
         glUniform3fv(skydomeShaderProgram.locations.cameraPosition,
                      1, glm::value_ptr(cameraPosition));
 
-    // update time in the animated Mandelbrot shader
+    // update time and animation uniforms in the animated Mandelbrot shader
     glUseProgram(mandelrotShaderProgram.program);
     glUniform1f(mandelrotShaderProgram.locations.elapsedTime, gameState.elapsedTime);
+    glUniform1f(mandelrotShaderProgram.locations.mandelbrotAnimStartTime,
+                gameState.mandelbrotAnimStartTime);
+    glUniform1i(mandelrotShaderProgram.locations.mandelbrotAnimStarted,
+                gameState.mandelbrotAnimStarted);
+    glUniform1i(mandelrotShaderProgram.locations.mandelbrotAnimPaused,
+                gameState.mandelbrotAnimPaused);
+    glUniform1f(mandelrotShaderProgram.locations.mandelbrotAnimPauseTime,
+                gameState.mandelbrotAnimPauseTime);
 
     // update time in the animated rocket flame shader
     glUseProgram(rocketFlameShaderProgram.program);
@@ -343,6 +355,24 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 'd': case 'D': gameState.keyMap[KEY_D] = true; break;
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = true; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
+
+        // Mandelbrot animation toggle (start/pause/resume)
+        case 'p': case 'P': {
+            if (!gameState.mandelbrotAnimStarted) {
+                gameState.mandelbrotAnimStarted = true;
+                gameState.mandelbrotAnimPaused = false;
+                gameState.mandelbrotAnimStartTime = gameState.elapsedTime;
+                gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
+            } else if (!gameState.mandelbrotAnimPaused) {
+                gameState.mandelbrotAnimPaused = true;
+                gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
+            } else {
+                gameState.mandelbrotAnimPaused = false;
+                gameState.mandelbrotAnimStartTime +=
+                    (gameState.elapsedTime - gameState.mandelbrotAnimPauseTime);
+            }
+            break;
+        }
     }
 
     // keep SHIFT state in sync with current modifiers
@@ -514,9 +544,6 @@ void initApplication() {
             object->update(0.0f, &sceneRootMatrix);
     }
     collectSceneLights();
-
-    // fog??
-    
 }
 
 /**

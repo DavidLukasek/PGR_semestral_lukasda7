@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "../singlemesh.h"
-#include "models/square.h"
+#include "square.h"
 
 typedef struct FogBall {
     glm::vec3 center = glm::vec3(0.0f);
@@ -15,7 +15,6 @@ typedef struct FogBall {
 // array holding all shader programs in the application
 std::vector<ShaderProgram> shaderPrograms;
 
-ShaderProgram commonShaderProgram;
 ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
 ShaderProgram rocketFlameShaderProgram;

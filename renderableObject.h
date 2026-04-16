@@ -44,6 +44,10 @@ typedef struct _ShaderProgram {
         GLint cameraPosition;
         GLint asteroidLocation;
         GLint hasDiffuseTexture;
+        GLint mandelbrotAnimStarted;
+        GLint mandelbrotAnimPaused;
+        GLint mandelbrotAnimStartTime;
+        GLint mandelbrotAnimPauseTime;
     } locations;
 
     _ShaderProgram() : program(0), initialized(false) {
@@ -61,15 +65,20 @@ typedef struct _ShaderProgram {
         locations.ambient = -1;
         locations.shininess = -1;
 
+        locations.fogCenter = -1;
+        locations.fogColor = -1;
+        locations.fogRadius = -1;
+        locations.fogDensity = -1;
+
         locations.elapsedTime = -1;
         locations.ambientColor = -1;
         locations.cameraPosition = -1;
         locations.asteroidLocation = -1;
         locations.hasDiffuseTexture = -1;
-        locations.fogCenter = -1;
-        locations.fogColor = -1;
-        locations.fogRadius = -1;
-        locations.fogDensity = -1;
+        locations.mandelbrotAnimStarted = -1;
+        locations.mandelbrotAnimPaused = -1;
+        locations.mandelbrotAnimStartTime = -1;
+        locations.mandelbrotAnimPauseTime = -1;
     }
 
 } ShaderProgram;

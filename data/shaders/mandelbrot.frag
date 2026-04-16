@@ -11,6 +11,10 @@
 
 uniform float elapsedTime;
 uniform vec3  asteroidLocation;
+uniform bool  mandelbrotAnimStarted;
+uniform bool  mandelbrotAnimPaused;
+uniform float mandelbrotAnimStartTime;
+uniform float mandelbrotAnimPauseTime;
 
 // ------------------------------- Attributes ---------------------------------
 
@@ -38,6 +42,15 @@ vec3 palette(float t) {
 
 void main() {
     const float WIN_HEIGHT = 500.0;
+    float animatedTime = 0.0;
+
+    if (mandelbrotAnimStarted) {
+        float mandelbrotTime = elapsedTime;
+        if (mandelbrotAnimPaused)
+            mandelbrotTime = mandelbrotAnimPauseTime;
+
+        animatedTime = max(mandelbrotTime - mandelbrotAnimStartTime, 0.0);
+    }
     
     //center coordinates scaled up to <-2;2>
     vec2 uv = UV * 3.0;
@@ -73,7 +86,7 @@ void main() {
     // color divergent fragments, if convergent then black
     if(dist_sq > 4.0) {
         float t = float(iterations) / 20.0;
-        color = palette(t + elapsedTime*0.2);
+        color = palette(t + animatedTime * 0.2);
     } else color = vec3(0.0);
 
     fragmentColor = vec4(color, 1.0);

@@ -153,22 +153,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
-    <ClCompile Include="data\models\square.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="singlemesh.cpp" />
     <ClCompile Include="lukasda7.cpp" />
+    <ClCompile Include="square.cpp" />
     <ClCompile Include="triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
-    <ClInclude Include="data\models\square.h" />
     <ClInclude Include="data\sceneGraph.h" />
     <ClInclude Include="gameState.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="renderableObject.h" />
     <ClInclude Include="singlemesh.h" />
+    <ClInclude Include="square.h" />
     <ClInclude Include="triangle.h" />
   </ItemGroup>
   <ItemGroup>

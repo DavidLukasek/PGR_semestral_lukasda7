@@ -13,7 +13,7 @@ const float Square::vertices[30] = {
 };
 
 Square::Square(ShaderProgram* shdrPrg)
-               : RenderableObject(shdrPrg),
+               : SingleMesh("square", shdrPrg, nullptr),
                initialized(false) {
     initializeSquare();
 }
@@ -49,7 +49,6 @@ void Square::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix
                                1, GL_FALSE, glm::value_ptr(globalModelMatrix));
         }
 
-
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawArrays(GL_TRIANGLES, 0, geometry->numTriangles * 3);
         glBindVertexArray(0);
@@ -63,6 +62,10 @@ void Square::initializeSquare() {
 
     geometry->numTriangles = 2;
     geometry->elementBufferObject = 0;
+    geometry->normalBufferObject = 0;
+    geometry->texCoordBufferObject = 0;
+    geometry->diffuseTextureObject = 0;
+    geometry->hasTexture = false;
 
     glGenVertexArrays(1, &(geometry->vertexArrayObject));
     glBindVertexArray(geometry->vertexArrayObject);

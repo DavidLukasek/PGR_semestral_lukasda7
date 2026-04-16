@@ -7,21 +7,21 @@ SingleMesh::SingleMesh(std::string modelFileName,
     const Material* mat)
     : RenderableObject(shdrPrg, mat)
     , initialized(false) {
-    if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
-        if (geometry == nullptr) {
-            std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
-        }
-        else {
-            std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
+    if (modelFileName != "square") {
+        if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
+            if (geometry == nullptr) {
+                std::cerr << "SingleMesh::SingleMesh(): geometry not initialized!" << std::endl;
+            }
+            else {
+                std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
+            }
         }
     }
-    else {
-        if ((shaderProgram != nullptr) && shaderProgram->initialized) {
+    
+    if ((shaderProgram != nullptr) && shaderProgram->initialized) {
             initialized = true;
-        }
-        else {
+    } else {
             std::cerr << "SingleMesh::SingleMesh(): shaderProgram struct not initialized!" << std::endl;
-        }
     }
 }
 

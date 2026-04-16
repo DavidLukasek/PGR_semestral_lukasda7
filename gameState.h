@@ -7,7 +7,7 @@
 
 #define WINDOW_TITLE "PGR: Application lukasda7"
 
-#define MAX_SCENE_LIGHTS 16
+#define MAX_SCENE_LIGHTS 8
 
 enum { KEY_W, KEY_A, KEY_S, KEY_D,
        KEY_Q, KEY_E, KEY_ESC, KEY_SHIFT,
@@ -24,6 +24,10 @@ public:
     const float mouseSensitivity = 0.25f;
 
     float elapsedTime = 0.0f;
+    bool mandelbrotAnimStarted = false;
+    bool mandelbrotAnimPaused = false;
+    float mandelbrotAnimStartTime = 0.0f;
+    float mandelbrotAnimPauseTime = 0.0f;
 
     bool keyMap[KEYS_COUNT] = { false };
 
