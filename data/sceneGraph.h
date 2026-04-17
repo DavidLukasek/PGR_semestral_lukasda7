@@ -20,7 +20,8 @@ ShaderProgram phongShaderProgram;
 ShaderProgram rocketFlameShaderProgram;
 ShaderProgram skydomeShaderProgram;
 
-ObjectList objects;
+// root of the scene - all objects are children of it or of other its children
+Object sceneRoot;
 std::vector<Light*> sceneLightsCache;
 
 Camera camera;
@@ -54,42 +55,8 @@ Material material2 = {
     2.0f                            // shininess
 };
 
-void createObjects() {
-    // square with mandelbrot set
-    objects.push_back(new Square(&mandelrotShaderProgram));
-
-    // ------------------------------------------------------------------------
-
-    // skydome
-    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
-                                         &skydomeShaderProgram,
-                                         &material2);
-    objects.push_back(skydome);
-
-    // ------------------------------------------------------------------------
-
-    // floor mesh
-    SingleMesh* floor = new SingleMesh(MODELS_PATH + (std::string)"floor.obj",
-                                       &phongShaderProgram,
-                                       &material1);
-    floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(0.0f, -1.0f, 2.0f)));
-    objects.push_back(floor);
-
-    // ------------------------------------------------------------------------
-
-    // Susanne
-    SingleMesh* monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
-                                       &phongShaderProgram,
-                                       &material2);
-    monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(-2.0f, 0.0f, 2.0f)) *
-                               glm::rotate(glm::mat4(1.0f),
-                                           glm::radians(90.0f),
-                                           glm::vec3(0.0f, 1.0f, 0.0f)));
-    objects.push_back(monke);
-
-    // ------------------------------------------------------------------------
+void createLights() {
+    sceneLightsCache.clear();
 
     // point light
     Light* pointLight1 = new Light(POINT_LIGHT,         // light type
@@ -97,8 +64,9 @@ void createObjects() {
                                    glm::vec3(1.0f),     // diffuse
                                    glm::vec3(1.0f));    // specular
     pointLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                     glm::vec3(-1.5f, 0.0f, 3.5f)));
-    objects.push_back(pointLight1);
+                                                    glm::vec3(-1.5f, 0.0f, 3.5f)));
+    sceneRoot.addChild(pointLight1);
+    sceneLightsCache.push_back(pointLight1);
 
     // ------------------------------------------------------------------------
 
@@ -112,8 +80,9 @@ void createObjects() {
                                   5.0f,                         // spot exponent
                                   1.0f);                        // light intensity
     spotLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                    glm::vec3(0.0f, 0.0f, 1.0f)));
-    objects.push_back(spotLight1);
+                                                   glm::vec3(0.0f, 0.0f, 1.0f)));
+    sceneRoot.addChild(spotLight1);
+    sceneLightsCache.push_back(spotLight1);
 
     // ------------------------------------------------------------------------
 
@@ -128,7 +97,8 @@ void createObjects() {
                                   1.0f);                        // light intensity
     spotLight2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                     glm::vec3(-0.4f, 0.0f, 1.5f)));
-    objects.push_back(spotLight2);
+    sceneRoot.addChild(spotLight2);
+    sceneLightsCache.push_back(spotLight2);
 
     // ------------------------------------------------------------------------
 
@@ -143,7 +113,8 @@ void createObjects() {
                                   1.0f);                        // light intensity
     spotLight3->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                     glm::vec3(0.4f, 0.0f, 1.5f)));
-    objects.push_back(spotLight3);
+    sceneRoot.addChild(spotLight3);
+    sceneLightsCache.push_back(spotLight3);
 
     // ------------------------------------------------------------------------
 
@@ -153,7 +124,44 @@ void createObjects() {
                                          glm::vec3(0.5f),               // diffuse
                                          glm::vec3(1.0f),               // specular
                                          glm::vec3(0.0f, -1.0f, 0.2f)); // light direction
-    objects.push_back(directionalLight1);
+    sceneRoot.addChild(directionalLight1);
+    sceneLightsCache.push_back(directionalLight1);
+}
+
+void createObjects() {
+    // square with mandelbrot set
+    sceneRoot.addChild(new Square(&mandelrotShaderProgram));
+
+    // ------------------------------------------------------------------------
+
+    // skydome
+    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
+                                         &skydomeShaderProgram,
+                                         &material2);
+    sceneRoot.addChild(skydome);
+
+    // ------------------------------------------------------------------------
+
+    // floor mesh
+    SingleMesh* floor = new SingleMesh(MODELS_PATH + (std::string)"floor.obj",
+                                       &phongShaderProgram,
+                                       &material1);
+    floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                              glm::vec3(0.0f, -1.0f, 2.0f)));
+    sceneRoot.addChild(floor);
+
+    // ------------------------------------------------------------------------
+
+    // Susanne
+    SingleMesh* monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
+                                       &phongShaderProgram,
+                                       &material2);
+    monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                              glm::vec3(-2.0f, 0.0f, 2.0f)) *
+                               glm::rotate(glm::mat4(1.0f),
+                                           glm::radians(90.0f),
+                                           glm::vec3(0.0f, 1.0f, 0.0f)));
+    sceneRoot.addChild(monke);
 
     // ------------------------------------------------------------------------
 
@@ -163,7 +171,7 @@ void createObjects() {
                                           &material2);
     asteroid->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                  asteroidLocation));
-    objects.push_back(asteroid);
+    sceneRoot.addChild(asteroid);
 
     // ------------------------------------------------------------------------
 
@@ -173,5 +181,5 @@ void createObjects() {
                                               &material2);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      glm::vec3(0.0, -1.0, 1.2)));
-    objects.push_back(rocketFlame1);
+    sceneRoot.addChild(rocketFlame1);
 }

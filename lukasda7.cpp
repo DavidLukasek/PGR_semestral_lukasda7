@@ -91,10 +91,9 @@ void loadShaderPrograms() {
  * \brief Delete all shader program objects.
  */
 void cleanupShaderPrograms(void) {
-    pgr::deleteProgramAndShaders(mandelrotShaderProgram.program);
-    pgr::deleteProgramAndShaders(phongShaderProgram.program);
-    pgr::deleteProgramAndShaders(rocketFlameShaderProgram.program);
-    pgr::deleteProgramAndShaders(skydomeShaderProgram.program);
+    for (ShaderProgram shdPrg : shaderPrograms) {
+        pgr::deleteProgramAndShaders(shdPrg.program);
+    }
 }
 
 void setFogUniforms(const ShaderProgram& shaderProgram) {
@@ -112,26 +111,6 @@ void setFogUniforms(const ShaderProgram& shaderProgram) {
 
     if (shaderProgram.locations.fogDensity != -1)
         glUniform1f(shaderProgram.locations.fogDensity, fogBall.density);
-}
-
-void collectLightsRecursive(Object* object, std::vector<Light*>& outLights) {
-    if (object == nullptr)
-        return;
-
-    if (Light* light = dynamic_cast<Light*>(object))
-        outLights.push_back(light);
-
-    const ObjectList& children = object->getChildren();
-    for (Object* child : children)
-        collectLightsRecursive(child, outLights);
-}
-
-void collectSceneLights() {
-    sceneLightsCache.clear();
-    sceneLightsCache.reserve(objects.size());
-
-    for (Object* object : objects)
-        collectLightsRecursive(object, sceneLightsCache);
 }
 
 void setLightUniforms(const ShaderProgram& shaderProgram,
@@ -275,12 +254,8 @@ void drawScene(void) {
                  1, glm::value_ptr(cameraPosition));
     glUniform1f(rocketFlameShaderProgram.locations.elapsedTime, gameState.elapsedTime);
 
-    // drawing of all objects
-    for (Object* object : objects) {
-        if (object != nullptr) {
-            object->draw(viewMatrix, projectionMatrix);
-        }
-    }
+    // draw all scene objects recursively from the root node
+    sceneRoot.draw(viewMatrix, projectionMatrix);
 }
 
 void updateCamera(float deltaTime) {
@@ -374,9 +349,6 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
             break;
         }
     }
-
-    // keep SHIFT state in sync with current modifiers
-    gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
 // Called whenever a key on the keyboard was released. The key
@@ -396,8 +368,6 @@ void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = false; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = false; break;
     }
-
-    gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
 //
@@ -494,8 +464,6 @@ void passiveMouseMotionCb(int mouseX, int mouseY) {
  * \brief Callback responsible for the scene update.
  */
 void timerCb(int) {
-    const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);
-    
     // getting current time and time from last frame
     static float lastTime = 0.0f;
     gameState.elapsedTime = 0.001f * static_cast<float>(glutGet(GLUT_ELAPSED_TIME)); // ms
@@ -503,10 +471,7 @@ void timerCb(int) {
     lastTime = gameState.elapsedTime;
 
     // update the application state
-    for (Object* object : objects) {
-        if (object != nullptr)
-            object->update(gameState.elapsedTime, &sceneRootMatrix);
-    }
+    sceneRoot.update(gameState.elapsedTime, nullptr);
     updateCamera(deltaTime);
     
     // and plan a new event
@@ -534,16 +499,14 @@ void initApplication() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // method from "sceneGraph.h"
+    // create objects and add them to the scene graph
     createObjects();
 
-    // Initialize global transforms once, then upload all scene lights once.
-    const glm::mat4 sceneRootMatrix = glm::mat4(1.0f);
-    for (Object* object : objects) {
-        if (object != nullptr)
-            object->update(0.0f, &sceneRootMatrix);
-    }
-    collectSceneLights();
+    // create lights and a light-cache storing lights only for fast uniforms
+    createLights();
+
+    // initialize global transforms once
+    sceneRoot.update(0.0f, nullptr);
 }
 
 /**

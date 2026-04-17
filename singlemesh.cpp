@@ -95,6 +95,7 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         std::cerr << "SingleMesh::draw(): Can't draw, mesh not initialized properly!" << std::endl;
     }
 
+    // draw children
     Object::draw(viewMatrix, projectionMatrix);
 }
 
