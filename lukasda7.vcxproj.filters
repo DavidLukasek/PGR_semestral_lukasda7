@@ -31,12 +31,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\shaders\simple-fs.glsl">
-      <Filter>data\shaders</Filter>
-    </None>
-    <None Include="data\shaders\simple-vs.glsl">
-      <Filter>data\shaders</Filter>
-    </None>
     <None Include="data\shaders\mandelbrot.frag">
       <Filter>data\shaders</Filter>
     </None>
@@ -56,6 +50,9 @@
       <Filter>data\shaders</Filter>
     </None>
     <None Include="data\shaders\skydome.vert">
+      <Filter>data\shaders</Filter>
+    </None>
+    <None Include="data\shaders\mandelbrot.vert">
       <Filter>data\shaders</Filter>
     </None>
   </ItemGroup>

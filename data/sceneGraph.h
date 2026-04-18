@@ -24,19 +24,26 @@ ShaderProgram skydomeShaderProgram;
 Object sceneRoot;
 std::vector<Light*> sceneLightsCache;
 
+// scene camera
 Camera camera;
 glm::vec2 cameraRotation = glm::vec2(0.0);
 
 GameState gameState;
 
-glm::vec3 asteroidLocation = glm::vec3(0.0f, 0.0f, -15.0f);
+// planet and moon locations to be used for fog and rotations laterin lukasda7.cpp
+glm::vec3 planetPosition = glm::vec3(-120.0f, 80.0f, -220.0f);
+glm::vec3 moonPosition = glm::vec3(0.0f, 0.0f, 200.0f);
+
+// holding on moon and planet references to rotate them later in rotateMoonAndPlanet
+SingleMesh* planet;
+SingleMesh* moon;
 
 // fog ball
 FogBall fogBall = {
-    asteroidLocation,               // fog center
+    planetPosition,                 // fog center
     glm::vec3(0.64f, 0.62f, 0.9f),  // fog color
-    13.0f,                          // fog radius
-    0.07f                           // fog density
+    105.0f,                         // fog radius
+    0.2f                            // fog density
 };
 
 // grey material
@@ -56,8 +63,6 @@ Material material2 = {
 };
 
 void createLights() {
-    sceneLightsCache.clear();
-
     // point light
     Light* pointLight1 = new Light(POINT_LIGHT,         // light type
                                    glm::vec3(0.0f),     // ambient
@@ -96,7 +101,7 @@ void createLights() {
                                   5.0f,                         // spot exponent
                                   1.0f);                        // light intensity
     spotLight2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                    glm::vec3(-0.4f, 0.0f, 1.5f)));
+                                                   glm::vec3(-0.4f, 0.0f, 1.5f)));
     sceneRoot.addChild(spotLight2);
     sceneLightsCache.push_back(spotLight2);
 
@@ -112,20 +117,20 @@ void createLights() {
                                   5.0f,                         // spot exponent
                                   1.0f);                        // light intensity
     spotLight3->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                    glm::vec3(0.4f, 0.0f, 1.5f)));
+                                                   glm::vec3(0.4f, 0.0f, 1.5f)));
     sceneRoot.addChild(spotLight3);
     sceneLightsCache.push_back(spotLight3);
 
     // ------------------------------------------------------------------------
 
-    // directional light 1
-    Light* directionalLight1 = new Light(DIRECTION_LIGHT,               // light type
-                                         glm::vec3(0.0f),               // ambient
-                                         glm::vec3(0.5f),               // diffuse
-                                         glm::vec3(1.0f),               // specular
-                                         glm::vec3(0.0f, -1.0f, 0.2f)); // light direction
-    sceneRoot.addChild(directionalLight1);
-    sceneLightsCache.push_back(directionalLight1);
+    // directional light
+    Light* directionalLight = new Light(DIRECTION_LIGHT,                 // light type
+                                         glm::vec3(0.0f),                // ambient
+                                         glm::vec3(1.0f),                // diffuse
+                                         glm::vec3(1.0f),                // specular
+                                         glm::vec3(-1.0f, -0.1f, 0.1f)); // light direction
+    sceneRoot.addChild(directionalLight);
+    sceneLightsCache.push_back(directionalLight);
 }
 
 void createObjects() {
@@ -142,6 +147,29 @@ void createObjects() {
 
     // ------------------------------------------------------------------------
 
+    // planet
+    planet = new SingleMesh(MODELS_PATH + (std::string)"planet.obj",
+                            &phongShaderProgram,
+                            &material2);
+    planet->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                               planetPosition) *
+                                glm::rotate(glm::mat4(1.0f),
+                                            glm::radians(90.0f),
+                                            glm::vec3(0.0f, 1.0f, 0.0f)));
+    sceneRoot.addChild(planet);
+
+    // ------------------------------------------------------------------------
+
+    // moon
+    moon = new SingleMesh(MODELS_PATH + (std::string)"moon.obj",
+                          &phongShaderProgram,
+                          &material2);
+    moon->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                             moonPosition));
+    planet->addChild(moon);
+
+    // ------------------------------------------------------------------------
+
     // floor mesh
     SingleMesh* floor = new SingleMesh(MODELS_PATH + (std::string)"floor.obj",
                                        &phongShaderProgram,
@@ -149,7 +177,7 @@ void createObjects() {
     floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                               glm::vec3(0.0f, -1.0f, 2.0f)));
     sceneRoot.addChild(floor);
-
+    
     // ------------------------------------------------------------------------
 
     // Susanne
@@ -162,16 +190,6 @@ void createObjects() {
                                            glm::radians(90.0f),
                                            glm::vec3(0.0f, 1.0f, 0.0f)));
     sceneRoot.addChild(monke);
-
-    // ------------------------------------------------------------------------
-
-    // asteroid
-    SingleMesh* asteroid = new SingleMesh(MODELS_PATH + (std::string)"asteroid.obj",
-                                          &phongShaderProgram,
-                                          &material2);
-    asteroid->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                 asteroidLocation));
-    sceneRoot.addChild(asteroid);
 
     // ------------------------------------------------------------------------
 

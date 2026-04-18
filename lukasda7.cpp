@@ -1,5 +1,4 @@
 #include <iostream>
-#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -75,7 +74,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
  */
 void loadShaderPrograms() {
     // creating all shader programs
-    mandelrotShaderProgram = loadShaderProgram("simple-vs.glsl", "mandelbrot.frag");
+    mandelrotShaderProgram = loadShaderProgram("mandelbrot.vert", "mandelbrot.frag");
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
     rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
     skydomeShaderProgram = loadShaderProgram("skydome.vert", "skydome.frag");
@@ -278,6 +277,49 @@ void updateCamera(float deltaTime) {
                              (gameState.keyMap[KEY_ARROW_UP]) * deltaTime);
 }
 
+void rotateMoonAndPlanet(float deltaTime) {
+    // --------------------  moon rotation   --------------------
+    static float moonOrbitAngle = 0.0f;
+    static float moonAxisAngle = 0.0f;
+
+    // subtracting planet's rotation speed since moon is its child
+    moonOrbitAngle += glm::radians(deltaTime * (MOON_PLANET_ROTATION_SPEED -
+                                                PLANET_AXIS_ROTATION_SPEED));
+    moonAxisAngle += glm::radians(deltaTime * MOON_AXIS_ROTATION_SPEED);
+
+    // rotate moon around the planet
+    glm::mat4 orbit = glm::rotate(glm::mat4(1.0f),
+                                  moonOrbitAngle,
+                                  glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // moon's center's offset relative to the planet center
+    glm::mat4 moonOffset = glm::translate(glm::mat4(1.0f),
+                                          moonPosition);
+
+    // rotate moon around its own axis
+    glm::mat4 moonSelfRotation = glm::rotate(glm::mat4(1.0f),
+                                             moonAxisAngle,
+                                             glm::vec3(0.0f, 1.0f, 0.0f));
+
+    moon->setLocalModelMatrix(orbit * moonOffset * moonSelfRotation);
+
+    // -------------------  planet rotation   -------------------
+    static float planetAxisAngle = 0.0f;
+
+    planetAxisAngle += glm::radians(deltaTime * PLANET_AXIS_ROTATION_SPEED);
+
+    // planet's center's offset
+    glm::mat4 planetOffset = glm::translate(glm::mat4(1.0f),
+                                            planetPosition);
+    
+    // rotate planet around its own axis
+    glm::mat4 planetSelfRotation = glm::rotate(glm::mat4(1.0f),
+                                               planetAxisAngle,
+                                               glm::vec3(0.0f, 1.0f, 0.0f));
+
+    planet->setLocalModelMatrix(planetOffset * planetSelfRotation);
+}
+
 // ############################################################################
 //                                Callbacks
 // ############################################################################
@@ -473,6 +515,7 @@ void timerCb(int) {
     // update the application state
     sceneRoot.update(gameState.elapsedTime, nullptr);
     updateCamera(deltaTime);
+    rotateMoonAndPlanet(deltaTime);
     
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);
@@ -493,11 +536,12 @@ void initApplication() {
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
 
-    // enable depth test and backface culling
+    // enable services like depth test, backface culling, blendingn etc.
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_MULTISAMPLE);
 
     // create objects and add them to the scene graph
     createObjects();
@@ -542,7 +586,10 @@ int main(int argc, char** argv) {
     glutInitContextVersion(pgr::OGL_VER_MAJOR, pgr::OGL_VER_MINOR);
     glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
 
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    // multisampling level
+    glutSetOption(GLUT_MULTISAMPLE, 4);
+
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
 
     // for each window
     {
