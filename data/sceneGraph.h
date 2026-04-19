@@ -193,11 +193,34 @@ void createObjects() {
 
     // ------------------------------------------------------------------------
 
-    // rocket flame
+    // spaceship
+    SingleMesh* spaceship = new SingleMesh(MODELS_PATH + (std::string)"spaceship.obj",
+                                           &phongShaderProgram,
+                                           &material2);
+    spaceship->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                  glm::vec3(-50.0f, 1.0f, 0.0f)) *
+                                   glm::rotate(glm::mat4(1.0f),
+                                               glm::radians(0.0f),
+                                               glm::vec3(0.0f, 1.0f, 0.0f)));
+    sceneRoot.addChild(spaceship);
+
+    // ------------------------------------------------------------------------
+
+    // rocket flame 1
     SingleMesh* rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
                                               &rocketFlameShaderProgram,
                                               &material2);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                     glm::vec3(0.0, -1.0, 1.2)));
-    sceneRoot.addChild(rocketFlame1);
+                                                     glm::vec3(-10.095f, 0.0, -33.345f)));
+    spaceship->addChild(rocketFlame1);
+
+    // ------------------------------------------------------------------------
+
+    // rocket flame 2
+    SingleMesh* rocketFlame2 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
+                                              &rocketFlameShaderProgram,
+                                              &material2);
+    rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     glm::vec3(10.095f, 0.0, -33.345f)));
+    spaceship->addChild(rocketFlame2);
 }

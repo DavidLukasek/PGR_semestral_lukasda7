@@ -13,6 +13,7 @@ uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 uniform mat4 normalMatrix;
 uniform float elapsedTime;
+uniform vec3 cameraPosition;
 
 // ------------------------------- Attributes ---------------------------------
 
@@ -28,31 +29,40 @@ out vec2 theTexCoord;
 //                                  Main
 // ############################################################################
 
-// TODO: SET INVERSES AND STUFF AS UNIFORMS !!!
-
 void main() {
-    // camera-facing billboard constrained to Y axis
-    vec3 objectPosition = modelMatrix[3].xyz;
-    vec3 cameraPosition = inverse(viewMatrix)[3].xyz;
+    // camera-facing billboard constrained to the local Z axis
+    vec3 objectPosition = vec3(modelMatrix * vec4(0.0, 0.0, 0.0, 1.0));
+    mat3 modelRotationScale = mat3(modelMatrix);
 
-    mat4 PV = projectionMatrix * viewMatrix;
+    vec3 localXWorld = modelRotationScale[0];
+    vec3 localYWorld = modelRotationScale[1];
+    vec3 localZWorld = modelRotationScale[2];
+
+    float scaleX = max(length(localXWorld), 0.0001);
+    float scaleY = max(length(localYWorld), 0.0001);
+    float scaleZ = max(length(localZWorld), 0.0001);
+
+    vec3 axisZ = localZWorld / scaleZ;
 
     vec3 toCamera = cameraPosition - objectPosition;
-    toCamera.y = 0.0;
+    vec3 projectedToCamera = toCamera - axisZ * dot(toCamera, axisZ);
 
-    toCamera = normalize(toCamera);
+    vec3 billboardY = normalize(localYWorld);
+    if (dot(projectedToCamera, projectedToCamera) > 0.000001) {
+        billboardY = normalize(projectedToCamera);
+    }
 
-    vec3 up = vec3(0.0, 1.0, 0.0);
-    vec3 right = normalize(cross(up, toCamera));
+    vec3 billboardX = normalize(cross(billboardY, axisZ));
+    billboardY = normalize(cross(axisZ, billboardX));
 
-    // assumption: quad stays in local XY plane and has z = 0
     vec3 worldPos = objectPosition
-                  + right * position.x
-                  + up    * position.y;
+                  + billboardX * (position.x * scaleX)
+                  + billboardY * (position.y * scaleY)
+                  + axisZ      * (position.z * scaleZ);
 
-    gl_Position = PV * vec4(worldPos, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * vec4(worldPos, 1.0);
     worldPosition = worldPos;
-    worldNormal = normalize(vec3(normalMatrix * vec4(normal, 0.0)));
+    worldNormal = normalize(billboardX * normal.x + billboardY * normal.y + axisZ * normal.z);
 
     // sprite animation using UV shift
     int frame = int(elapsedTime / FRAME_TIME) % NUM_FRAMES;

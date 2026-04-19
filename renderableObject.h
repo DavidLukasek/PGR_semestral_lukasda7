@@ -75,8 +75,8 @@ typedef struct _ShaderProgram {
         locations.cameraPosition = -1;
         locations.asteroidLocation = -1;
         locations.hasDiffuseTexture = -1;
-        locations.mandelbrotAnimStarted = -1;
         locations.mandelbrotAnimPaused = -1;
+        locations.mandelbrotAnimStarted = -1;
         locations.mandelbrotAnimStartTime = -1;
         locations.mandelbrotAnimPauseTime = -1;
     }
