@@ -41,7 +41,6 @@ vec3 palette(float t) {
 // ############################################################################
 
 void main() {
-    const float WIN_HEIGHT = 500.0;
     float animatedTime = 0.0;
 
     if (mandelbrotAnimStarted) {

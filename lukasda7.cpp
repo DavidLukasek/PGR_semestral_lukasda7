@@ -277,20 +277,23 @@ void updateCamera(float deltaTime) {
                              (gameState.keyMap[KEY_ARROW_UP]) * deltaTime);
 }
 
-void rotateMoonAndPlanet(float deltaTime) {
-    // --------------------  moon rotation   --------------------
+void rotateUfoMoonAndPlanet(float deltaTime) {
+    // -----------------------  moon rotation   -----------------------
     static float moonOrbitAngle = 0.0f;
     static float moonAxisAngle = 0.0f;
 
     // subtracting planet's rotation speed since moon is its child
-    moonOrbitAngle += glm::radians(deltaTime * (MOON_PLANET_ROTATION_SPEED -
-                                                PLANET_AXIS_ROTATION_SPEED));
-    moonAxisAngle += glm::radians(deltaTime * MOON_AXIS_ROTATION_SPEED);
+    moonOrbitAngle += glm::radians(deltaTime *
+                                   (MOON_ORBIT_ROT_SPEED - PLANET_AXIS_ROT_SPEED) *
+                                   GLOBAL_ANIM_SPEED);
+    moonAxisAngle += glm::radians(deltaTime *
+                                  MOON_AXIS_ROT_SPEED * 
+                                  GLOBAL_ANIM_SPEED);
 
     // rotate moon around the planet
-    glm::mat4 orbit = glm::rotate(glm::mat4(1.0f),
-                                  moonOrbitAngle,
-                                  glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 moonOrbit = glm::rotate(glm::mat4(1.0f),
+                                      moonOrbitAngle,
+                                      glm::vec3(0.0f, 1.0f, 0.0f));
 
     // moon's center's offset relative to the planet center
     glm::mat4 moonOffset = glm::translate(glm::mat4(1.0f),
@@ -301,12 +304,38 @@ void rotateMoonAndPlanet(float deltaTime) {
                                              moonAxisAngle,
                                              glm::vec3(0.0f, 1.0f, 0.0f));
 
-    moon->setLocalModelMatrix(orbit * moonOffset * moonSelfRotation);
+    moon->setLocalModelMatrix(moonOrbit * moonOffset * moonSelfRotation);
 
-    // -------------------  planet rotation   -------------------
+    // -----------------------  ufo rotation   ------------------------
+
+    static float ufoOrbitAngle = 0.0f;
+    static float ufoAxisAngle = 0.0f;
+
+    // subtracting moon's rotation speed since ufo is its child
+    ufoOrbitAngle += glm::radians(deltaTime * (UFO_ORBIT_ROT_SPEED) * GLOBAL_ANIM_SPEED);
+    ufoAxisAngle += glm::radians(deltaTime * UFO_AXIS_ROT_SPEED * GLOBAL_ANIM_SPEED);
+
+    // rotate ufo around the moon
+    glm::mat4 ufoOrbit = glm::rotate(glm::mat4(1.0f),
+                                     ufoOrbitAngle,
+                                     glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // ufo's center's offset relative to the moon center
+    glm::mat4 ufoOffset = glm::translate(glm::mat4(1.0f),
+                                         ufoPosition);
+
+    // rotate ufo around its own axis
+    glm::mat4 ufoSelfRotation = glm::rotate(glm::mat4(1.0f),
+                                            ufoAxisAngle,
+                                            glm::vec3(0.0f, 1.0f, 0.0f));
+
+    ufo->setLocalModelMatrix(glm::inverse(moonSelfRotation) * ufoOrbit *
+                             ufoOffset * ufoSelfRotation);
+
+    // ----------------------  planet rotation   ----------------------
     static float planetAxisAngle = 0.0f;
 
-    planetAxisAngle += glm::radians(deltaTime * PLANET_AXIS_ROTATION_SPEED);
+    planetAxisAngle += glm::radians(deltaTime * PLANET_AXIS_ROT_SPEED * GLOBAL_ANIM_SPEED);
 
     // planet's center's offset
     glm::mat4 planetOffset = glm::translate(glm::mat4(1.0f),
@@ -515,7 +544,10 @@ void timerCb(int) {
     // update the application state
     sceneRoot.update(gameState.elapsedTime, nullptr);
     updateCamera(deltaTime);
-    rotateMoonAndPlanet(deltaTime);
+    rotateUfoMoonAndPlanet(deltaTime);
+
+    // update the fog's position to follow the planet
+    fogBall.center = planet->getPosition();
     
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);
