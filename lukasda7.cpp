@@ -278,14 +278,14 @@ void updateCamera(float deltaTime) {
                              (gameState.keyMap[KEY_ARROW_UP]) * deltaTime);
 }
 
-void rotateUfoMoonAndPlanet(float deltaTime) {
+void rotatePlanetarySystem(float deltaTime) {
     // -----------------------  moon rotation   -----------------------
     static float moonOrbitAngle = 0.0f;
     static float moonAxisAngle = 0.0f;
 
     // subtracting planet's rotation speed since moon is its child
     moonOrbitAngle += glm::radians(deltaTime *
-                                   (MOON_ORBIT_ROT_SPEED - PLANET_AXIS_ROT_SPEED) *
+                                   (MOON_ORBIT_ROT_SPEED - PLANET_1_AXIS_ROT_SPEED) *
                                    GLOBAL_ANIM_SPEED);
     moonAxisAngle += glm::radians(deltaTime *
                                   MOON_AXIS_ROT_SPEED * 
@@ -313,7 +313,7 @@ void rotateUfoMoonAndPlanet(float deltaTime) {
     static float ufoAxisAngle = 0.0f;
 
     // subtracting moon's rotation speed since ufo is its child
-    ufoOrbitAngle += glm::radians(deltaTime * (UFO_ORBIT_ROT_SPEED) * GLOBAL_ANIM_SPEED);
+    ufoOrbitAngle += glm::radians(deltaTime * UFO_ORBIT_ROT_SPEED * GLOBAL_ANIM_SPEED);
     ufoAxisAngle += glm::radians(deltaTime * UFO_AXIS_ROT_SPEED * GLOBAL_ANIM_SPEED);
 
     // rotate ufo around the moon
@@ -333,21 +333,46 @@ void rotateUfoMoonAndPlanet(float deltaTime) {
     ufo->setLocalModelMatrix(glm::inverse(moonSelfRotation) * ufoOrbit *
                              ufoOffset * ufoSelfRotation);
 
-    // ----------------------  planet rotation   ----------------------
-    static float planetAxisAngle = 0.0f;
+    // -------------------  shared planets orbit  ---------------------
+    static float planetsOrbitAngle = 0.0f;
 
-    planetAxisAngle += glm::radians(deltaTime * PLANET_AXIS_ROT_SPEED * GLOBAL_ANIM_SPEED);
+    planetsOrbitAngle += glm::radians(deltaTime * PLANET_ORBIT_ROT_SPEED * GLOBAL_ANIM_SPEED);
 
-    // planet's center's offset
-    glm::mat4 planetOffset = glm::translate(glm::mat4(1.0f),
-                                            PLANET_POSITION);
-    
-    // rotate planet around its own axis
-    glm::mat4 planetSelfRotation = glm::rotate(glm::mat4(1.0f),
-                                               planetAxisAngle,
-                                               glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 planetsOrbit = glm::translate(glm::mat4(1.0f), 
+                                            glm::vec3(0.0f, 80.0f, 0.0f)) *
+                             glm::rotate(glm::mat4(1.0f),
+                                         planetsOrbitAngle,
+                                         glm::vec3(0.0f, 1.0f, 0.0f)) *
+                             glm::translate(glm::mat4(1.0f),
+                                            glm::vec3(0.0f, -80.0f, 0.0f));
 
-    planet->setLocalModelMatrix(planetOffset * planetSelfRotation);
+    // ---------------------  planet 1 rotation   ---------------------
+    static float planet1AxisAngle = 0.0f;
+
+    planet1AxisAngle += glm::radians(deltaTime *
+                                     (PLANET_1_AXIS_ROT_SPEED - PLANET_ORBIT_ROT_SPEED) * 
+                                     GLOBAL_ANIM_SPEED);
+
+    glm::mat4 planet1Offset = glm::translate(glm::mat4(1.0f), PLANET_1_POSITION);
+    glm::mat4 planet1SelfRotation = glm::rotate(glm::mat4(1.0f),
+                                                planet1AxisAngle,
+                                                glm::vec3(0.0f, 1.0f, 0.0f));
+
+    planet1->setLocalModelMatrix(planetsOrbit * planet1Offset * planet1SelfRotation);
+
+    // ---------------------  planet 2 rotation   ---------------------
+    static float planet2AxisAngle = 0.0f;
+
+    planet2AxisAngle += glm::radians(deltaTime *
+                                     (PLANET_2_AXIS_ROT_SPEED - PLANET_ORBIT_ROT_SPEED) * 
+                                     GLOBAL_ANIM_SPEED);
+
+    glm::mat4 planet2Offset = glm::translate(glm::mat4(1.0f), PLANET_2_POSITION);
+    glm::mat4 planet2SelfRotation = glm::rotate(glm::mat4(1.0f),
+                                                planet2AxisAngle,
+                                                glm::vec3(0.0f, 1.0f, 0.0f));
+
+    planet2->setLocalModelMatrix(planetsOrbit * planet2Offset * planet2SelfRotation);
 }
 
 // ############################################################################
@@ -545,10 +570,10 @@ void timerCb(int) {
     // update the application state
     sceneRoot.update(gameState.elapsedTime, nullptr);
     updateCamera(deltaTime);
-    rotateUfoMoonAndPlanet(deltaTime);
+    rotatePlanetarySystem(deltaTime);
 
     // update the fog's position to follow the planet
-    fogBall.center = planet->getPosition();
+    fogBall.center = planet1->getPosition();
     
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);

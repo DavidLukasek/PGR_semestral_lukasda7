@@ -35,7 +35,8 @@ GameState gameState;
 
 // holding on moon and planet references to rotate them later in rotateMoonAndPlanet
 SingleMesh* ufo;
-SingleMesh* planet;
+SingleMesh* planet1;
+SingleMesh* planet2;
 SingleMesh* moon;
 
 // fog ball
@@ -156,13 +157,13 @@ void createObjects() {
 
     // ------------------------------------------------------------------------
 
-    // planet
-    planet = new SingleMesh(MODELS_PATH + (std::string)"planet.obj",
-                            &phongShaderProgram,
-                            &material2);
-    planet->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                               PLANET_POSITION));
-    sceneRoot.addChild(planet);
+    // planet 1
+    planet1 = new SingleMesh(MODELS_PATH + (std::string)"planet1.obj",
+                             &phongShaderProgram,
+                             &material2);
+    planet1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                               PLANET_1_POSITION));
+    sceneRoot.addChild(planet1);
 
     // ------------------------------------------------------------------------
 
@@ -172,7 +173,7 @@ void createObjects() {
                           &material2);
     moon->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                              MOON_POSITION));
-    planet->addChild(moon);
+    planet1->addChild(moon);
 
     // ------------------------------------------------------------------------
 
@@ -183,6 +184,16 @@ void createObjects() {
     ufo->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                             UFO_POSITION));
     moon->addChild(ufo);
+
+    // ------------------------------------------------------------------------
+
+    // planet 2
+    planet2 = new SingleMesh(MODELS_PATH + (std::string)"planet2.obj",
+                             &phongShaderProgram,
+                             &material2);
+    planet2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                               PLANET_2_POSITION));
+    sceneRoot.addChild(planet2);
 
     // ------------------------------------------------------------------------
 
