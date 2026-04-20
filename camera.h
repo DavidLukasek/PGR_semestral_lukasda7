@@ -1,22 +1,17 @@
 #pragma once
 
+#include "config.h"
 #include "object.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 class Camera : public Object {
 public:
-    static constexpr float MOVE_SPEED = 50.0f;
-    static constexpr float SPRINT_SPEED = 100.0f;
-    static constexpr float FOV_SPEED = 100.0f;
-    static constexpr float MIN_FOV = 10.0f;
-    static constexpr float MAX_FOV = 170.0f;
-
     Camera(
         glm::vec3 initialPosition = glm::vec3(0.0f, 0.0f, 3.0f),
         float fieldOfViewDegrees = 90.0f,
-        float nearPlane = 0.1f,
-        float farPlane = 1000.0f,
+        float nearPlane = NEAR_PLANE,
+        float farPlane = FAR_PLANE,
         bool isSprinting = false
     );
     ~Camera() override = default;

@@ -21,6 +21,7 @@
       <Filter>data</Filter>
     </ClInclude>
     <ClInclude Include="square.h" />
+    <ClInclude Include="config.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

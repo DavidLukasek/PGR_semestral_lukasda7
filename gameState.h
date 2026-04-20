@@ -2,20 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#define SHADER_PATH "data/shaders/"
-#define MODELS_PATH "data/models/"
-
-#define WINDOW_TITLE "PGR: Application lukasda7"
-
-#define MAX_SCENE_LIGHTS 8
-
-#define GLOBAL_ANIM_SPEED       0.1f
-#define UFO_ORBIT_ROT_SPEED     60.0f
-#define UFO_AXIS_ROT_SPEED     -90.0f
-#define MOON_ORBIT_ROT_SPEED    20.0f
-#define MOON_AXIS_ROT_SPEED   -100.0f
-#define PLANET_ORBIT_ROT_SPEED   1.0f
-#define PLANET_AXIS_ROT_SPEED   -5.0f
+#include "config.h"
 
 enum { KEY_W, KEY_A, KEY_S, KEY_D,
        KEY_Q, KEY_E, KEY_ESC, KEY_SHIFT,
@@ -24,12 +11,12 @@ enum { KEY_W, KEY_A, KEY_S, KEY_D,
 
 typedef struct _GameState {
 public:
-    int windowWidth = 1920;
-    int windowHeight = 1080;
+    int windowWidth = WINDOW_WIDTH;
+    int windowHeight = WINDOW_HEIGHT;
 
     int ogMouseX = -1;
     int ogMouseY = -1;
-    const float mouseSensitivity = 0.25f;
+    float mouseSensitivity = MOUSE_SENSITIVITY;
 
     float elapsedTime = 0.0f;
 
@@ -40,5 +27,5 @@ public:
 
     bool keyMap[KEYS_COUNT] = { false };
 
-    glm::vec3 ambientColor = glm::vec3(0.05f);
+    glm::vec3 ambientColor = AMBIENT_COLOR;
 } GameState;

@@ -2,14 +2,15 @@
 
 #include <vector>
 
+#include "config.h"
 #include "../singlemesh.h"
 #include "square.h"
 
 typedef struct FogBall {
-    glm::vec3 center = glm::vec3(0.0f);
-    glm::vec3 color  = glm::vec3(1.0f);
-    float radius     = 10.0f;
-    float density    = 0.1f;
+    glm::vec3 center = FOG_CENTER;
+    glm::vec3 color  = FOG_COLOR;
+    float radius     = FOG_RADIUS;
+    float density    = FOG_DENSITY;
 } FogBall;
 
 // array holding all shader programs in the application
@@ -22,6 +23,8 @@ ShaderProgram skydomeShaderProgram;
 
 // root of the scene - all objects are children of it or of other its children
 Object sceneRoot;
+
+// cache storing references to all scene lights for faster updates
 std::vector<Light*> sceneLightsCache;
 
 // scene camera
@@ -30,24 +33,13 @@ glm::vec2 cameraRotation = glm::vec2(0.0);
 
 GameState gameState;
 
-// ufo, moon and planet locations to be used for fog and rotations later in lukasda7.cpp
-glm::vec3 ufoPosition = glm::vec3(0.0f, 15.0f, 0.0f);
-glm::vec3 moonPosition = glm::vec3(0.0f, 0.0f, 200.0f);
-glm::vec3 planetPosition = glm::vec3(-120.0f, 80.0f, -220.0f);
-glm::vec3 starPosition = glm::vec3(0.0f, 80.0f, 1000.0f);
-
 // holding on moon and planet references to rotate them later in rotateMoonAndPlanet
 SingleMesh* ufo;
 SingleMesh* planet;
 SingleMesh* moon;
 
 // fog ball
-FogBall fogBall = {
-    planetPosition,                 // fog center
-    glm::vec3(0.64f, 0.62f, 0.9f),  // fog color
-    105.0f,                         // fog radius
-    0.2f                            // fog density
-};
+FogBall fogBall;
 
 // grey material
 Material material1 = {
@@ -141,13 +133,13 @@ void createLights() {
     // ------------------------------------------------------------------------
 
     // directional light
-    Light* directionalLight = new Light(DIRECTION_LIGHT,                 // light type
-                                         glm::vec3(0.0f),                // ambient
-                                         glm::vec3(1.0f),                // diffuse
-                                         glm::vec3(1.0f),                // specular
-                                         glm::vec3(-1.0f, -0.1f, 0.1f)); // light direction
-    sceneRoot.addChild(directionalLight);
-    sceneLightsCache.push_back(directionalLight);
+    Light* sunLight = new Light(DIRECTION_LIGHT,                // light type
+                                glm::vec3(0.0f),                // ambient
+                                glm::vec3(1.0f),                // diffuse
+                                glm::vec3(1.0f),                // specular
+                                glm::normalize(-SUN_LOCATION)); // light direction
+    sceneRoot.addChild(sunLight);
+    sceneLightsCache.push_back(sunLight);
 }
 
 void createObjects() {
@@ -169,10 +161,7 @@ void createObjects() {
                             &phongShaderProgram,
                             &material2);
     planet->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                               planetPosition) *
-                                glm::rotate(glm::mat4(1.0f),
-                                            glm::radians(90.0f),
-                                            glm::vec3(0.0f, 1.0f, 0.0f)));
+                                               PLANET_POSITION));
     sceneRoot.addChild(planet);
 
     // ------------------------------------------------------------------------
@@ -182,8 +171,18 @@ void createObjects() {
                           &phongShaderProgram,
                           &material2);
     moon->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                             moonPosition));
+                                             MOON_POSITION));
     planet->addChild(moon);
+
+    // ------------------------------------------------------------------------
+
+    // ufo
+    ufo = new SingleMesh(MODELS_PATH + (std::string)"ufo.obj",
+                         &phongShaderProgram,
+                         &material2);
+    ufo->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                            UFO_POSITION));
+    moon->addChild(ufo);
 
     // ------------------------------------------------------------------------
 
@@ -215,7 +214,7 @@ void createObjects() {
                                            &phongShaderProgram,
                                            &material2);
     spaceship->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                  glm::vec3(-50.0f, 1.0f, 0.0f)) *
+                                                  SPACESHIP_POSITION) *
                                    glm::rotate(glm::mat4(1.0f),
                                                glm::radians(0.0f),
                                                glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -228,7 +227,7 @@ void createObjects() {
                                               &rocketFlameShaderProgram,
                                               &material2);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                     glm::vec3(-10.095f, 0.0, -33.345f)));
+                                                     ROCKET_FLAME_1_OFFSET));
     spaceship->addChild(rocketFlame1);
 
     // ------------------------------------------------------------------------
@@ -238,16 +237,6 @@ void createObjects() {
                                               &rocketFlameShaderProgram,
                                               &material2);
     rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                     glm::vec3(10.095f, 0.0, -33.345f)));
+                                                     ROCKET_FLAME_2_OFFSET));
     spaceship->addChild(rocketFlame2);
-
-    // ------------------------------------------------------------------------
-
-    // ufo
-    ufo = new SingleMesh(MODELS_PATH + (std::string)"ufo.obj",
-                                     &phongShaderProgram,
-                                     &material2);
-    ufo->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                            ufoPosition));
-    moon->addChild(ufo);
 }

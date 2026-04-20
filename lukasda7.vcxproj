@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="config.h" />
     <ClInclude Include="data\sceneGraph.h" />
     <ClInclude Include="gameState.h" />
     <ClInclude Include="light.h" />

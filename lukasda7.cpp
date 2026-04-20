@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "camera.h"
+#include "config.h"
 #include "gameState.h"
 #include "light.h"
 #include "object.h"
@@ -59,8 +60,8 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
     prog.locations.asteroidLocation = glGetUniformLocation(prog.program, "asteroidLocation");
     prog.locations.hasDiffuseTexture = glGetUniformLocation(prog.program, "hasDiffuseTexture");
-    prog.locations.mandelbrotAnimStarted = glGetUniformLocation(prog.program, "mandelbrotAnimStarted");
     prog.locations.mandelbrotAnimPaused = glGetUniformLocation(prog.program, "mandelbrotAnimPaused");
+    prog.locations.mandelbrotAnimStarted = glGetUniformLocation(prog.program, "mandelbrotAnimStarted");
     prog.locations.mandelbrotAnimStartTime = glGetUniformLocation(prog.program, "mandelbrotAnimStartTime");
     prog.locations.mandelbrotAnimPauseTime = glGetUniformLocation(prog.program, "mandelbrotAnimPauseTime");
 
@@ -297,7 +298,7 @@ void rotateUfoMoonAndPlanet(float deltaTime) {
 
     // moon's center's offset relative to the planet center
     glm::mat4 moonOffset = glm::translate(glm::mat4(1.0f),
-                                          moonPosition);
+                                          MOON_POSITION);
 
     // rotate moon around its own axis
     glm::mat4 moonSelfRotation = glm::rotate(glm::mat4(1.0f),
@@ -322,7 +323,7 @@ void rotateUfoMoonAndPlanet(float deltaTime) {
 
     // ufo's center's offset relative to the moon center
     glm::mat4 ufoOffset = glm::translate(glm::mat4(1.0f),
-                                         ufoPosition);
+                                         UFO_POSITION);
 
     // rotate ufo around its own axis
     glm::mat4 ufoSelfRotation = glm::rotate(glm::mat4(1.0f),
@@ -339,7 +340,7 @@ void rotateUfoMoonAndPlanet(float deltaTime) {
 
     // planet's center's offset
     glm::mat4 planetOffset = glm::translate(glm::mat4(1.0f),
-                                            planetPosition);
+                                            PLANET_POSITION);
     
     // rotate planet around its own axis
     glm::mat4 planetSelfRotation = glm::rotate(glm::mat4(1.0f),
