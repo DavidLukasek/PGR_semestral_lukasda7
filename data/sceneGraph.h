@@ -20,6 +20,7 @@ ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
 ShaderProgram rocketFlameShaderProgram;
 ShaderProgram skydomeShaderProgram;
+ShaderProgram cloudsShaderProgram;
 
 // root of the scene - all objects are children of it or of other its children
 Object sceneRoot;
@@ -37,6 +38,7 @@ GameState gameState;
 SingleMesh* ufo;
 SingleMesh* planet1;
 SingleMesh* planet2;
+SingleMesh* planet2Clouds;
 SingleMesh* moon;
 
 // fog ball
@@ -194,6 +196,19 @@ void createObjects() {
     planet2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                PLANET_2_POSITION));
     sceneRoot.addChild(planet2);
+
+    // ------------------------------------------------------------------------
+
+    // planet 2 clouds
+    planet2Clouds = new SingleMesh(MODELS_PATH + (std::string)"planet2_clouds.obj",
+                                   &cloudsShaderProgram,
+                                   &material2);
+    planet2Clouds->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                      PLANET_2_POSITION));
+    sceneRoot.addChild(planet2Clouds);
+
+    // turn off backface culling for this object
+    planet2Clouds->setBackfaceCullingOff(true);
 
     // ------------------------------------------------------------------------
 

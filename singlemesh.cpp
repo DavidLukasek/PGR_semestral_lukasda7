@@ -84,12 +84,21 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
+        // turning off backface culling for objects that have it off
+        if (backFaceCullingOff) {
+            glDisable(GL_CULL_FACE);
+        }
+
+        // drawing
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawElements(GL_TRIANGLES, geometry->numTriangles * 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         if (hasDiffuseTexture)
             glBindTexture(GL_TEXTURE_2D, 0);
+
+        // turn culling back on
+        glEnable(GL_CULL_FACE);
     }
     else {
         std::cerr << "SingleMesh::draw(): Can't draw, mesh not initialized properly!" << std::endl;
@@ -97,6 +106,10 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
 
     // draw children
     Object::draw(viewMatrix, projectionMatrix);
+}
+
+void SingleMesh::setBackfaceCullingOff(bool value) {
+    backFaceCullingOff = value;
 }
 
 /** Load one mesh using assimp library (vertices only, for more attributes see method extended version in Asteroids)

@@ -29,11 +29,11 @@
 // ------------------------- Planetary system objects -------------------------
 
 // object positions
-#define UFO_POSITION      glm::vec3(0.0f, 15.0f, 0.0f)
-#define MOON_POSITION     glm::vec3(0.0f, 0.0f, 200.0f)
-#define PLANET_1_POSITION glm::vec3(-160.0f, 80.0f, -260.0f)
-#define PLANET_2_POSITION glm::vec3(160.0f, 80.0f, 260.0f)
-#define SUN_LOCATION      glm::vec3(1000.0f, 100.0f, -100.0f)
+#define UFO_POSITION       glm::vec3(0.0f, 15.0f, 0.0f)
+#define MOON_POSITION      glm::vec3(0.0f, 0.0f, 200.0f)
+#define PLANET_1_POSITION  glm::vec3(-160.0f, 80.0f, -260.0f)
+#define PLANET_2_POSITION  glm::vec3(160.0f, 80.0f, 260.0f)
+#define SUN_LOCATION       glm::vec3(1000.0f, 100.0f, -100.0f)
 
 // object rotation speeds
 #define UFO_AXIS_ROT_SPEED     -150.0f
@@ -53,6 +53,6 @@
 // ------------------------------- Other objects ------------------------------
 
 // object positions
-#define SPACESHIP_POSITION    glm::vec3(-50.0f, 1.0f, 0.0f)
-#define ROCKET_FLAME_1_OFFSET glm::vec3(10.095f, 0.0, -33.345f)
-#define ROCKET_FLAME_2_OFFSET glm::vec3(-10.095f, 0.0, -33.345f)
+#define SPACESHIP_POSITION     glm::vec3(-50.0f, 1.0f, 0.0f)
+#define ROCKET_FLAME_1_OFFSET  glm::vec3(10.095f, 0.0, -33.345f)
+#define ROCKET_FLAME_2_OFFSET  glm::vec3(-10.095f, 0.0, -33.345f)
