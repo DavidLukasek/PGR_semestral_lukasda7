@@ -8,6 +8,7 @@ uniform mat4 modelMatrix;
 uniform mat4 normalMatrix;
 
 uniform float elapsedTime;
+uniform int   isUVAnimated;         // flag for animated UV coordinates
 
 // ------------------------------- Attributes ---------------------------------
 
@@ -30,5 +31,7 @@ void main() {
 
     worldPosition = vec3(modelMatrix * vec4(position, 1.0));
     worldNormal = normalize(vec3(normalMatrix * vec4(normal, 0.0)));
+
     theTexCoord = texCoord;
+    if (bool(isUVAnimated)) theTexCoord += 0.1*elapsedTime;
 }

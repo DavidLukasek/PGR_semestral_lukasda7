@@ -6,7 +6,9 @@ SingleMesh::SingleMesh(std::string modelFileName,
     ShaderProgram* shdrPrg,
     const Material* mat)
     : RenderableObject(shdrPrg, mat)
-    , initialized(false) {
+    , initialized(false)
+    , backFaceCullingOff(false)
+    , isUVAnimated(false) {
     if (modelFileName != "square") {
         if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
             if (geometry == nullptr) {
@@ -88,6 +90,10 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         if (backFaceCullingOff) {
             glDisable(GL_CULL_FACE);
         }
+        // turning on UV animation if enabled
+        if (shaderProgram->locations.isUVAnimated != -1) {
+            glUniform1i(shaderProgram->locations.isUVAnimated, isUVAnimated ? 1 : 0);
+        }
 
         // drawing
         glBindVertexArray(geometry->vertexArrayObject);
@@ -110,6 +116,10 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
 
 void SingleMesh::setBackfaceCullingOff(bool value) {
     backFaceCullingOff = value;
+}
+
+void SingleMesh::setUVAnimated(bool value) {
+    isUVAnimated = value;
 }
 
 /** Load one mesh using assimp library (vertices only, for more attributes see method extended version in Asteroids)

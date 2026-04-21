@@ -60,6 +60,8 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
     prog.locations.asteroidLocation = glGetUniformLocation(prog.program, "asteroidLocation");
     prog.locations.hasDiffuseTexture = glGetUniformLocation(prog.program, "hasDiffuseTexture");
+    prog.locations.isUVAnimated = glGetUniformLocation(prog.program, "isUVAnimated");
+
     prog.locations.mandelbrotAnimPaused = glGetUniformLocation(prog.program, "mandelbrotAnimPaused");
     prog.locations.mandelbrotAnimStarted = glGetUniformLocation(prog.program, "mandelbrotAnimStarted");
     prog.locations.mandelbrotAnimStartTime = glGetUniformLocation(prog.program, "mandelbrotAnimStartTime");
@@ -79,14 +81,12 @@ void loadShaderPrograms() {
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
     rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
     skydomeShaderProgram = loadShaderProgram("skydome.vert", "skydome.frag");
-    cloudsShaderProgram = loadShaderProgram("clouds.vert", "clouds.frag");
 
     // pushing them all into the global shader program vector
     shaderPrograms.push_back(mandelrotShaderProgram);
     shaderPrograms.push_back(phongShaderProgram);
     shaderPrograms.push_back(rocketFlameShaderProgram);
     shaderPrograms.push_back(skydomeShaderProgram);
-    shaderPrograms.push_back(cloudsShaderProgram);
 }
 
 /**
@@ -228,26 +228,6 @@ void drawScene(void) {
 
     // light uniforms update
     setLightUniforms(phongShaderProgram, sceneLightsCache);
-
-    glUseProgram(cloudsShaderProgram.program);
-
-    // elapsed time uniform update
-    if (cloudsShaderProgram.locations.elapsedTime != -1)
-        glUniform1f(cloudsShaderProgram.locations.elapsedTime, gameState.elapsedTime);
-
-    // camera position uniform update
-    if (cloudsShaderProgram.locations.cameraPosition != -1) {
-        glUniform3fv(cloudsShaderProgram.locations.cameraPosition,
-                     1, glm::value_ptr(cameraPosition));
-    }
-
-    // ambient uniform update
-    if (cloudsShaderProgram.locations.ambientColor != -1)
-        glUniform3fv(cloudsShaderProgram.locations.ambientColor,
-                     1, glm::value_ptr(gameState.ambientColor));
-
-    // light uniforms update
-    setLightUniforms(cloudsShaderProgram, sceneLightsCache);
 
     // fog uniforms update for all shaders
     for (const ShaderProgram& prog : shaderPrograms)

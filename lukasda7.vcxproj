@@ -173,8 +173,6 @@
     <ClInclude Include="triangle.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\shaders\clouds.frag" />
-    <None Include="data\shaders\clouds.vert" />
     <None Include="data\shaders\mandelbrot.frag" />
     <None Include="data\shaders\mandelbrot.vert" />
     <None Include="data\shaders\phong.frag" />

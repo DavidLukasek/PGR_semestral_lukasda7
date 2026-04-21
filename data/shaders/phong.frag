@@ -15,7 +15,7 @@
 uniform float elapsedTime;          // elapsed application time
 uniform vec3  ambientColor;         // ambient color
 uniform vec3  cameraPosition;       // position of the camera
-uniform int   hasDiffuseTexture;    // flag for texture-less materials
+uniform int   hasDiffuseTexture;    // flag for texture-less material
 
 // matrix uniforms
 uniform mat4  projectionMatrix;     // projection matrix
@@ -180,9 +180,11 @@ void main() {
     vec3 normal = normalize(worldNormal);
 
     // diffuse texture color
+    vec4 texel = vec4(1.0);
     vec3 albedo = vec3(1.0);
     if (hasDiffuseTexture != 0)
-        albedo = texture(diffuseTex, theTexCoord).rgb;
+        texel = texture(diffuseTex, theTexCoord);
+        albedo = texel.rgb;
 
     // ambient * diffuse color
     vec3 color = ambientColor * matAmbient * albedo;
@@ -207,5 +209,5 @@ void main() {
     float fogFactor = fogFactorFromLength(traveledInFog);
     color = mix(color, fogColor, fogFactor);
 
-    fragmentColor = vec4(color, 1.0);
+    fragmentColor = vec4(color, texel.w);
 }
