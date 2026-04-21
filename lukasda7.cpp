@@ -199,6 +199,82 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
     }
 }
 
+void drawObjectStencil(Object* object) {
+    // set stencil function to redraw with object id
+    glStencilFunc(GL_ALWAYS, object->getObjectID(), 0xFF);
+
+    CHECK_GL_ERROR();
+
+    object->draw(camera.getViewMatrix(),
+                 camera.getProjectionMatrix((float)gameState.windowWidth /
+                                            (float)gameState.windowHeight));
+
+    // draw stencil for all children
+    for (Object* child : object->getChildren()) {
+        drawObjectStencil(child);
+    }
+}
+
+void drawStencil() {
+    // enable stencil test
+    glEnable(GL_STENCIL_TEST);
+
+    // value in the stencil buffer is replaced with the object ID (byte 1..255, 0 ... background)
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    CHECK_GL_ERROR();
+
+    // draw object IDs into the stencil buffer
+    Object::setSuppressChildrenDraw(true);
+    drawObjectStencil(&sceneRoot);
+    Object::setSuppressChildrenDraw(false);
+
+    // disable stencil test
+    glDisable(GL_STENCIL_TEST);
+}
+
+unsigned char pickObject(int mouseX, int mouseY) {
+    unsigned char objectID = 0;
+
+    glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    drawStencil();
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    glReadPixels(mouseX, gameState.windowHeight - mouseY - 1, 1, 1,
+                 GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &objectID);
+
+    return objectID;
+}
+
+void checkObjectPick() {
+    if (gameState.keyMap[LMB]) {
+        unsigned char objectID = pickObject(gameState.ogMouseX, gameState.ogMouseY);
+        switch (objectID) {
+            // Mandelbrot object animation case
+            case 2:
+                if (!gameState.mandelbrotAnimStarted) {
+                    gameState.mandelbrotAnimStarted = true;
+                    gameState.mandelbrotAnimPaused = false;
+                    gameState.mandelbrotAnimStartTime = gameState.elapsedTime;
+                    gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
+                }
+                else if (!gameState.mandelbrotAnimPaused) {
+                    gameState.mandelbrotAnimPaused = true;
+                    gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
+                }
+                else {
+                    gameState.mandelbrotAnimPaused = false;
+                    gameState.mandelbrotAnimStartTime +=
+                        (gameState.elapsedTime - gameState.mandelbrotAnimPauseTime);
+                }
+                break;
+        }
+
+        gameState.keyMap[LMB] = false;
+    }
+}
+
 /**
  * \brief Draw all scene objects and update their uniforms
  */
@@ -386,7 +462,7 @@ void rotatePlanetarySystem(float deltaTime) {
  */
 void displayCb() {
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // draw the window contents (scene objects)
     drawScene();
@@ -429,24 +505,6 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 'd': case 'D': gameState.keyMap[KEY_D] = true; break;
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = true; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
-
-        // Mandelbrot animation toggle (start/pause/resume)
-        case 'p': case 'P': {
-            if (!gameState.mandelbrotAnimStarted) {
-                gameState.mandelbrotAnimStarted = true;
-                gameState.mandelbrotAnimPaused = false;
-                gameState.mandelbrotAnimStartTime = gameState.elapsedTime;
-                gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
-            } else if (!gameState.mandelbrotAnimPaused) {
-                gameState.mandelbrotAnimPaused = true;
-                gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
-            } else {
-                gameState.mandelbrotAnimPaused = false;
-                gameState.mandelbrotAnimStartTime +=
-                    (gameState.elapsedTime - gameState.mandelbrotAnimPauseTime);
-            }
-            break;
-        }
     }
 }
 
@@ -577,7 +635,10 @@ void timerCb(int) {
     // update the fog's position to follow planet1
     fogBall.center = planet1->getPosition();
     planet2Clouds->setPosition(planet2->getPosition());
-    
+
+    // check if an object has been picked and which
+    checkObjectPick();
+
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);
 
@@ -650,7 +711,7 @@ int main(int argc, char** argv) {
     // multisampling level
     glutSetOption(GLUT_MULTISAMPLE, 4);
 
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL | GLUT_MULTISAMPLE);
 
     // for each window
     {

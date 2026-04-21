@@ -14,9 +14,11 @@ typedef std::vector<Object*> ObjectList;
  */
 class Object {
 protected:
-    glm::mat4   localModelMatrix;
-    glm::mat4   globalModelMatrix;
-    ObjectList  children;
+    glm::mat4       localModelMatrix;
+    glm::mat4       globalModelMatrix;
+    ObjectList      children;
+    unsigned char   objectID;
+    static bool     suppressChildrenDraw;
 
     void updateGlobalModelMatrix(const glm::mat4* parentModelMatrix);
     void updateChildren(float elapsedTime);
@@ -34,6 +36,9 @@ public:
     void setPosition(const glm::vec3& position);
     glm::vec3 getPosition() const;
     void translate(const glm::vec3& offset);
+    void setObjectID(unsigned char ID);
+    unsigned char getObjectID();
+    static void setSuppressChildrenDraw(bool suppress);
 
     virtual void update(float elapsedTime, const glm::mat4* parentModelMatrix);
     virtual void draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);

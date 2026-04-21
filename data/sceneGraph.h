@@ -145,8 +145,8 @@ void createLights() {
 }
 
 void createObjects() {
-    // square with mandelbrot set
-    sceneRoot.addChild(new Square(&mandelrotShaderProgram));
+    // variable to assign all object's IDs
+    int objectIDs = 1;
 
     // ------------------------------------------------------------------------
 
@@ -154,7 +154,15 @@ void createObjects() {
     SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
                                          &skydomeShaderProgram,
                                          &material2);
+    skydome->setObjectID(objectIDs++);
     sceneRoot.addChild(skydome);
+
+    // ------------------------------------------------------------------------
+
+    // square with mandelbrot set
+    Square* mandelbrot = new Square(&mandelrotShaderProgram);
+    mandelbrot->setObjectID(objectIDs++);
+    sceneRoot.addChild(mandelbrot);
 
     // ------------------------------------------------------------------------
 
@@ -164,6 +172,7 @@ void createObjects() {
                              &material2);
     planet1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                PLANET_1_POSITION));
+    planet1->setObjectID(objectIDs++);
     sceneRoot.addChild(planet1);
 
     // ------------------------------------------------------------------------
@@ -174,6 +183,7 @@ void createObjects() {
                           &material2);
     moon->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                              MOON_POSITION));
+    moon->setObjectID(objectIDs++);
     planet1->addChild(moon);
 
     // ------------------------------------------------------------------------
@@ -184,6 +194,7 @@ void createObjects() {
                          &material2);
     ufo->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                             UFO_POSITION));
+    ufo->setObjectID(objectIDs++);
     moon->addChild(ufo);
 
     // ------------------------------------------------------------------------
@@ -194,6 +205,7 @@ void createObjects() {
                              &material2);
     planet2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                PLANET_2_POSITION));
+    planet2->setObjectID(objectIDs++);
     sceneRoot.addChild(planet2);
 
     // ------------------------------------------------------------------------
@@ -205,10 +217,9 @@ void createObjects() {
     planet2Clouds->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                       PLANET_2_POSITION));
     planet2Clouds->setUVAnimated(true);
-    sceneRoot.addChild(planet2Clouds);
-
-    // turn off backface culling for this object
+    planet2Clouds->setObjectID(objectIDs++);
     planet2Clouds->setBackfaceCullingOff(true);
+    sceneRoot.addChild(planet2Clouds);
 
     // ------------------------------------------------------------------------
 
@@ -218,6 +229,7 @@ void createObjects() {
                                        &material1);
     floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                               glm::vec3(0.0f, -1.0f, 2.0f)));
+    floor->setObjectID(objectIDs++);
     sceneRoot.addChild(floor);
     
     // ------------------------------------------------------------------------
@@ -231,6 +243,7 @@ void createObjects() {
                                glm::rotate(glm::mat4(1.0f),
                                            glm::radians(90.0f),
                                            glm::vec3(0.0f, 1.0f, 0.0f)));
+    monke->setObjectID(objectIDs++);
     sceneRoot.addChild(monke);
 
     // ------------------------------------------------------------------------
@@ -244,6 +257,7 @@ void createObjects() {
                                    glm::rotate(glm::mat4(1.0f),
                                                glm::radians(0.0f),
                                                glm::vec3(0.0f, 1.0f, 0.0f)));
+    spaceship->setObjectID(objectIDs++);
     sceneRoot.addChild(spaceship);
 
     // ------------------------------------------------------------------------
@@ -254,6 +268,7 @@ void createObjects() {
                                               &material2);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_1_OFFSET));
+    rocketFlame1->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame1);
 
     // ------------------------------------------------------------------------
@@ -264,5 +279,6 @@ void createObjects() {
                                               &material2);
     rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_2_OFFSET));
+    rocketFlame2->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame2);
 }

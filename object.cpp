@@ -1,8 +1,11 @@
 #include "object.h"
 
+bool Object::suppressChildrenDraw = false;
+
 Object::Object()
     : localModelMatrix(1.0f)
-    , globalModelMatrix(1.0f) {
+    , globalModelMatrix(1.0f)
+    , objectID(-1) {
 }
 
 Object::~Object() = default;
@@ -67,6 +70,19 @@ void Object::update(float elapsedTime, const glm::mat4* parentModelMatrix) {
     updateChildren(elapsedTime);
 }
 
+void Object::setObjectID(unsigned char ID) {
+    objectID = ID;
+}
+
+unsigned char Object::getObjectID() {
+    return objectID;
+}
+
+void Object::setSuppressChildrenDraw(bool suppress) {
+    suppressChildrenDraw = suppress;
+}
+
 void Object::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
-    drawChildren(viewMatrix, projectionMatrix);
+    if (!suppressChildrenDraw)
+        drawChildren(viewMatrix, projectionMatrix);
 }
