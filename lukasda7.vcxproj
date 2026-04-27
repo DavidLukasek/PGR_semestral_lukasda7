@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="data\models\Item.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="singlemesh.cpp" />
@@ -163,6 +164,7 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="data\models\Item.h" />
     <ClInclude Include="data\sceneGraph.h" />
     <ClInclude Include="gameState.h" />
     <ClInclude Include="light.h" />

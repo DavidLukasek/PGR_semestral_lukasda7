@@ -60,6 +60,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.cameraPosition = glGetUniformLocation(prog.program, "cameraPosition");
     prog.locations.asteroidLocation = glGetUniformLocation(prog.program, "asteroidLocation");
     prog.locations.hasDiffuseTexture = glGetUniformLocation(prog.program, "hasDiffuseTexture");
+    prog.locations.hasNormalTexture = glGetUniformLocation(prog.program, "hasNormalTexture");
     prog.locations.isUVAnimated = glGetUniformLocation(prog.program, "isUVAnimated");
 
     prog.locations.mandelbrotAnimPaused = glGetUniformLocation(prog.program, "mandelbrotAnimPaused");
@@ -662,8 +663,10 @@ void initApplication() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
+
+    // set up alpha-blending
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // create objects and add them to the scene graph
     createObjects();

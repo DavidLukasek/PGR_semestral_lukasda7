@@ -8,6 +8,9 @@
     <ClCompile Include="light.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="square.cpp" />
+    <ClCompile Include="data\models\Item.cpp">
+      <Filter>data\models</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="object.h" />
@@ -22,6 +25,9 @@
     </ClInclude>
     <ClInclude Include="square.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="data\models\Item.h">
+      <Filter>data\models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">
@@ -29,6 +35,9 @@
     </Filter>
     <Filter Include="data\shaders">
       <UniqueIdentifier>{f8d67b17-30c0-43eb-9b08-23edee4d8841}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data\models">
+      <UniqueIdentifier>{eeec654e-c917-4614-8092-c9493991e7c2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

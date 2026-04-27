@@ -56,3 +56,4 @@
 #define SPACESHIP_POSITION     glm::vec3(-50.0f, 1.0f, 0.0f)
 #define ROCKET_FLAME_1_OFFSET  glm::vec3(10.095f, 0.0, -33.345f)
 #define ROCKET_FLAME_2_OFFSET  glm::vec3(-10.095f, 0.0, -33.345f)
+#define ITEM_POSITION          glm::vec3(0.0f, 3.0f, -10.0f)

@@ -2,7 +2,8 @@
 
 #include <vector>
 
-#include "config.h"
+#include "../config.h"
+#include "models/Item.h"
 #include "../singlemesh.h"
 #include "square.h"
 
@@ -281,4 +282,13 @@ void createObjects() {
                                                      ROCKET_FLAME_2_OFFSET));
     rocketFlame2->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame2);
+
+    // ------------------------------------------------------------------------
+
+    // item
+    SingleMesh* item = new Item(&phongShaderProgram);
+    item->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                             ITEM_POSITION));
+    item->setObjectID(objectIDs++);
+    sceneRoot.addChild(item);
 }

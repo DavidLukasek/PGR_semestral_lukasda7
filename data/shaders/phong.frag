@@ -15,7 +15,8 @@
 uniform float elapsedTime;          // elapsed application time
 uniform vec3  ambientColor;         // ambient color
 uniform vec3  cameraPosition;       // position of the camera
-uniform int   hasDiffuseTexture;    // flag for texture-less material
+uniform int   hasDiffuseTexture;    // flag for material with diffuse texture
+uniform int   hasNormalTexture;     // flag for material with normal texture
 
 // matrix uniforms
 uniform mat4  projectionMatrix;     // projection matrix
@@ -23,7 +24,9 @@ uniform mat4  viewMatrix;           // view matrix
 uniform mat4  modelMatrix;          // model matrix
 uniform mat4  normalMatrix;         // inverse transposed model matrix
 
-uniform sampler2D diffuseTex;       // diffuse texture sampler
+// texture sampler uniforms
+uniform sampler2D diffuseSampler;   // diffuse texture sampler
+uniform sampler2D normalSampler;    // normal texture sampler
 
 // current material uniforms
 uniform vec3  matDiffuse;           // diffuse parameter of the material
@@ -158,16 +161,29 @@ float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance) {
     float endR = length(endPos - fogCenter) * invFogRadius;
 
     // Simpson approximation of density integral along ray segment
-    float densityScale =
-        (fogRadialDensity(startR) +
-         4.0 * fogRadialDensity(midR) +
-         fogRadialDensity(endR)) / 6.0;
+    float densityScale = (fogRadialDensity(startR) +
+                          4.0 * fogRadialDensity(midR) +
+                          fogRadialDensity(endR))
+                          / 6.0;
 
     return segmentLength * densityScale;
 }
 
-float fogFactorFromLength(float traveledInFog) {
-    return 1.0 - exp(-traveledInFog * fogDensity);
+vec3 getNormalFromMap(vec3 position, vec3 baseNormal, vec2 texCoord) {
+    vec3 tangentNormal = texture(normalSampler, texCoord).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(position);
+    vec3 Q2  = dFdy(position);
+    vec2 st1 = dFdx(texCoord);
+    vec2 st2 = dFdy(texCoord);
+
+    vec3 N = normalize(baseNormal);
+    vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
+    vec3 B = normalize(-Q1 * st2.s + Q2 * st1.s);
+
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
 }
 
 // ############################################################################
@@ -177,14 +193,22 @@ float fogFactorFromLength(float traveledInFog) {
 void main() {
     // world-coordinates position and normal of fragment
     vec3 position = worldPosition;
-    vec3 normal = normalize(worldNormal);
+    vec3 baseNormal = normalize(worldNormal);
 
     // diffuse texture color
-    vec4 texel = vec4(1.0);
     vec3 albedo = vec3(1.0);
-    if (hasDiffuseTexture != 0)
-        texel = texture(diffuseTex, theTexCoord);
+    float alpha = 1.0;
+    if (hasDiffuseTexture != 0) {
+        vec4 texel = texture(diffuseSampler, theTexCoord);
         albedo = texel.rgb;
+        alpha = texel.w;
+    }
+
+    // normal texture color
+    vec3 normal = baseNormal;
+    if (hasNormalTexture != 0) {
+        normal = getNormalFromMap(position, baseNormal, theTexCoord);
+    }
 
     // ambient * diffuse color
     vec3 color = ambientColor * matAmbient * albedo;
@@ -206,8 +230,8 @@ void main() {
     }
 
     // adding fog to the color
-    float fogFactor = fogFactorFromLength(traveledInFog);
+    float fogFactor = 1.0 - exp(-traveledInFog * fogDensity);
     color = mix(color, fogColor, fogFactor);
 
-    fragmentColor = vec4(color, texel.w);
+    fragmentColor = vec4(color, alpha);
 }

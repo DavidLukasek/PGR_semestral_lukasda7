@@ -36,6 +36,7 @@ SingleMesh::~SingleMesh() {
         glDeleteBuffers(1, &(geometry->elementBufferObject));
         glDeleteBuffers(1, &(geometry->vertexBufferObject));
         glDeleteTextures(1, &(geometry->diffuseTextureObject));
+        glDeleteTextures(1, &(geometry->normalTextureObject));
 
         delete geometry;
         geometry = nullptr;
@@ -68,27 +69,52 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
 
         const bool hasDiffuseTexture =
             (geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0);
+        const bool hasNormalTexture =
+            (geometry != nullptr) && geometry->hasNormalTexture && (geometry->normalTextureObject != 0);
 
         if (shaderProgram->locations.hasDiffuseTexture != -1)
             glUniform1i(shaderProgram->locations.hasDiffuseTexture, hasDiffuseTexture ? 1 : 0);
+        if (shaderProgram->locations.hasNormalTexture != -1)
+            glUniform1i(shaderProgram->locations.hasNormalTexture, hasNormalTexture ? 1 : 0);
 
-        // texture uniforms
+        auto setSamplerUnitIfPresent = [&](const char* uniformName, GLint unit) {
+            const GLint location = glGetUniformLocation(shaderProgram->program, uniformName);
+            if (location != -1)
+                glUniform1i(location, unit);
+        };
+
+        // diffuse texture uniforms
         if (hasDiffuseTexture) {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, geometry->diffuseTextureObject);
 
-            const GLint diffuseTextureLocation = glGetUniformLocation(shaderProgram->program, "diffuseTex");
-            if (diffuseTextureLocation != -1)
-                glUniform1i(diffuseTextureLocation, 0);
+            // Support both naming conventions used in this project.
+            setSamplerUnitIfPresent("diffuseTex", 0);
+            setSamplerUnitIfPresent("diffuseSampler", 0);
         }
         else {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
+        // normal texture uniforms
+        if (hasNormalTexture) {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, geometry->normalTextureObject);
+
+            // Support both naming conventions used in this project.
+            setSamplerUnitIfPresent("normalTex", 1);
+            setSamplerUnitIfPresent("normalSampler", 1);
+        }
+        else {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
         // turning off backface culling for objects that have it off
         if (backFaceCullingOff) {
             glDisable(GL_CULL_FACE);
+            glDepthMask(GL_FALSE);
         }
         // turning on UV animation if enabled
         if (shaderProgram->locations.isUVAnimated != -1) {
@@ -102,9 +128,17 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
 
         if (hasDiffuseTexture)
             glBindTexture(GL_TEXTURE_2D, 0);
+        if (hasNormalTexture) {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        glActiveTexture(GL_TEXTURE0);
 
-        // turn culling back on
-        glEnable(GL_CULL_FACE);
+        // turning all on again if turned off due to being transparent clouds
+        if (backFaceCullingOff) {
+            glEnable(GL_CULL_FACE);
+            glDepthMask(GL_TRUE);
+        }
     }
     else {
         std::cerr << "SingleMesh::draw(): Can't draw, mesh not initialized properly!" << std::endl;
@@ -160,7 +194,9 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     *geometry = new ObjectGeometry;
     (*geometry)->texCoordBufferObject = 0;
     (*geometry)->diffuseTextureObject = 0;
+    (*geometry)->normalTextureObject = 0;
     (*geometry)->hasTexture = false;
+    (*geometry)->hasNormalTexture = false;
 
     // vertex buffer object, store all vertex positions
     glGenBuffers(1, &((*geometry)->vertexBufferObject));
@@ -218,8 +254,8 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     if ((retValue = aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &color)) != AI_SUCCESS)
         color = aiColor4D(0.0f, 0.0f, 0.0f, 0.0f);
 
-    aiString texturePath;
-    if (mat->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath) == AI_SUCCESS) {
+    // lambda function for resolving texture paths to absolute
+    auto resolveTexturePath = [&](const aiString& texturePath) -> std::string {
         std::string resolvedTexturePath = texturePath.C_Str();
         const bool isAbsolutePath = (resolvedTexturePath.size() > 1 && resolvedTexturePath[1] == ':')
                                     || (!resolvedTexturePath.empty() && (resolvedTexturePath[0] == '/' || resolvedTexturePath[0] == '\\'));
@@ -230,9 +266,31 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
             resolvedTexturePath = modelDir + resolvedTexturePath;
         }
 
-        (*geometry)->diffuseTextureObject = pgr::createTexture(resolvedTexturePath.c_str());
-        (*geometry)->hasTexture = ((*geometry)->diffuseTextureObject != 0) && mesh->HasTextureCoords(0);
+        return resolvedTexturePath;
+    };
+
+    // lambda function for loading textures
+    auto loadTexture = [&](aiTextureType type, const char* textureRole, GLuint& textureObject) -> bool {
+        aiString texturePath;
+        if (mat->GetTexture(type, 0, &texturePath) != AI_SUCCESS)
+            return false;
+
+        const std::string resolvedTexturePath = resolveTexturePath(texturePath);
+        textureObject = pgr::createTexture(resolvedTexturePath.c_str());
+        return textureObject != 0;
+    };
+
+    // load diffuse map and check if it succeeded
+    if (loadTexture(aiTextureType_DIFFUSE, "diffuse", (*geometry)->diffuseTextureObject)) {
+        (*geometry)->hasTexture = mesh->HasTextureCoords(0);
     }
+
+    // load normal map and check if it succeeded
+    const bool hasLoadedNormalMap =
+        loadTexture(aiTextureType_NORMALS, "normal (NORMALS)", (*geometry)->normalTextureObject) ||
+        loadTexture(aiTextureType_HEIGHT, "normal (HEIGHT/map_Bump)", (*geometry)->normalTextureObject);
+    if (hasLoadedNormalMap)
+        (*geometry)->hasNormalTexture = mesh->HasTextureCoords(0);
 
     glGenVertexArrays(1, &((*geometry)->vertexArrayObject));
     glBindVertexArray((*geometry)->vertexArrayObject);

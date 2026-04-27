@@ -44,6 +44,7 @@ typedef struct _ShaderProgram {
         GLint cameraPosition;
         GLint asteroidLocation;
         GLint hasDiffuseTexture;
+        GLint hasNormalTexture;
         GLint isUVAnimated;
         
         GLint mandelbrotAnimStarted;
@@ -77,6 +78,7 @@ typedef struct _ShaderProgram {
         locations.cameraPosition = -1;
         locations.asteroidLocation = -1;
         locations.hasDiffuseTexture = -1;
+        locations.hasNormalTexture = -1;
         locations.isUVAnimated = -1;
 
         locations.mandelbrotAnimPaused = -1;
@@ -97,7 +99,9 @@ typedef struct _ObjectGeometry {
     GLuint        texCoordBufferObject; ///< identifier for the texture coordinate buffer object
     GLuint        vertexArrayObject;    ///< identifier for the vertex array object
     GLuint        diffuseTextureObject; ///< identifier for the diffuse texture object
-    bool          hasTexture;           ///< whether has texture coordinates and texture assigned
+    GLuint        normalTextureObject;  ///< identifier for the normal texture object
+    bool          hasTexture;           ///< whether has diffuse texture coordinates and texture assigned
+    bool          hasNormalTexture;     ///< whether has normal texture coordinates and texture assigned
     unsigned int  numTriangles;         ///< number of triangles in the mesh
 } ObjectGeometry;
 
