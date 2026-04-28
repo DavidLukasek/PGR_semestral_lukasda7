@@ -65,7 +65,11 @@ void Square::initializeSquare() {
     geometry->normalBufferObject = 0;
     geometry->texCoordBufferObject = 0;
     geometry->diffuseTextureObject = 0;
+    geometry->normalTextureObject = 0;
+    geometry->specularTextureObject = 0;
     geometry->hasTexture = false;
+    geometry->hasNormalTexture = false;
+    geometry->hasSpecularTexture = false;
 
     glGenVertexArrays(1, &(geometry->vertexArrayObject));
     glBindVertexArray(geometry->vertexArrayObject);

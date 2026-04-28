@@ -16,6 +16,7 @@ Item::~Item() {
         glDeleteBuffers(1, &(geometry->vertexBufferObject));
         glDeleteTextures(1, &(geometry->diffuseTextureObject));
         glDeleteTextures(1, &(geometry->normalTextureObject));
+        glDeleteTextures(1, &(geometry->specularTextureObject));
 
         delete geometry;
         geometry = nullptr;
@@ -56,6 +57,9 @@ void Item::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) 
         if (shaderProgram->locations.hasNormalTexture != -1)
             glUniform1i(shaderProgram->locations.hasNormalTexture, 0);
 
+        if (shaderProgram->locations.hasSpecularTexture != -1)
+            glUniform1i(shaderProgram->locations.hasSpecularTexture, 0);
+
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawElements(GL_TRIANGLES, geometry->numTriangles * 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -75,8 +79,10 @@ void Item::initializeItem() {
     geometry->texCoordBufferObject = 0;
     geometry->diffuseTextureObject = 0;
     geometry->normalTextureObject = 0;
+    geometry->specularTextureObject = 0;
     geometry->hasTexture = false;
     geometry->hasNormalTexture = false;
+    geometry->hasSpecularTexture = false;
 
     glGenVertexArrays(1, &(geometry->vertexArrayObject));
     glBindVertexArray(geometry->vertexArrayObject);

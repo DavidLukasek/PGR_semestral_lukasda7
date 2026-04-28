@@ -61,6 +61,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.asteroidLocation = glGetUniformLocation(prog.program, "asteroidLocation");
     prog.locations.hasDiffuseTexture = glGetUniformLocation(prog.program, "hasDiffuseTexture");
     prog.locations.hasNormalTexture = glGetUniformLocation(prog.program, "hasNormalTexture");
+    prog.locations.hasSpecularTexture = glGetUniformLocation(prog.program, "hasSpecularTexture");
     prog.locations.isUVAnimated = glGetUniformLocation(prog.program, "isUVAnimated");
 
     prog.locations.mandelbrotAnimPaused = glGetUniformLocation(prog.program, "mandelbrotAnimPaused");

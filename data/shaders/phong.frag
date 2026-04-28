@@ -17,6 +17,7 @@ uniform vec3  ambientColor;         // ambient color
 uniform vec3  cameraPosition;       // position of the camera
 uniform int   hasDiffuseTexture;    // flag for material with diffuse texture
 uniform int   hasNormalTexture;     // flag for material with normal texture
+uniform int   hasSpecularTexture;   // flag for material with specular texture
 
 // matrix uniforms
 uniform mat4  projectionMatrix;     // projection matrix
@@ -27,6 +28,7 @@ uniform mat4  normalMatrix;         // inverse transposed model matrix
 // texture sampler uniforms
 uniform sampler2D diffuseSampler;   // diffuse texture sampler
 uniform sampler2D normalSampler;    // normal texture sampler
+uniform sampler2D specularSampler;  // specular texture sampler
 
 // current material uniforms
 uniform vec3  matDiffuse;           // diffuse parameter of the material
@@ -63,7 +65,7 @@ out vec4 fragmentColor;
 
 // ------------------------------- Functions ----------------------------------
 
-vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
+vec3 getColorFromLight(vec3 albedo, vec3 specularStrength, vec3 position, vec3 normal, int index) {
     vec3 lightVec = lightPositions[index] - position;
     float lightDist = length(lightVec);
     float lightFallof = 1.0 / (lightDist * lightDist);
@@ -97,7 +99,7 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
             diffuse = NdotL * lightDiffuses[index] *
                       matDiffuse * albedo * lightFallof;
             specular = pow(cosB, matShininess) * lightSpeculars[index] *
-                       matSpecular * lightFallof;
+                       matSpecular * specularStrength * lightFallof;
             break;
 
         // spot light calculation
@@ -108,7 +110,7 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
             diffuse = NdotL * spotEffect * lightDiffuses[index] *
                       matDiffuse * albedo * lightFallof;
             specular = spotEffect * pow(cosB, matShininess) *
-                       lightSpeculars[index] * matSpecular * lightFallof;
+                       lightSpeculars[index] * matSpecular * specularStrength * lightFallof;
             break;
 
         // directional light calculation
@@ -116,7 +118,7 @@ vec3 getColorFromLight(vec3 albedo, vec3 position, vec3 normal, int index) {
             diffuse = NdotL * lightDiffuses[index] *
                       matDiffuse * albedo;
             specular = pow(cosB, matShininess) *
-                       lightSpeculars[index] * matSpecular;
+                       lightSpeculars[index] * matSpecular * specularStrength;
             break;
     }
 
@@ -210,12 +212,19 @@ void main() {
         normal = getNormalFromMap(position, baseNormal, theTexCoord);
     }
 
+    // specular texture color
+    vec3 specularStrength = vec3(1.0);
+    if (hasSpecularTexture != 0) {
+        vec4 texel = texture(specularSampler, theTexCoord);
+        specularStrength = texel.rgb;
+    }
+
     // ambient * diffuse color
     vec3 color = ambientColor * matAmbient * albedo;
 
     // adding color from all lights in the scene
     for (int i = 0; i < lightCount; i++) {
-        color += getColorFromLight(albedo, position, normal, i);
+        color += getColorFromLight(albedo, specularStrength, position, normal, i);
     }
 
     // setup for fog

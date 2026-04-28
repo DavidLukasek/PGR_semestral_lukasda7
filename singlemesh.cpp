@@ -37,6 +37,7 @@ SingleMesh::~SingleMesh() {
         glDeleteBuffers(1, &(geometry->vertexBufferObject));
         glDeleteTextures(1, &(geometry->diffuseTextureObject));
         glDeleteTextures(1, &(geometry->normalTextureObject));
+        glDeleteTextures(1, &(geometry->specularTextureObject));
 
         delete geometry;
         geometry = nullptr;
@@ -71,11 +72,15 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             (geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0);
         const bool hasNormalTexture =
             (geometry != nullptr) && geometry->hasNormalTexture && (geometry->normalTextureObject != 0);
+        const bool hasSpecularTexture =
+            (geometry != nullptr) && geometry->hasSpecularTexture && (geometry->specularTextureObject != 0);
 
         if (shaderProgram->locations.hasDiffuseTexture != -1)
             glUniform1i(shaderProgram->locations.hasDiffuseTexture, hasDiffuseTexture ? 1 : 0);
         if (shaderProgram->locations.hasNormalTexture != -1)
             glUniform1i(shaderProgram->locations.hasNormalTexture, hasNormalTexture ? 1 : 0);
+        if (shaderProgram->locations.hasSpecularTexture != -1)
+            glUniform1i(shaderProgram->locations.hasSpecularTexture, hasSpecularTexture ? 1 : 0);
 
         auto setSamplerUnitIfPresent = [&](const char* uniformName, GLint unit) {
             const GLint location = glGetUniformLocation(shaderProgram->program, uniformName);
@@ -111,6 +116,20 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
+        // specular texture uniforms
+        if (hasSpecularTexture) {
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, geometry->specularTextureObject);
+
+            // support both naming conventions used in this project
+            setSamplerUnitIfPresent("specularTex", 2);
+            setSamplerUnitIfPresent("specularSampler", 2);
+        }
+        else {
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
         // turning off backface culling for objects that have it off
         if (backFaceCullingOff) {
             glDisable(GL_CULL_FACE);
@@ -130,6 +149,10 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glBindTexture(GL_TEXTURE_2D, 0);
         if (hasNormalTexture) {
             glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        if (hasSpecularTexture) {
+            glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
         glActiveTexture(GL_TEXTURE0);
@@ -195,8 +218,10 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
     (*geometry)->texCoordBufferObject = 0;
     (*geometry)->diffuseTextureObject = 0;
     (*geometry)->normalTextureObject = 0;
+    (*geometry)->specularTextureObject = 0;
     (*geometry)->hasTexture = false;
     (*geometry)->hasNormalTexture = false;
+    (*geometry)->hasSpecularTexture = false;
 
     // vertex buffer object, store all vertex positions
     glGenBuffers(1, &((*geometry)->vertexBufferObject));
@@ -291,6 +316,14 @@ bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shad
         loadTexture(aiTextureType_HEIGHT, "normal (HEIGHT/map_Bump)", (*geometry)->normalTextureObject);
     if (hasLoadedNormalMap)
         (*geometry)->hasNormalTexture = mesh->HasTextureCoords(0);
+
+    // load specular map and check if it succeeded
+    const bool hasLoadedSpecularMap =
+        loadTexture(aiTextureType_SPECULAR, "specular (SPECULAR)", (*geometry)->specularTextureObject) ||
+        loadTexture(aiTextureType_SHININESS, "specular (SHININESS/map_Ns)", (*geometry)->specularTextureObject);
+    if (hasLoadedSpecularMap) {
+        (*geometry)->hasSpecularTexture = mesh->HasTextureCoords(0);
+    }
 
     glGenVertexArrays(1, &((*geometry)->vertexArrayObject));
     glBindVertexArray((*geometry)->vertexArrayObject);

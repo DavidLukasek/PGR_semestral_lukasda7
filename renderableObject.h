@@ -45,6 +45,7 @@ typedef struct _ShaderProgram {
         GLint asteroidLocation;
         GLint hasDiffuseTexture;
         GLint hasNormalTexture;
+        GLint hasSpecularTexture;
         GLint isUVAnimated;
         
         GLint mandelbrotAnimStarted;
@@ -79,6 +80,7 @@ typedef struct _ShaderProgram {
         locations.asteroidLocation = -1;
         locations.hasDiffuseTexture = -1;
         locations.hasNormalTexture = -1;
+        locations.hasSpecularTexture = -1;
         locations.isUVAnimated = -1;
 
         locations.mandelbrotAnimPaused = -1;
@@ -100,8 +102,10 @@ typedef struct _ObjectGeometry {
     GLuint        vertexArrayObject;    ///< identifier for the vertex array object
     GLuint        diffuseTextureObject; ///< identifier for the diffuse texture object
     GLuint        normalTextureObject;  ///< identifier for the normal texture object
+    GLuint        specularTextureObject; ///< identifier for the specular texture object
     bool          hasTexture;           ///< whether has diffuse texture coordinates and texture assigned
     bool          hasNormalTexture;     ///< whether has normal texture coordinates and texture assigned
+    bool          hasSpecularTexture;   ///< whether has specular texture coordinates and texture assigned
     unsigned int  numTriangles;         ///< number of triangles in the mesh
 } ObjectGeometry;
 
