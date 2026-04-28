@@ -34,6 +34,8 @@ glm::vec2 cameraRotation = glm::vec2(0.0);
 
 GameState gameState;
 
+GLuint environmentMapTextureObject = 0;
+
 // holding on moon and planet references to rotate them later in rotateMoonAndPlanet
 SingleMesh* ufo;
 SingleMesh* planet1;

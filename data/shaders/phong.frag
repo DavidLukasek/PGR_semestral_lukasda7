@@ -7,6 +7,8 @@
 #define SPOT_LIGHT 1
 #define DIRECTION_LIGHT 2
 
+#define PI 3.14159265359
+
 #define MAX_SCENE_LIGHTS 8
 
 // ------------------------------- Uniforms -----------------------------------
@@ -29,6 +31,7 @@ uniform mat4  normalMatrix;         // inverse transposed model matrix
 uniform sampler2D diffuseSampler;   // diffuse texture sampler
 uniform sampler2D normalSampler;    // normal texture sampler
 uniform sampler2D specularSampler;  // specular texture sampler
+uniform sampler2D environmentSampler; // environment texture sampler
 
 // current material uniforms
 uniform vec3  matDiffuse;           // diffuse parameter of the material
@@ -188,6 +191,16 @@ vec3 getNormalFromMap(vec3 position, vec3 baseNormal, vec2 texCoord) {
     return normalize(TBN * tangentNormal);
 }
 
+vec2 getEquirectangularUV(vec3 direction) {
+    vec3 dir = normalize(direction);
+
+    // keep orientation consistent with the skydome UV layout
+    float u = 0.5 - atan(dir.z, dir.x) / (2.0 * PI);
+    float v = 0.5 + asin(clamp(dir.y, -1.0, 1.0)) / PI;
+
+    return vec2(fract(u), clamp(v, 0.0, 1.0));
+}
+
 // ############################################################################
 //                                  Main
 // ############################################################################
@@ -226,6 +239,15 @@ void main() {
     for (int i = 0; i < lightCount; i++) {
         color += getColorFromLight(albedo, specularStrength, position, normal, i);
     }
+
+    // environment map reflection
+    vec3 V = normalize(cameraPosition - position);
+    vec3 reflectionDirection = reflect(-V, normal);
+    vec2 envTexCoord = getEquirectangularUV(reflectionDirection);
+    vec3 envColor = texture(environmentSampler, envTexCoord).rgb;
+    float fresnel = pow(1.0 - max(dot(normal, V), 0.0), 5.0);
+    float reflectionStrength = (0.08 + 0.35 * fresnel) * dot(specularStrength, vec3(0.3333333));
+    color += envColor * reflectionStrength;
 
     // setup for fog
     vec3 viewVector = position - cameraPosition;

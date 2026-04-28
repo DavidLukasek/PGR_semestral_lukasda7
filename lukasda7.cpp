@@ -304,6 +304,19 @@ void drawScene(void) {
         glUniform3fv(phongShaderProgram.locations.ambientColor,
                      1, glm::value_ptr(gameState.ambientColor));
 
+    // environment map uniform update
+    if (environmentMapTextureObject != 0) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, environmentMapTextureObject);
+
+        const GLint environmentSamplerLocation =
+            glGetUniformLocation(phongShaderProgram.program, "environmentSampler");
+        if (environmentSamplerLocation != -1)
+            glUniform1i(environmentSamplerLocation, 3);
+
+        glActiveTexture(GL_TEXTURE0);
+    }
+
     // light uniforms update
     setLightUniforms(phongShaderProgram, sceneLightsCache);
 
@@ -659,6 +672,11 @@ void initApplication() {
     // init OpenGL
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
+    environmentMapTextureObject = pgr::createTexture("data/textures/space_skydome.png");
+    if (environmentMapTextureObject == 0) {
+        std::cerr << "ERROR: Could not load environment texture: data/textures/space_skydome.png"
+                  << std::endl;
+    }
 
     // enable services like depth test, backface culling, blending etc.
     glEnable(GL_DEPTH_TEST);
@@ -691,6 +709,11 @@ void finalizeApplication(void) {
 
     // delete shaders
     cleanupShaderPrograms();
+
+    if (environmentMapTextureObject != 0) {
+        glDeleteTextures(1, &environmentMapTextureObject);
+        environmentMapTextureObject = 0;
+    }
 }
 
 // ############################################################################
