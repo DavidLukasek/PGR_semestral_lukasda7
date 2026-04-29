@@ -68,6 +68,10 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.mandelbrotAnimStarted = glGetUniformLocation(prog.program, "mandelbrotAnimStarted");
     prog.locations.mandelbrotAnimStartTime = glGetUniformLocation(prog.program, "mandelbrotAnimStartTime");
     prog.locations.mandelbrotAnimPauseTime = glGetUniformLocation(prog.program, "mandelbrotAnimPauseTime");
+    prog.locations.mandelbrotMaxIterations = glGetUniformLocation(prog.program, "mandelbrotMaxIterations");
+    prog.locations.mandelbrotZoomSpeed = glGetUniformLocation(prog.program, "mandelbrotZoomSpeed");
+    prog.locations.mandelbrotColorSpeed = glGetUniformLocation(prog.program, "mandelbrotColorSpeed");
+    prog.locations.mandelbrotZoomTarget = glGetUniformLocation(prog.program, "mandelbrotZoomtarget");
 
     prog.initialized = true;
 
@@ -98,6 +102,27 @@ void cleanupShaderPrograms(void) {
     for (ShaderProgram shdPrg : shaderPrograms) {
         pgr::deleteProgramAndShaders(shdPrg.program);
     }
+}
+
+void setMandelbrotStaticUniforms(const ShaderProgram& shaderProgram) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    if (shaderProgram.locations.mandelbrotMaxIterations != -1)
+        glUniform1i(shaderProgram.locations.mandelbrotMaxIterations,
+                    MANDELBROT_MAX_ITERATIONS);
+
+    if (shaderProgram.locations.mandelbrotZoomSpeed != -1)
+        glUniform1f(shaderProgram.locations.mandelbrotZoomSpeed,
+                    MANDELBROT_ZOOM_SPEED);
+
+    if (shaderProgram.locations.mandelbrotColorSpeed != -1)
+        glUniform1f(shaderProgram.locations.mandelbrotColorSpeed,
+                    MANDELBROT_COLOR_SPEED);
+
+    if (shaderProgram.locations.mandelbrotZoomTarget != -1)
+        glUniform2fv(shaderProgram.locations.mandelbrotZoomTarget,
+                     1, glm::value_ptr(MANDELBROT_ZOOM_TARGET));
 }
 
 void setFogUniforms(const ShaderProgram& shaderProgram) {
@@ -672,6 +697,7 @@ void initApplication() {
     // init OpenGL
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
+    setMandelbrotStaticUniforms(mandelrotShaderProgram);
     environmentMapTextureObject = pgr::createTexture("data/textures/space_skydome.png");
     if (environmentMapTextureObject == 0) {
         std::cerr << "ERROR: Could not load environment texture: data/textures/space_skydome.png"

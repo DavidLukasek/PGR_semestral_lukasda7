@@ -1,6 +1,8 @@
 #pragma once
 
-// ------------------------------- Application --------------------------------
+// ############################################################################
+//                                 Application
+// ############################################################################
 
 #define SHADER_PATH "data/shaders/"
 #define MODELS_PATH "data/models/"
@@ -9,7 +11,7 @@
 #define WINDOW_WIDTH  1920
 #define WINDOW_HEIGHT 1080
 
-#define MAX_SCENE_LIGHTS    8    // also needs to be manually changed in phong.frag!
+#define MAX_SCENE_LIGHTS    8  // also needs to be manually changed in phong.frag!
 #define AMBIENT_COLOR       glm::vec3(0.05f)
 
 #define GLOBAL_ANIM_SPEED   1.0f
@@ -18,28 +20,39 @@
 
 // ---------------------------------- Camera ----------------------------------
 
-#define MOVE_SPEED    50.0f
-#define SPRINT_SPEED 100.0f
+#define MOVE_SPEED     5.0f
+#define SPRINT_SPEED  10.0f
 #define FOV_SPEED    100.0f
 #define MIN_FOV       10.0f
 #define MAX_FOV      170.0f
 #define NEAR_PLANE     0.1f
 #define FAR_PLANE   1000.0f
 
-// ------------------------- Planetary system objects -------------------------
+// ------------------------- Mandelbrot set parameters ------------------------
 
-// object positions
+#define MANDELBROT_MAX_ITERATIONS 1000
+#define MANDELBROT_ZOOM_SPEED 1.0f
+#define MANDELBROT_COLOR_SPEED 0.2f
+#define MANDELBROT_ZOOM_TARGET glm::vec2(-1.186918, 0.300295)
+
+// ############################################################################
+//                                Scene objects
+// ############################################################################
+
+// ----------------------------- Planetary system -----------------------------
+
+// planetary system object positions
 #define UFO_POSITION       glm::vec3(0.0f, 15.0f, 0.0f)
 #define MOON_POSITION      glm::vec3(0.0f, 0.0f, 200.0f)
 #define PLANET_1_POSITION  glm::vec3(-160.0f, 80.0f, -260.0f)
 #define PLANET_2_POSITION  glm::vec3(160.0f, 80.0f, 260.0f)
-#define SUN_LOCATION       glm::vec3(1000.0f, 100.0f, -100.0f)
+#define SUN_LOCATION       glm::vec3(-1.0f, 0.5f, 1.0f)
 
-// object rotation speeds
+// planetary system object rotation speeds
 #define UFO_AXIS_ROT_SPEED     -150.0f
 #define UFO_ORBIT_ROT_SPEED      70.0f
 #define MOON_AXIS_ROT_SPEED    -100.0f
-#define MOON_ORBIT_ROT_SPEED     10.0f
+#define MOON_ORBIT_ROT_SPEED     20.0f
 #define PLANET_1_AXIS_ROT_SPEED  -5.0f
 #define PLANET_2_AXIS_ROT_SPEED  15.0f
 #define PLANET_ORBIT_ROT_SPEED    5.0f
@@ -53,7 +66,11 @@
 // ------------------------------- Other objects ------------------------------
 
 // object positions
-#define SPACESHIP_POSITION     glm::vec3(-50.0f, 1.0f, 0.0f)
+#define MANDELBROT_POSITION    glm::vec3(4.0741f, -0.7087f, -3.3598f)
+#define SPACESHIP_POSITION     glm::vec3(50.0f, 1.0f, 0.0f)
 #define ROCKET_FLAME_1_OFFSET  glm::vec3(10.095f, 0.0, -33.345f)
 #define ROCKET_FLAME_2_OFFSET  glm::vec3(-10.095f, 0.0, -33.345f)
-#define ITEM_POSITION          glm::vec3(0.0f, 3.0f, -10.0f)
+#define ITEM_POSITION          glm::vec3(0.0f, 20.0f, 0.0f)
+#define FLOOR_OFFSET           glm::vec3(0.0f, -1.0f, 0.0f)
+#define BOARD_STONES_POSITION  glm::vec3(0.0f, -1.0f, -5.2858f)
+#define BOARD_POSITION         glm::vec3(0.0f, 0.29122f, -4.9681f)

@@ -48,10 +48,15 @@ typedef struct _ShaderProgram {
         GLint hasSpecularTexture;
         GLint isUVAnimated;
         
+        // uniform mandelbrot locations
         GLint mandelbrotAnimStarted;
         GLint mandelbrotAnimPaused;
         GLint mandelbrotAnimStartTime;
         GLint mandelbrotAnimPauseTime;
+        GLint mandelbrotMaxIterations;
+        GLint mandelbrotZoomSpeed;
+        GLint mandelbrotColorSpeed;
+        GLint mandelbrotZoomTarget;
     } locations;
 
     _ShaderProgram() : program(0), initialized(false) {
@@ -87,6 +92,10 @@ typedef struct _ShaderProgram {
         locations.mandelbrotAnimStarted = -1;
         locations.mandelbrotAnimStartTime = -1;
         locations.mandelbrotAnimPauseTime = -1;
+        locations.mandelbrotMaxIterations = -1;
+        locations.mandelbrotZoomSpeed = -1;
+        locations.mandelbrotColorSpeed = -1;
+        locations.mandelbrotZoomTarget = -1;
     }
 
 } ShaderProgram;

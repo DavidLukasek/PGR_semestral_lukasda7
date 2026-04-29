@@ -154,7 +154,7 @@ void createObjects() {
     // ------------------------------------------------------------------------
 
     // skydome
-    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
+    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome_sun.obj",
                                          &skydomeShaderProgram,
                                          &material2);
     skydome->setObjectID(objectIDs++);
@@ -164,6 +164,13 @@ void createObjects() {
 
     // square with mandelbrot set
     Square* mandelbrot = new Square(&mandelrotShaderProgram);
+    mandelbrot->setLocalModelMatrix(glm::translate(glm::mat4(1.0f), 
+                                                   MANDELBROT_POSITION) *
+                                    glm::rotate(glm::mat4(1.0f),
+                                                glm::radians(-56.3482f),
+                                                glm::vec3(0.0f, 1.0f, 0.0f)) *
+                                    glm::scale(glm::mat4(1.0f),
+                                               glm::vec3(2.0f, 2.0f, 2.0f)));
     mandelbrot->setObjectID(objectIDs++);
     sceneRoot.addChild(mandelbrot);
 
@@ -226,31 +233,6 @@ void createObjects() {
 
     // ------------------------------------------------------------------------
 
-    // floor mesh
-    SingleMesh* floor = new SingleMesh(MODELS_PATH + (std::string)"floor.obj",
-                                       &phongShaderProgram,
-                                       &material1);
-    floor->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(0.0f, -1.0f, 2.0f)));
-    floor->setObjectID(objectIDs++);
-    sceneRoot.addChild(floor);
-    
-    // ------------------------------------------------------------------------
-
-    // Susanne
-    SingleMesh* monke = new SingleMesh(MODELS_PATH + (std::string)"monke.obj",
-                                       &phongShaderProgram,
-                                       &material2);
-    monke->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                              glm::vec3(-2.0f, 0.0f, 2.0f)) *
-                               glm::rotate(glm::mat4(1.0f),
-                                           glm::radians(90.0f),
-                                           glm::vec3(0.0f, 1.0f, 0.0f)));
-    monke->setObjectID(objectIDs++);
-    sceneRoot.addChild(monke);
-
-    // ------------------------------------------------------------------------
-
     // spaceship
     SingleMesh* spaceship = new SingleMesh(MODELS_PATH + (std::string)"spaceship.obj",
                                            &phongShaderProgram,
@@ -293,4 +275,48 @@ void createObjects() {
                                              ITEM_POSITION));
     item->setObjectID(objectIDs++);
     sceneRoot.addChild(item);
+
+    // ------------------------------------------------------------------------
+
+    // island
+    SingleMesh* island = new SingleMesh(MODELS_PATH + (std::string)"island.obj",
+                                        &phongShaderProgram,
+                                        &material2);
+    island->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                               FLOOR_OFFSET));
+    island->setObjectID(objectIDs++);
+    sceneRoot.addChild(island);
+
+    // ------------------------------------------------------------------------
+
+    // island middle
+    SingleMesh* islandMiddle = new SingleMesh(MODELS_PATH + (std::string)"island_middle.obj",
+                                              &phongShaderProgram,
+                                              &material2);
+    islandMiddle->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     FLOOR_OFFSET));
+    islandMiddle->setObjectID(objectIDs++);
+    sceneRoot.addChild(islandMiddle);
+
+    // ------------------------------------------------------------------------
+
+    // board stones
+    SingleMesh* boardStones = new SingleMesh(MODELS_PATH + (std::string)"board_stones.obj",
+                                             &phongShaderProgram,
+                                             &material2);
+    boardStones->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                    BOARD_STONES_POSITION));
+    boardStones->setObjectID(objectIDs++);
+    sceneRoot.addChild(boardStones);
+
+    // ------------------------------------------------------------------------
+
+    // board
+    SingleMesh* board = new SingleMesh(MODELS_PATH + (std::string)"board.obj",
+                                       &phongShaderProgram,
+                                       &material2);
+    board->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                              BOARD_POSITION));
+    board->setObjectID(objectIDs++);
+    sceneRoot.addChild(board);
 }

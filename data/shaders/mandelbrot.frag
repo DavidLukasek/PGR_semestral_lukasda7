@@ -5,16 +5,21 @@
 #define HALF 0.5
 #define ONE 1.0
 #define TAU 6.28318
-#define MAX_ITER 1000
 
 // ------------------------------- Uniforms -----------------------------------
 
 uniform float elapsedTime;
 uniform vec3  asteroidLocation;
+
 uniform bool  mandelbrotAnimStarted;
 uniform bool  mandelbrotAnimPaused;
 uniform float mandelbrotAnimStartTime;
 uniform float mandelbrotAnimPauseTime;
+
+uniform int   mandelbrotMaxIterations;
+uniform float mandelbrotZoomSpeed;
+uniform float mandelbrotColorSpeed;
+uniform vec2  mandelbrotZoomtarget;
 
 // ------------------------------- Attributes ---------------------------------
 
@@ -43,6 +48,7 @@ vec3 palette(float t) {
 void main() {
     float animatedTime = 0.0;
 
+    // animation only if picked
     if (mandelbrotAnimStarted) {
         float mandelbrotTime = elapsedTime;
         if (mandelbrotAnimPaused)
@@ -50,17 +56,17 @@ void main() {
 
         animatedTime = max(mandelbrotTime - mandelbrotAnimStartTime, 0.0);
     }
-    
+
     //center coordinates scaled up to <-2;2>
     vec2 uv = UV * 3.0;
-    uv.x -= 2.0;
-    uv.y -= 1.5;
-    
+    uv.x -= 0.85;
+    uv.y -= 1.8;
+
     //slow zoom
-    //vec2 target = vec2(-1.2506715, 0.0201205);
-    //float zoom = 1.0;
-    // zoom = exp(-0.2 * elapsedTime);
-    //uv = target + uv * zoom;
+    vec2 target = mandelbrotZoomtarget;
+    float zoom = 1.0;
+    zoom = exp(-0.2 * animatedTime);
+    uv = target + uv * zoom;
     
     float real          = uv.x;
     float imaginary     = uv.y;
@@ -71,7 +77,7 @@ void main() {
     int iterations = 0;      //number of iterations until divergence
     
     //fractal loop
-    for(int i = 0; i < MAX_ITER && dist_sq < 4.0; ++i) {
+    for(int i = 0; i < mandelbrotMaxIterations && dist_sq < 4.0; ++i) {
         float tempReal = real;
         
         real = (tempReal*tempReal) - (imaginary*imaginary) + OG_real;
@@ -85,7 +91,7 @@ void main() {
     // color divergent fragments, if convergent then black
     if(dist_sq > 4.0) {
         float t = float(iterations) / 20.0;
-        color = palette(t + animatedTime * 0.2);
+        color = palette(t + animatedTime * mandelbrotColorSpeed);
     } else color = vec3(0.0);
 
     fragmentColor = vec4(color, 1.0);
