@@ -227,6 +227,9 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
 }
 
 void drawObjectStencil(Object* object) {
+    if ((object == nullptr) || !object->isVisible())
+        return;
+
     // set stencil function to redraw with object id
     glStencilFunc(GL_ALWAYS, object->getObjectID(), 0xFF);
 
@@ -295,6 +298,14 @@ void checkObjectPick() {
                     gameState.mandelbrotAnimStartTime +=
                         (gameState.elapsedTime - gameState.mandelbrotAnimPauseTime);
                 }
+                break;
+            // rocket startup case
+            case 8:
+                gameState.rocketFlamesEnabled = !gameState.rocketFlamesEnabled;
+                if (rocketFlame1 != nullptr)
+                    rocketFlame1->setVisible(gameState.rocketFlamesEnabled);
+                if (rocketFlame2 != nullptr)
+                    rocketFlame2->setVisible(gameState.rocketFlamesEnabled);
                 break;
         }
 

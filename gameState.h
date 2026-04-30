@@ -24,6 +24,7 @@ public:
     bool mandelbrotAnimPaused = false;
     float mandelbrotAnimStartTime = 0.0f;
     float mandelbrotAnimPauseTime = 0.0f;
+    bool rocketFlamesEnabled = false;
 
     bool keyMap[KEYS_COUNT] = { false };
 

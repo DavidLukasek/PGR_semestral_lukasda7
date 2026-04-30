@@ -18,6 +18,7 @@ protected:
     glm::mat4       globalModelMatrix;
     ObjectList      children;
     unsigned char   objectID;
+    bool            visible;
     static bool     suppressChildrenDraw;
 
     void updateGlobalModelMatrix(const glm::mat4* parentModelMatrix);
@@ -38,6 +39,8 @@ public:
     void translate(const glm::vec3& offset);
     void setObjectID(unsigned char ID);
     unsigned char getObjectID();
+    void setVisible(bool value);
+    bool isVisible() const;
     static void setSuppressChildrenDraw(bool suppress);
 
     virtual void update(float elapsedTime, const glm::mat4* parentModelMatrix);

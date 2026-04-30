@@ -47,6 +47,9 @@ SingleMesh::~SingleMesh() {
 }
 
 void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+    if (!isVisible())
+        return;
+
     // updating uniforms
     if (initialized && (shaderProgram != nullptr)) {
         // material uniforms

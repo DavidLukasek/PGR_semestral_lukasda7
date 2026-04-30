@@ -5,7 +5,8 @@ bool Object::suppressChildrenDraw = false;
 Object::Object()
     : localModelMatrix(1.0f)
     , globalModelMatrix(1.0f)
-    , objectID(-1) {
+    , objectID(-1)
+    , visible(true) {
 }
 
 Object::~Object() = default;
@@ -78,11 +79,22 @@ unsigned char Object::getObjectID() {
     return objectID;
 }
 
+void Object::setVisible(bool value) {
+    visible = value;
+}
+
+bool Object::isVisible() const {
+    return visible;
+}
+
 void Object::setSuppressChildrenDraw(bool suppress) {
     suppressChildrenDraw = suppress;
 }
 
 void Object::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
+    if (!visible)
+        return;
+
     if (!suppressChildrenDraw)
         drawChildren(viewMatrix, projectionMatrix);
 }

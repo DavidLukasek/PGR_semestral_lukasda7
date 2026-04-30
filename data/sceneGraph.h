@@ -42,6 +42,8 @@ SingleMesh* planet1;
 SingleMesh* planet2;
 SingleMesh* planet2Clouds;
 SingleMesh* moon;
+SingleMesh* rocketFlame1 = nullptr;
+SingleMesh* rocketFlame2 = nullptr;
 
 // fog ball
 FogBall fogBall;
@@ -59,7 +61,7 @@ Material material2 = {
     glm::vec3(1.0f),                // ambient
     glm::vec3(1.0f),                // diffuse
     glm::vec3(0.23f, 0.20f, 0.11f), // specular
-    2.0f                            // shininess
+    10.0f                           // shininess
 };
 
 void createLights() {
@@ -97,7 +99,7 @@ void createLights() {
                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
                                   cos(glm::radians(45.0f)),     // spot cutoff
                                   5.0f,                         // spot exponent
-                                  1.0f);                        // light intensity
+                                  5.0f);                        // light intensity
     spotLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                    glm::vec3(0.0f, 0.0f, 1.0f)));
     sceneRoot.addChild(spotLight1);
@@ -113,7 +115,7 @@ void createLights() {
                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
                                   cos(glm::radians(45.0f)),     // spot cutoff
                                   5.0f,                         // spot exponent
-                                  1.0f);                        // light intensity
+                                  5.0f);                        // light intensity
     spotLight2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                    glm::vec3(-0.4f, 0.0f, 1.5f)));
     sceneRoot.addChild(spotLight2);
@@ -129,7 +131,7 @@ void createLights() {
                                   glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
                                   cos(glm::radians(45.0f)),     // spot cutoff
                                   5.0f,                         // spot exponent
-                                  1.0f);                        // light intensity
+                                  5.0f);                        // light intensity
     spotLight3->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                    glm::vec3(0.4f, 0.0f, 1.5f)));
     sceneRoot.addChild(spotLight3);
@@ -248,22 +250,24 @@ void createObjects() {
     // ------------------------------------------------------------------------
 
     // rocket flame 1
-    SingleMesh* rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
-                                              &rocketFlameShaderProgram,
-                                              &material2);
+    rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
+                                  &rocketFlameShaderProgram,
+                                  &material2);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_1_OFFSET));
+    rocketFlame1->setVisible(false);
     rocketFlame1->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame1);
 
     // ------------------------------------------------------------------------
 
     // rocket flame 2
-    SingleMesh* rocketFlame2 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
-                                              &rocketFlameShaderProgram,
-                                              &material2);
+    rocketFlame2 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
+                                  &rocketFlameShaderProgram,
+                                  &material2);
     rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_2_OFFSET));
+    rocketFlame2->setVisible(false);
     rocketFlame2->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame2);
 
