@@ -51,9 +51,13 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.shininess = glGetUniformLocation(prog.program, "matShininess");
 
     prog.locations.fogCenter = glGetUniformLocation(prog.program, "fogCenter");
+    prog.locations.fogCenter2 = glGetUniformLocation(prog.program, "fogCenter2");
     prog.locations.fogColor = glGetUniformLocation(prog.program, "fogColor");
+    prog.locations.fogColor2 = glGetUniformLocation(prog.program, "fogColor2");
     prog.locations.fogRadius = glGetUniformLocation(prog.program, "fogRadius");
+    prog.locations.fogRadius2 = glGetUniformLocation(prog.program, "fogRadius2");
     prog.locations.fogDensity = glGetUniformLocation(prog.program, "fogDensity");
+    prog.locations.fogDensity2 = glGetUniformLocation(prog.program, "fogDensity2");
 
     prog.locations.elapsedTime = glGetUniformLocation(prog.program, "elapsedTime");
     prog.locations.ambientColor = glGetUniformLocation(prog.program, "ambientColor");
@@ -130,16 +134,28 @@ void setFogUniforms(const ShaderProgram& shaderProgram) {
     glUseProgram(shaderProgram.program);
 
     if (shaderProgram.locations.fogCenter != -1)
-        glUniform3fv(shaderProgram.locations.fogCenter, 1, glm::value_ptr(fogBall.center));
+        glUniform3fv(shaderProgram.locations.fogCenter, 1, glm::value_ptr(fogBall1.center));
+
+    if (shaderProgram.locations.fogCenter2 != -1)
+        glUniform3fv(shaderProgram.locations.fogCenter2, 1, glm::value_ptr(fogBall2.center));
 
     if (shaderProgram.locations.fogColor != -1)
-        glUniform3fv(shaderProgram.locations.fogColor, 1, glm::value_ptr(fogBall.color));
+        glUniform3fv(shaderProgram.locations.fogColor, 1, glm::value_ptr(fogBall1.color));
+
+    if (shaderProgram.locations.fogColor2 != -1)
+        glUniform3fv(shaderProgram.locations.fogColor2, 1, glm::value_ptr(fogBall2.color));
 
     if (shaderProgram.locations.fogRadius != -1)
-        glUniform1f(shaderProgram.locations.fogRadius, fogBall.radius);
+        glUniform1f(shaderProgram.locations.fogRadius, fogBall1.radius);
+
+    if (shaderProgram.locations.fogRadius2 != -1)
+        glUniform1f(shaderProgram.locations.fogRadius2, fogBall2.radius);
 
     if (shaderProgram.locations.fogDensity != -1)
-        glUniform1f(shaderProgram.locations.fogDensity, fogBall.density);
+        glUniform1f(shaderProgram.locations.fogDensity, fogBall1.density);
+
+    if (shaderProgram.locations.fogDensity2 != -1)
+        glUniform1f(shaderProgram.locations.fogDensity2, fogBall2.density);
 }
 
 void setLightUniforms(const ShaderProgram& shaderProgram,
@@ -683,8 +699,9 @@ void timerCb(int) {
     updateCamera(deltaTime);
     rotatePlanetarySystem(deltaTime);
 
-    // update the fog's position to follow planet1
-    fogBall.center = planet1->getPosition();
+    // update the fog's positions to follow planets
+    fogBall1.center = planet1->getPosition();
+    fogBall2.center = planet2->getPosition();
     planet2Clouds->setPosition(planet2->getPosition());
 
     // check if an object has been picked and which

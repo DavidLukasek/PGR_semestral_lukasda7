@@ -8,9 +8,13 @@ uniform vec3  cameraPosition;
 
 // fog uniforms
 uniform vec3  fogCenter;
+uniform vec3  fogCenter2;
 uniform vec3  fogColor;
+uniform vec3  fogColor2;
 uniform float fogRadius;
+uniform float fogRadius2;
 uniform float fogDensity;
+uniform float fogDensity2;
 
 // ------------------------------- Attributes ---------------------------------
 
@@ -27,10 +31,10 @@ float fogRadialDensity(float normalizedRadius) {
     return 1.0 - smoothstep(0.72, 1.0, normalizedRadius);
 }
 
-float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance) {
-    vec3 oc = rayOrigin - fogCenter;
+float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec3 center, float radius) {
+    vec3 oc = rayOrigin - center;
     float b = dot(oc, rayDirection);
-    float c = dot(oc, oc) - fogRadius * fogRadius;
+    float c = dot(oc, oc) - radius * radius;
     float h = b * b - c;
 
     if (h <= 0.0)
@@ -50,14 +54,14 @@ float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance) {
     if (segmentLength <= 0.0)
         return 0.0;
 
-    float invFogRadius = 1.0 / max(fogRadius, 0.0001);
+    float invFogRadius = 1.0 / max(radius, 0.0001);
     vec3 startPos = rayOrigin + rayDirection * start;
     vec3 endPos = rayOrigin + rayDirection * end;
     vec3 midPos = 0.5 * (startPos + endPos);
 
-    float startR = length(startPos - fogCenter) * invFogRadius;
-    float midR = length(midPos - fogCenter) * invFogRadius;
-    float endR = length(endPos - fogCenter) * invFogRadius;
+    float startR = length(startPos - center) * invFogRadius;
+    float midR = length(midPos - center) * invFogRadius;
+    float endR = length(endPos - center) * invFogRadius;
 
     // Simpson approximation of density integral along ray segment
     float densityScale =
@@ -68,8 +72,8 @@ float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance) {
     return segmentLength * densityScale;
 }
 
-float fogFactorFromLength(float traveledInFog) {
-    return 1.0 - exp(-traveledInFog * fogDensity);
+float fogFactorFromAmount(float fogAmount) {
+    return 1.0 - exp(-fogAmount);
 }
 
 // ############################################################################
@@ -95,17 +99,25 @@ void main() {
     // setup for fog
     vec3 viewVector = position - cameraPosition;
     float maxDistance = length(viewVector);
-    float traveledInFog = 0.0;
+    float traveledInFog1 = 0.0;
+    float traveledInFog2 = 0.0;
 
     // getting fog view thickness
     if (maxDistance > 0.0) {
         vec3 rayDirection = viewVector / maxDistance;
-        traveledInFog = fogSegmentLength(cameraPosition, rayDirection, maxDistance);
+        traveledInFog1 = fogSegmentLength(cameraPosition, rayDirection, maxDistance, fogCenter, fogRadius);
+        traveledInFog2 = fogSegmentLength(cameraPosition, rayDirection, maxDistance, fogCenter2, fogRadius2);
     }
 
     // adding fog to the color
-    float fogFactor = fogFactorFromLength(traveledInFog);
-    texel.rgb = mix(texel.rgb, fogColor, fogFactor);
+    float fogAmount1 = traveledInFog1 * fogDensity;
+    float fogAmount2 = traveledInFog2 * fogDensity2;
+    float totalFogAmount = fogAmount1 + fogAmount2;
+    vec3 mixedFogColor = (totalFogAmount > 0.0)
+        ? (fogColor * fogAmount1 + fogColor2 * fogAmount2) / totalFogAmount
+        : fogColor;
+    float fogFactor = fogFactorFromAmount(totalFogAmount);
+    texel.rgb = mix(texel.rgb, mixedFogColor, fogFactor);
 
     fragmentColor = vec4(texel.rgb, alpha);
 }

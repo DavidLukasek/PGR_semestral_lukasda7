@@ -20,8 +20,8 @@
 
 // ---------------------------------- Camera ----------------------------------
 
-#define MOVE_SPEED     5.0f
-#define SPRINT_SPEED  10.0f
+#define MOVE_SPEED     50.0f
+#define SPRINT_SPEED  200.0f
 #define FOV_SPEED    100.0f
 #define MIN_FOV       10.0f
 #define MAX_FOV      170.0f
@@ -58,10 +58,14 @@
 #define PLANET_ORBIT_ROT_SPEED    5.0f
 
 // planet fog parameters
-#define FOG_CENTER      PLANET_1_POSITION
-#define FOG_COLOR       glm::vec3(0.64f, 0.62f, 0.9f)
-#define FOG_RADIUS      105.0f
-#define FOG_DENSITY       0.2f
+#define FOG_1_CENTER      PLANET_1_POSITION
+#define FOG_1_COLOR       glm::vec3(0.64f, 0.62f, 0.9f)
+#define FOG_1_RADIUS      105.0f
+#define FOG_1_DENSITY       0.2f
+#define FOG_2_CENTER      PLANET_2_POSITION
+#define FOG_2_COLOR       glm::vec3(0.5f, 0.5f, 0.95f)
+#define FOG_2_RADIUS      105.0f
+#define FOG_2_DENSITY       0.2f
 
 // ------------------------------- Other objects ------------------------------
 

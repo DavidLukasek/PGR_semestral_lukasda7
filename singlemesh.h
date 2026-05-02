@@ -13,11 +13,13 @@ public:
     void draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) override;
     void setBackfaceCullingOff(bool value);
     void setUVAnimated(bool value);
+    void setAdditiveBlending(bool value);
     
 private:
     bool initialized;           ///< object has the shader with defined locations
     bool backFaceCullingOff;
     bool isUVAnimated;          ///< whether its UVs are animated
+    bool additiveBlending;      ///< whether to use additive blending for this mesh
 
     bool loadSingleMesh(const std::string& fileName, ShaderProgram* shader, ObjectGeometry** geometry);
 };

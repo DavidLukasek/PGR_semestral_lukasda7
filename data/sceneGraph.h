@@ -8,10 +8,10 @@
 #include "square.h"
 
 typedef struct FogBall {
-    glm::vec3 center = FOG_CENTER;
-    glm::vec3 color  = FOG_COLOR;
-    float radius     = FOG_RADIUS;
-    float density    = FOG_DENSITY;
+    glm::vec3 center = FOG_1_CENTER;
+    glm::vec3 color  = FOG_1_COLOR;
+    float radius     = FOG_1_RADIUS;
+    float density    = FOG_1_DENSITY;
 } FogBall;
 
 // array holding all shader programs in the application
@@ -46,7 +46,8 @@ SingleMesh* rocketFlame1 = nullptr;
 SingleMesh* rocketFlame2 = nullptr;
 
 // fog ball
-FogBall fogBall;
+FogBall fogBall1 = { FOG_1_CENTER, FOG_1_COLOR, FOG_1_RADIUS, FOG_1_DENSITY };
+FogBall fogBall2 = { FOG_2_CENTER, FOG_2_COLOR, FOG_2_RADIUS, FOG_2_DENSITY };
 
 // grey material
 Material material1 = {
@@ -156,7 +157,7 @@ void createObjects() {
     // ------------------------------------------------------------------------
 
     // skydome
-    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome_sun.obj",
+    SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
                                          &skydomeShaderProgram,
                                          &material2);
     skydome->setObjectID(objectIDs++);
@@ -179,7 +180,7 @@ void createObjects() {
     // ------------------------------------------------------------------------
 
     // planet 1
-    planet1 = new SingleMesh(MODELS_PATH + (std::string)"planet1.obj",
+    planet1 = new SingleMesh(MODELS_PATH + (std::string)"planet.obj",
                              &phongShaderProgram,
                              &material2);
     planet1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
@@ -256,6 +257,8 @@ void createObjects() {
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_1_OFFSET));
     rocketFlame1->setVisible(false);
+    rocketFlame1->setBackfaceCullingOff(true);
+    rocketFlame1->setAdditiveBlending(true);
     rocketFlame1->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame1);
 
@@ -268,6 +271,8 @@ void createObjects() {
     rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_2_OFFSET));
     rocketFlame2->setVisible(false);
+    rocketFlame2->setBackfaceCullingOff(true);
+    rocketFlame2->setAdditiveBlending(true);
     rocketFlame2->setObjectID(objectIDs++);
     spaceship->addChild(rocketFlame2);
 

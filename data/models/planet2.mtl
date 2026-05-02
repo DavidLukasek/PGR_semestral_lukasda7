@@ -1,13 +1,13 @@
 # Blender 5.1.1 MTL File: 'PGR_Models.blend'
 # www.blender.org
 
-newmtl MAT_ground
+newmtl MAT_planet2
+Ns 10.000005
 Ka 1.000000 1.000000 1.000000
-Ks 0.500000 0.500000 0.500000
+Ks 0.000000 0.000000 0.000000
 Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
-illum 2
-map_Kd ../textures/ground_diffuse.png
-map_Ns ../textures/ground_specular.png
-map_Bump -bm 1.000000 ../textures/ground_normal.png
+illum 1
+map_Kd ../textures/planet2_diffuse.png
+map_Bump -bm 1.000000 ../textures/planet2_normal.png

@@ -34,9 +34,13 @@ typedef struct _ShaderProgram {
 
         // uniform fog locations
         GLint fogCenter;
+        GLint fogCenter2;
         GLint fogColor;
+        GLint fogColor2;
         GLint fogRadius;
+        GLint fogRadius2;
         GLint fogDensity;
+        GLint fogDensity2;
 
         // uniform misc locations
         GLint elapsedTime;
@@ -75,9 +79,13 @@ typedef struct _ShaderProgram {
         locations.shininess = -1;
 
         locations.fogCenter = -1;
+        locations.fogCenter2 = -1;
         locations.fogColor = -1;
+        locations.fogColor2 = -1;
         locations.fogRadius = -1;
+        locations.fogRadius2 = -1;
         locations.fogDensity = -1;
+        locations.fogDensity2 = -1;
 
         locations.elapsedTime = -1;
         locations.ambientColor = -1;

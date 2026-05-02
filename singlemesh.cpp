@@ -8,7 +8,8 @@ SingleMesh::SingleMesh(std::string modelFileName,
     : RenderableObject(shdrPrg, mat)
     , initialized(false)
     , backFaceCullingOff(false)
-    , isUVAnimated(false) {
+    , isUVAnimated(false)
+    , additiveBlending(false) {
     if (modelFileName != "square") {
         if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
             if (geometry == nullptr) {
@@ -138,6 +139,11 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glDisable(GL_CULL_FACE);
             glDepthMask(GL_FALSE);
         }
+
+        // additive blending is useful for emissive/translucent effects (e.g. flames)
+        if (additiveBlending) {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        }
         // turning on UV animation if enabled
         if (shaderProgram->locations.isUVAnimated != -1) {
             glUniform1i(shaderProgram->locations.isUVAnimated, isUVAnimated ? 1 : 0);
@@ -160,6 +166,10 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         }
         glActiveTexture(GL_TEXTURE0);
 
+        if (additiveBlending) {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
+
         // turning all on again if turned off due to being transparent clouds
         if (backFaceCullingOff) {
             glEnable(GL_CULL_FACE);
@@ -180,6 +190,10 @@ void SingleMesh::setBackfaceCullingOff(bool value) {
 
 void SingleMesh::setUVAnimated(bool value) {
     isUVAnimated = value;
+}
+
+void SingleMesh::setAdditiveBlending(bool value) {
+    additiveBlending = value;
 }
 
 /** Load one mesh using assimp library (vertices only, for more attributes see method extended version in Asteroids)
