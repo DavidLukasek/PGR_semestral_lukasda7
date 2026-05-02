@@ -8,10 +8,8 @@
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
-uniform mat4 normalMatrix;
+uniform mat4 pvmMatrix;
 uniform float elapsedTime;
 uniform vec3 cameraPosition;
 
@@ -60,7 +58,7 @@ void main() {
                   + billboardY * (position.y * scaleY)
                   + axisZ      * (position.z * scaleZ);
 
-    gl_Position = projectionMatrix * viewMatrix * vec4(worldPos, 1.0);
+    gl_Position = pvmMatrix * vec4(worldPos, 1.0);
     worldPosition = worldPos;
     worldNormal = normalize(billboardX * normal.x + billboardY * normal.y + axisZ * normal.z);
 

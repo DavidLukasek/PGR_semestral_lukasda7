@@ -72,6 +72,24 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glUniformMatrix4fv(shaderProgram->locations.normalMatrix, 1, GL_FALSE, glm::value_ptr(normalMatrix));
         }
 
+        if (shaderProgram->locations.pvmMatrix != -1) {
+            glm::mat4 pvmMatrix;
+            const bool isRocketFlameLikeShader =
+                (shaderProgram->locations.modelMatrix != -1) &&
+                (shaderProgram->locations.cameraPosition != -1) &&
+                (shaderProgram->locations.elapsedTime != -1) &&
+                (shaderProgram->locations.isUVAnimated == -1);
+
+            if (isRocketFlameLikeShader)
+                pvmMatrix = projectionMatrix * viewMatrix;
+            else if (shaderProgram->locations.modelMatrix != -1)
+                pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
+            else
+                pvmMatrix = projectionMatrix * glm::mat4(glm::mat3(viewMatrix));
+
+            glUniformMatrix4fv(shaderProgram->locations.pvmMatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
+        }
+
         const bool hasDiffuseTexture =
             (geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0);
         const bool hasNormalTexture =

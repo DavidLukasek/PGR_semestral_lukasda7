@@ -84,6 +84,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.viewMatrix = glGetUniformLocation(prog.program, "viewMatrix");
     prog.locations.modelMatrix = glGetUniformLocation(prog.program, "modelMatrix");
     prog.locations.normalMatrix = glGetUniformLocation(prog.program, "normalMatrix");
+    prog.locations.pvmMatrix = glGetUniformLocation(prog.program, "pvmMatrix");
 
     prog.locations.diffuse = glGetUniformLocation(prog.program, "matDiffuse");
     prog.locations.specular = glGetUniformLocation(prog.program, "matSpecular");

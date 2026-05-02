@@ -49,6 +49,12 @@ void Square::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix
                                1, GL_FALSE, glm::value_ptr(globalModelMatrix));
         }
 
+        if (shaderProgram->locations.pvmMatrix != -1) {
+            const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
+            glUniformMatrix4fv(shaderProgram->locations.pvmMatrix,
+                               1, GL_FALSE, glm::value_ptr(pvmMatrix));
+        }
+
         glBindVertexArray(geometry->vertexArrayObject);
         glDrawArrays(GL_TRIANGLES, 0, geometry->numTriangles * 3);
         glBindVertexArray(0);

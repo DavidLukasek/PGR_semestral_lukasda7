@@ -21,12 +21,6 @@ uniform int   hasDiffuseTexture;    // flag for material with diffuse texture
 uniform int   hasNormalTexture;     // flag for material with normal texture
 uniform int   hasSpecularTexture;   // flag for material with specular texture
 
-// matrix uniforms
-uniform mat4  projectionMatrix;     // projection matrix
-uniform mat4  viewMatrix;           // view matrix
-uniform mat4  modelMatrix;          // model matrix
-uniform mat4  normalMatrix;         // inverse transposed model matrix
-
 // texture sampler uniforms
 uniform sampler2D diffuseSampler;   // diffuse texture sampler
 uniform sampler2D normalSampler;    // normal texture sampler

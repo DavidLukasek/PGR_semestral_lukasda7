@@ -2,8 +2,7 @@
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
+uniform mat4 pvmMatrix;
 
 // ------------------------------- Attributes ---------------------------------
 
@@ -18,9 +17,7 @@ out vec3 thePosition;
 // ############################################################################
 
 void main() {
-    mat4 PVM = projectionMatrix * mat4(mat3(viewMatrix));
-
-    gl_Position = PVM * vec4(position, 1.0);
+    gl_Position = pvmMatrix * vec4(position, 1.0);
 
     thePosition = position;
     

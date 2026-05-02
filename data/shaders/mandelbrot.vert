@@ -1,17 +1,21 @@
 #version 140
 
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 modelMatrix;
+// ------------------------------- Uniforms -----------------------------------
+
+uniform mat4 pvmMatrix;
+
+// ------------------------------- Attributes ---------------------------------
 
 in vec3 position;
 in vec2 texCoord;
 
 out vec2 UV;
 
-void main() {
-    mat4 PVM = projectionMatrix * viewMatrix * modelMatrix;
+// ############################################################################
+//                                  Main
+// ############################################################################
 
-    gl_Position = PVM * vec4(position, 1.0);
+void main() {
+    gl_Position = pvmMatrix * vec4(position, 1.0);
     UV = texCoord;
 }

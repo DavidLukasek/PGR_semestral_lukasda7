@@ -51,6 +51,12 @@ void Item::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) 
                                1, GL_FALSE, glm::value_ptr(normalMatrix));
         }
 
+        if (shaderProgram->locations.pvmMatrix != -1) {
+            const glm::mat4 pvmMatrix = projectionMatrix * viewMatrix * globalModelMatrix;
+            glUniformMatrix4fv(shaderProgram->locations.pvmMatrix,
+                               1, GL_FALSE, glm::value_ptr(pvmMatrix));
+        }
+
         if (shaderProgram->locations.hasDiffuseTexture != -1)
             glUniform1i(shaderProgram->locations.hasDiffuseTexture, 0);
 

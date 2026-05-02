@@ -25,6 +25,7 @@ typedef struct _ShaderProgram {
         GLint viewMatrix;
         GLint modelMatrix;
         GLint normalMatrix;
+        GLint pvmMatrix;
 
         // uniform material locations
         GLint diffuse;
@@ -72,6 +73,7 @@ typedef struct _ShaderProgram {
         locations.viewMatrix = -1;
         locations.modelMatrix = -1;
         locations.normalMatrix = -1;
+        locations.pvmMatrix = -1;
 
         locations.diffuse = -1;
         locations.specular = -1;
