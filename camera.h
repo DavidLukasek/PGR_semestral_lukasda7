@@ -27,6 +27,7 @@ public:
     void moveDown(float distance);
 
     void rotate(float yawOffsetDegrees, float pitchOffsetDegrees);
+    void setRotation(float yawDegrees, float pitchDegrees);
 
     void changeFieldOfView(float delta);
     void setSprinting(bool value);

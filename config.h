@@ -20,13 +20,22 @@
 
 // ---------------------------------- Camera ----------------------------------
 
-#define MOVE_SPEED     50.0f
-#define SPRINT_SPEED  200.0f
+// basic camera settings
+#define MOVE_SPEED     5.0f
+#define SPRINT_SPEED  50.0f
 #define FOV_SPEED    100.0f
 #define MIN_FOV       10.0f
 #define MAX_FOV      170.0f
 #define NEAR_PLANE     0.1f
 #define FAR_PLANE   1000.0f
+
+// multiple camera preset positions and rotations
+#define CAMERA_PRESET_1_POSITION glm::vec3(0.0f, 0.0f, 3.0f)
+#define CAMERA_PRESET_1_ROTATION glm::vec2(-90.0f, 0.0f)      // yaw, pitch
+#define CAMERA_PRESET_2_POSITION glm::vec3(40.0f, 25.0f, 40.0f)
+#define CAMERA_PRESET_2_ROTATION glm::vec2(-135.0f, -20.0f)   // yaw, pitch
+#define CAMERA_PRESET_3_POSITION glm::vec3(-80.0f, 40.0f, 0.0f)
+#define CAMERA_PRESET_3_ROTATION glm::vec2(0.0f, -15.0f)      // yaw, pitch
 
 // ------------------------- Mandelbrot set parameters ------------------------
 

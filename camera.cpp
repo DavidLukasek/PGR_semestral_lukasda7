@@ -63,6 +63,12 @@ void Camera::rotate(float yawOffsetDegrees, float pitchOffsetDegrees) {
     updateVectors();
 }
 
+void Camera::setRotation(float yawDegrees, float pitchDegrees) {
+    yaw = yawDegrees;
+    pitch = glm::clamp(pitchDegrees, -89.0f, 89.0f);
+    updateVectors();
+}
+
 void Camera::changeFieldOfView(float delta) {
     fieldOfViewDegrees = glm::clamp(fieldOfViewDegrees + FOV_SPEED * delta,
                                     MIN_FOV, MAX_FOV);

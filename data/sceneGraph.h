@@ -234,49 +234,7 @@ void createObjects() {
     planet2Clouds->setBackfaceCullingOff(true);
     sceneRoot.addChild(planet2Clouds);
 
-    // ------------------------------------------------------------------------
-
-    // spaceship
-    SingleMesh* spaceship = new SingleMesh(MODELS_PATH + (std::string)"spaceship.obj",
-                                           &phongShaderProgram,
-                                           &material2);
-    spaceship->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                  SPACESHIP_POSITION) *
-                                   glm::rotate(glm::mat4(1.0f),
-                                               glm::radians(0.0f),
-                                               glm::vec3(0.0f, 1.0f, 0.0f)));
-    spaceship->setObjectID(objectIDs++);
-    sceneRoot.addChild(spaceship);
-
-    // ------------------------------------------------------------------------
-
-    // rocket flame 1
-    rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
-                                  &rocketFlameShaderProgram,
-                                  &material2);
-    rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                     ROCKET_FLAME_1_OFFSET));
-    rocketFlame1->setVisible(false);
-    rocketFlame1->setBackfaceCullingOff(true);
-    rocketFlame1->setAdditiveBlending(true);
-    rocketFlame1->setObjectID(objectIDs++);
-    spaceship->addChild(rocketFlame1);
-
-    // ------------------------------------------------------------------------
-
-    // rocket flame 2
-    rocketFlame2 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
-                                  &rocketFlameShaderProgram,
-                                  &material2);
-    rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                     ROCKET_FLAME_2_OFFSET));
-    rocketFlame2->setVisible(false);
-    rocketFlame2->setBackfaceCullingOff(true);
-    rocketFlame2->setAdditiveBlending(true);
-    rocketFlame2->setObjectID(objectIDs++);
-    spaceship->addChild(rocketFlame2);
-
-    // ------------------------------------------------------------------------
+     // ------------------------------------------------------------------------
 
     // item
     SingleMesh* item = new Item(&phongShaderProgram);
@@ -328,4 +286,46 @@ void createObjects() {
                                               BOARD_POSITION));
     board->setObjectID(objectIDs++);
     sceneRoot.addChild(board);
+
+    // ------------------------------------------------------------------------
+
+    // spaceship
+    SingleMesh* spaceship = new SingleMesh(MODELS_PATH + (std::string)"spaceship.obj",
+                                           &phongShaderProgram,
+                                           &material2);
+    spaceship->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                  SPACESHIP_POSITION) *
+                                   glm::rotate(glm::mat4(1.0f),
+                                               glm::radians(0.0f),
+                                               glm::vec3(0.0f, 1.0f, 0.0f)));
+    spaceship->setObjectID(objectIDs++);
+    sceneRoot.addChild(spaceship);
+
+    // ------------------------------------------------------------------------
+
+    // rocket flame 1
+    rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
+                                  &rocketFlameShaderProgram,
+                                  &material2);
+    rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     ROCKET_FLAME_1_OFFSET));
+    rocketFlame1->setVisible(false);
+    rocketFlame1->setBackfaceCullingOff(true);
+    rocketFlame1->setAdditiveBlending(true);
+    rocketFlame1->setObjectID(objectIDs++);
+    spaceship->addChild(rocketFlame1);
+
+    // ------------------------------------------------------------------------
+
+    // rocket flame 2
+    rocketFlame2 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
+                                  &rocketFlameShaderProgram,
+                                  &material2);
+    rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     ROCKET_FLAME_2_OFFSET));
+    rocketFlame2->setVisible(false);
+    rocketFlame2->setBackfaceCullingOff(true);
+    rocketFlame2->setAdditiveBlending(true);
+    rocketFlame2->setObjectID(objectIDs++);
+    spaceship->addChild(rocketFlame2);
 }

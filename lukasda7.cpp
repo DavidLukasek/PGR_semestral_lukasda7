@@ -1,14 +1,54 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "camera.h"
-#include "config.h"
 #include "gameState.h"
 #include "light.h"
 #include "object.h"
 #include "pgr.h"
 #include "data/sceneGraph.h"
+
+glm::vec2 directionToYawPitch(const glm::vec3& direction) {
+    const glm::vec3 dir = glm::normalize(direction);
+    const float yaw = glm::degrees(std::atan2(dir.z, dir.x));
+    const float pitch = glm::degrees(std::asin(glm::clamp(dir.y, -1.0f, 1.0f)));
+    return glm::vec2(yaw, pitch);
+}
+
+void applyCameraPreset(int presetIndex) {
+    if (presetIndex < 0 || presetIndex > 2)
+        return;
+
+    camera.setPosition(cameraPresets[presetIndex].position);
+    camera.setRotation(cameraPresets[presetIndex].rotation.x,
+                       cameraPresets[presetIndex].rotation.y);
+}
+
+void saveCurrentCameraToPreset(int presetIndex) {
+    if (presetIndex < 0 || presetIndex > 2)
+        return;
+
+    cameraPresets[presetIndex].position = camera.getPosition();
+    cameraPresets[presetIndex].rotation = glm::vec2(camera.getYaw(), camera.getPitch());
+}
+
+void updateCameraPreset3FromUfo() {
+    if (ufo == nullptr)
+        return;
+
+    const glm::mat4& ufoGlobalModel = ufo->getGlobalModelMatrix();
+    cameraPresets[2].position = glm::vec3(ufoGlobalModel[3]);
+
+    const glm::vec3 ufoForward = glm::mat3(ufoGlobalModel) * glm::vec3(0.0f, 0.0f, -1.0f);
+    if (glm::length(ufoForward) > 0.0001f) {
+        cameraPresets[2].rotation = directionToYawPitch(ufoForward);
+    }
+
+    if (gameState.currentCameraPresetIndex == 2)
+        applyCameraPreset(2);
+}
 
 // ############################################################################
 //                               OpenGL Stuff
@@ -316,7 +356,7 @@ void checkObjectPick() {
                 }
                 break;
             // rocket startup case
-            case 8:
+            case 13:
                 gameState.rocketFlamesEnabled = !gameState.rocketFlamesEnabled;
                 if (rocketFlame1 != nullptr)
                     rocketFlame1->setVisible(gameState.rocketFlamesEnabled);
@@ -421,6 +461,8 @@ void updateCamera(float deltaTime) {
     // branchless way of saying if DOWN then decrease else if UP then increase
     camera.changeFieldOfView((gameState.keyMap[KEY_ARROW_DOWN]) * deltaTime -
                              (gameState.keyMap[KEY_ARROW_UP]) * deltaTime);
+
+    updateCameraPreset3FromUfo();
 }
 
 void rotatePlanetarySystem(float deltaTime) {
@@ -572,6 +614,11 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 'd': case 'D': gameState.keyMap[KEY_D] = true; break;
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = true; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
+        case 'c': case 'C':
+            saveCurrentCameraToPreset(gameState.currentCameraPresetIndex);
+            gameState.currentCameraPresetIndex = (gameState.currentCameraPresetIndex + 1) % 3;
+            applyCameraPreset(gameState.currentCameraPresetIndex);
+            break;
     }
 }
 
@@ -695,9 +742,9 @@ void timerCb(int) {
     lastTime = gameState.elapsedTime;
 
     // update the application state
-    sceneRoot.update(gameState.elapsedTime, nullptr);
     updateCamera(deltaTime);
     rotatePlanetarySystem(deltaTime);
+    sceneRoot.update(gameState.elapsedTime, nullptr);
 
     // update the fog's positions to follow planets
     fogBall1.center = planet1->getPosition();
@@ -722,13 +769,15 @@ void timerCb(int) {
  * \brief Initialize application data and OpenGL stuff.
  */
 void initApplication() {
+    applyCameraPreset(gameState.currentCameraPresetIndex);
+
     // init OpenGL
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
     setMandelbrotStaticUniforms(mandelrotShaderProgram);
-    environmentMapTextureObject = pgr::createTexture("data/textures/space_skydome.png");
+    environmentMapTextureObject = pgr::createTexture("data/textures/space_skydome_black_hole.png");
     if (environmentMapTextureObject == 0) {
-        std::cerr << "ERROR: Could not load environment texture: data/textures/space_skydome.png"
+        std::cerr << "ERROR: Could not load environment texture: data/textures/space_skydome_black_hole.png"
                   << std::endl;
     }
 
