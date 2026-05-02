@@ -160,6 +160,7 @@
     <ClCompile Include="lukasda7.cpp" />
     <ClCompile Include="square.cpp" />
     <ClCompile Include="triangle.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -173,6 +174,7 @@
     <ClInclude Include="singlemesh.h" />
     <ClInclude Include="square.h" />
     <ClInclude Include="triangle.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\mandelbrot.frag" />

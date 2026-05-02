@@ -1,54 +1,14 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include "camera.h"
 #include "gameState.h"
 #include "light.h"
 #include "object.h"
 #include "pgr.h"
+#include "utils.h"
 #include "data/sceneGraph.h"
-
-glm::vec2 directionToYawPitch(const glm::vec3& direction) {
-    const glm::vec3 dir = glm::normalize(direction);
-    const float yaw = glm::degrees(std::atan2(dir.z, dir.x));
-    const float pitch = glm::degrees(std::asin(glm::clamp(dir.y, -1.0f, 1.0f)));
-    return glm::vec2(yaw, pitch);
-}
-
-void applyCameraPreset(int presetIndex) {
-    if (presetIndex < 0 || presetIndex > 2)
-        return;
-
-    camera.setPosition(cameraPresets[presetIndex].position);
-    camera.setRotation(cameraPresets[presetIndex].rotation.x,
-                       cameraPresets[presetIndex].rotation.y);
-}
-
-void saveCurrentCameraToPreset(int presetIndex) {
-    if (presetIndex < 0 || presetIndex > 2)
-        return;
-
-    cameraPresets[presetIndex].position = camera.getPosition();
-    cameraPresets[presetIndex].rotation = glm::vec2(camera.getYaw(), camera.getPitch());
-}
-
-void updateCameraPreset3FromUfo() {
-    if (ufo == nullptr)
-        return;
-
-    const glm::mat4& ufoGlobalModel = ufo->getGlobalModelMatrix();
-    cameraPresets[2].position = glm::vec3(ufoGlobalModel[3]);
-
-    const glm::vec3 ufoForward = glm::mat3(ufoGlobalModel) * glm::vec3(0.0f, 0.0f, -1.0f);
-    if (glm::length(ufoForward) > 0.0001f) {
-        cameraPresets[2].rotation = directionToYawPitch(ufoForward);
-    }
-
-    if (gameState.currentCameraPresetIndex == 2)
-        applyCameraPreset(2);
-}
 
 // ############################################################################
 //                               OpenGL Stuff
@@ -283,93 +243,6 @@ void setLightUniforms(const ShaderProgram& shaderProgram,
     }
 }
 
-void drawObjectStencil(Object* object) {
-    if ((object == nullptr) || !object->isVisible())
-        return;
-
-    // set stencil function to redraw with object id
-    glStencilFunc(GL_ALWAYS, object->getObjectID(), 0xFF);
-
-    CHECK_GL_ERROR();
-
-    object->draw(camera.getViewMatrix(),
-                 camera.getProjectionMatrix((float)gameState.windowWidth /
-                                            (float)gameState.windowHeight));
-
-    // draw stencil for all children
-    for (Object* child : object->getChildren()) {
-        drawObjectStencil(child);
-    }
-}
-
-void drawStencil() {
-    // enable stencil test
-    glEnable(GL_STENCIL_TEST);
-
-    // value in the stencil buffer is replaced with the object ID (byte 1..255, 0 ... background)
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-    CHECK_GL_ERROR();
-
-    // draw object IDs into the stencil buffer
-    Object::setSuppressChildrenDraw(true);
-    drawObjectStencil(&sceneRoot);
-    Object::setSuppressChildrenDraw(false);
-
-    // disable stencil test
-    glDisable(GL_STENCIL_TEST);
-}
-
-unsigned char pickObject(int mouseX, int mouseY) {
-    unsigned char objectID = 0;
-
-    glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    drawStencil();
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-    glReadPixels(mouseX, gameState.windowHeight - mouseY - 1, 1, 1,
-                 GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &objectID);
-
-    return objectID;
-}
-
-void checkObjectPick() {
-    if (gameState.keyMap[LMB]) {
-        unsigned char objectID = pickObject(gameState.ogMouseX, gameState.ogMouseY);
-        switch (objectID) {
-            // Mandelbrot object animation case
-            case 2:
-                if (!gameState.mandelbrotAnimStarted) {
-                    gameState.mandelbrotAnimStarted = true;
-                    gameState.mandelbrotAnimPaused = false;
-                    gameState.mandelbrotAnimStartTime = gameState.elapsedTime;
-                    gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
-                }
-                else if (!gameState.mandelbrotAnimPaused) {
-                    gameState.mandelbrotAnimPaused = true;
-                    gameState.mandelbrotAnimPauseTime = gameState.elapsedTime;
-                }
-                else {
-                    gameState.mandelbrotAnimPaused = false;
-                    gameState.mandelbrotAnimStartTime +=
-                        (gameState.elapsedTime - gameState.mandelbrotAnimPauseTime);
-                }
-                break;
-            // rocket startup case
-            case 13:
-                gameState.rocketFlamesEnabled = !gameState.rocketFlamesEnabled;
-                if (rocketFlame1 != nullptr)
-                    rocketFlame1->setVisible(gameState.rocketFlamesEnabled);
-                if (rocketFlame2 != nullptr)
-                    rocketFlame2->setVisible(gameState.rocketFlamesEnabled);
-                break;
-        }
-
-        gameState.keyMap[LMB] = false;
-    }
-}
-
 /**
  * \brief Draw all scene objects and update their uniforms
  */
@@ -444,125 +317,6 @@ void drawScene(void) {
     sceneRoot.draw(viewMatrix, projectionMatrix);
 }
 
-void updateCamera(float deltaTime) {
-    // toggling camera sprint
-    camera.setSprinting(gameState.keyMap[KEY_SHIFT]);
-
-    // camera movement
-    camera.moveForward((gameState.keyMap[KEY_W]) * deltaTime);
-    camera.moveBackward((gameState.keyMap[KEY_S]) * deltaTime);
-    camera.moveRight((gameState.keyMap[KEY_D]) * deltaTime);
-    camera.moveLeft((gameState.keyMap[KEY_A]) * deltaTime);
-    camera.moveUp((gameState.keyMap[KEY_E]) * deltaTime);
-    camera.moveDown((gameState.keyMap[KEY_Q]) * deltaTime);
-
-    // camera rotation is handled directly in mouseMotionCb() callback
-
-    // camera FOV change
-    // branchless way of saying if DOWN then decrease else if UP then increase
-    camera.changeFieldOfView((gameState.keyMap[KEY_ARROW_DOWN]) * deltaTime -
-                             (gameState.keyMap[KEY_ARROW_UP]) * deltaTime);
-
-    updateCameraPreset3FromUfo();
-}
-
-void rotatePlanetarySystem(float deltaTime) {
-    // -----------------------  moon rotation   -----------------------
-    static float moonOrbitAngle = 0.0f;
-    static float moonAxisAngle = 0.0f;
-
-    // subtracting planet's rotation speed since moon is its child
-    moonOrbitAngle += glm::radians(deltaTime *
-                                   (MOON_ORBIT_ROT_SPEED - PLANET_1_AXIS_ROT_SPEED) *
-                                   GLOBAL_ANIM_SPEED);
-    moonAxisAngle += glm::radians(deltaTime *
-                                  MOON_AXIS_ROT_SPEED * 
-                                  GLOBAL_ANIM_SPEED);
-
-    // rotate moon around the planet
-    glm::mat4 moonOrbit = glm::rotate(glm::mat4(1.0f),
-                                      moonOrbitAngle,
-                                      glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // moon's center's offset relative to the planet center
-    glm::mat4 moonOffset = glm::translate(glm::mat4(1.0f),
-                                          MOON_POSITION);
-
-    // rotate moon around its own axis
-    glm::mat4 moonSelfRotation = glm::rotate(glm::mat4(1.0f),
-                                             moonAxisAngle,
-                                             glm::vec3(0.0f, 1.0f, 0.0f));
-
-    moon->setLocalModelMatrix(moonOrbit * moonOffset * moonSelfRotation);
-
-    // -----------------------  ufo rotation   ------------------------
-
-    static float ufoOrbitAngle = 0.0f;
-    static float ufoAxisAngle = 0.0f;
-
-    // subtracting moon's rotation speed since ufo is its child
-    ufoOrbitAngle += glm::radians(deltaTime * UFO_ORBIT_ROT_SPEED * GLOBAL_ANIM_SPEED);
-    ufoAxisAngle += glm::radians(deltaTime * UFO_AXIS_ROT_SPEED * GLOBAL_ANIM_SPEED);
-
-    // rotate ufo around the moon
-    glm::mat4 ufoOrbit = glm::rotate(glm::mat4(1.0f),
-                                     ufoOrbitAngle,
-                                     glm::vec3(1.0f, 0.0f, 0.0f));
-
-    // ufo's center's offset relative to the moon center
-    glm::mat4 ufoOffset = glm::translate(glm::mat4(1.0f),
-                                         UFO_POSITION);
-
-    // rotate ufo around its own axis
-    glm::mat4 ufoSelfRotation = glm::rotate(glm::mat4(1.0f),
-                                            ufoAxisAngle,
-                                            glm::vec3(0.0f, 1.0f, 0.0f));
-
-    ufo->setLocalModelMatrix(glm::inverse(moonSelfRotation) * ufoOrbit *
-                             ufoOffset * ufoSelfRotation);
-
-    // -------------------  shared planets orbit  ---------------------
-    static float planetsOrbitAngle = 0.0f;
-
-    planetsOrbitAngle += glm::radians(deltaTime * PLANET_ORBIT_ROT_SPEED * GLOBAL_ANIM_SPEED);
-
-    glm::mat4 planetsOrbit = glm::translate(glm::mat4(1.0f), 
-                                            glm::vec3(0.0f, 80.0f, 0.0f)) *
-                             glm::rotate(glm::mat4(1.0f),
-                                         planetsOrbitAngle,
-                                         glm::vec3(0.0f, 1.0f, 0.0f)) *
-                             glm::translate(glm::mat4(1.0f),
-                                            glm::vec3(0.0f, -80.0f, 0.0f));
-
-    // ---------------------  planet 1 rotation   ---------------------
-    static float planet1AxisAngle = 0.0f;
-
-    planet1AxisAngle += glm::radians(deltaTime *
-                                     (PLANET_1_AXIS_ROT_SPEED - PLANET_ORBIT_ROT_SPEED) * 
-                                     GLOBAL_ANIM_SPEED);
-
-    glm::mat4 planet1Offset = glm::translate(glm::mat4(1.0f), PLANET_1_POSITION);
-    glm::mat4 planet1SelfRotation = glm::rotate(glm::mat4(1.0f),
-                                                planet1AxisAngle,
-                                                glm::vec3(0.0f, 1.0f, 0.0f));
-
-    planet1->setLocalModelMatrix(planetsOrbit * planet1Offset * planet1SelfRotation);
-
-    // ---------------------  planet 2 rotation   ---------------------
-    static float planet2AxisAngle = 0.0f;
-
-    planet2AxisAngle += glm::radians(deltaTime *
-                                     (PLANET_2_AXIS_ROT_SPEED - PLANET_ORBIT_ROT_SPEED) * 
-                                     GLOBAL_ANIM_SPEED);
-
-    glm::mat4 planet2Offset = glm::translate(glm::mat4(1.0f), PLANET_2_POSITION);
-    glm::mat4 planet2SelfRotation = glm::rotate(glm::mat4(1.0f),
-                                                planet2AxisAngle,
-                                                glm::vec3(0.0f, 1.0f, 0.0f));
-
-    planet2->setLocalModelMatrix(planetsOrbit * planet2Offset * planet2SelfRotation);
-}
-
 // ############################################################################
 //                                Callbacks
 // ############################################################################
@@ -616,9 +370,13 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
         case 'q': case 'Q': gameState.keyMap[KEY_Q] = true; break;
         case 'e': case 'E': gameState.keyMap[KEY_E] = true; break;
         case 'c': case 'C':
-            saveCurrentCameraToPreset(gameState.currentCameraPresetIndex);
+            saveCurrentCameraToPreset(camera,
+                                      cameraPresets[gameState.currentCameraPresetIndex].position,
+                                      cameraPresets[gameState.currentCameraPresetIndex].rotation);
             gameState.currentCameraPresetIndex = (gameState.currentCameraPresetIndex + 1) % 3;
-            applyCameraPreset(gameState.currentCameraPresetIndex);
+            applyCameraPreset(camera,
+                              cameraPresets[gameState.currentCameraPresetIndex].position,
+                              cameraPresets[gameState.currentCameraPresetIndex].rotation);
             break;
     }
 }
@@ -668,9 +426,6 @@ void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
 
     gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
-
-// -----------------------  Mouse ---------------------------------
-// three events - mouse click, mouse drag, and mouse move with no button pressed
 
 // 
 /**
@@ -742,9 +497,32 @@ void timerCb(int) {
     float deltaTime = gameState.elapsedTime - lastTime;
     lastTime = gameState.elapsedTime;
 
+    CameraInputState cameraInput = {};
+    cameraInput.moveForward = gameState.keyMap[KEY_W];
+    cameraInput.moveBackward = gameState.keyMap[KEY_S];
+    cameraInput.moveRight = gameState.keyMap[KEY_D];
+    cameraInput.moveLeft = gameState.keyMap[KEY_A];
+    cameraInput.moveUp = gameState.keyMap[KEY_E];
+    cameraInput.moveDown = gameState.keyMap[KEY_Q];
+    cameraInput.fovUpPressed = gameState.keyMap[KEY_ARROW_UP];
+    cameraInput.fovDownPressed = gameState.keyMap[KEY_ARROW_DOWN];
+    cameraInput.sprint = gameState.keyMap[KEY_SHIFT];
+
     // update the application state
-    updateCamera(deltaTime);
-    rotatePlanetarySystem(deltaTime);
+    updateCamera(deltaTime,
+                 camera,
+                 cameraInput,
+                 glm::vec3(0.0f),
+                 BOUNDING_SPHERE_RADIUS,
+                 planet1,
+                 102.5f,
+                 planet2,
+                 102.5f,
+                 ufo,
+                 cameraPresets[2].position,
+                 cameraPresets[2].rotation,
+                 gameState.currentCameraPresetIndex);
+    rotatePlanetarySystem(deltaTime, moon, ufo, planet1, planet2);
     sceneRoot.update(gameState.elapsedTime, nullptr);
 
     // update the fog's positions to follow planets
@@ -752,8 +530,27 @@ void timerCb(int) {
     fogBall2.center = planet2->getPosition();
     planet2Clouds->setPosition(planet2->getPosition());
 
+    const glm::mat4 viewMatrix = camera.getViewMatrix();
+    const glm::mat4 projectionMatrix =
+        camera.getProjectionMatrix((float)gameState.windowWidth /
+                                   (float)gameState.windowHeight);
+
     // check if an object has been picked and which
-    checkObjectPick();
+    checkObjectPick(gameState.keyMap[LMB],
+                    gameState.ogMouseX,
+                    gameState.ogMouseY,
+                    gameState.windowHeight,
+                    &sceneRoot,
+                    viewMatrix,
+                    projectionMatrix,
+                    gameState.mandelbrotAnimStarted,
+                    gameState.mandelbrotAnimPaused,
+                    gameState.mandelbrotAnimStartTime,
+                    gameState.mandelbrotAnimPauseTime,
+                    gameState.elapsedTime,
+                    gameState.rocketFlamesEnabled,
+                    rocketFlame1,
+                    rocketFlame2);
 
     // and plan a new event
     glutTimerFunc(33, timerCb, 0);
@@ -770,7 +567,9 @@ void timerCb(int) {
  * \brief Initialize application data and OpenGL stuff.
  */
 void initApplication() {
-    applyCameraPreset(gameState.currentCameraPresetIndex);
+    applyCameraPreset(camera,
+                      cameraPresets[gameState.currentCameraPresetIndex].position,
+                      cameraPresets[gameState.currentCameraPresetIndex].rotation);
 
     // init OpenGL
     // - all programs (shaders), buffers, textures, ...

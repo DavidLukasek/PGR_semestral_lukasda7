@@ -11,6 +11,7 @@
     <ClCompile Include="data\models\Item.cpp">
       <Filter>data\models</Filter>
     </ClCompile>
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="object.h" />
@@ -28,6 +29,7 @@
     <ClInclude Include="data\models\Item.h">
       <Filter>data\models</Filter>
     </ClInclude>
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="data">

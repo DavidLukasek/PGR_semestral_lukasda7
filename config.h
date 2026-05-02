@@ -14,9 +14,11 @@
 #define MAX_SCENE_LIGHTS    8  // also needs to be manually changed in phong.frag!
 #define AMBIENT_COLOR       glm::vec3(0.05f)
 
-#define GLOBAL_ANIM_SPEED   1.0f
+#define GLOBAL_ANIM_SPEED   0.1f
 
 #define MOUSE_SENSITIVITY   0.25f
+
+#define BOUNDING_SPHERE_RADIUS 750.0f
 
 // ---------------------------------- Camera ----------------------------------
 
