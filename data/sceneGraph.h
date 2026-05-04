@@ -51,18 +51,34 @@ FogBall fogBall1 = { FOG_1_CENTER, FOG_1_COLOR, FOG_1_RADIUS, FOG_1_DENSITY };
 FogBall fogBall2 = { FOG_2_CENTER, FOG_2_COLOR, FOG_2_RADIUS, FOG_2_DENSITY };
 
 // grey material
-Material material1 = {
+Material greyMaterial = {
     glm::vec3(0.3f),                // ambient
     glm::vec3(0.3f),                // diffuse
     glm::vec3(0.3f),                // specular
-    2.0f                            // shininess
+    10.0f                            // shininess
 };
 
 // white material
-Material material2 = {
+Material whiteMaterial = {
     glm::vec3(1.0f),                // ambient
     glm::vec3(1.0f),                // diffuse
     glm::vec3(0.23f, 0.20f, 0.11f), // specular
+    10.0f                           // shininess
+};
+
+// red material
+Material redMaterial = {
+    glm::vec3(1.0f),                // ambient
+    glm::vec3(1.0f, 0.0f, 0.0f),    // diffuse
+    glm::vec3(0.93f, 0.20f, 0.11f), // specular
+    10.0f                           // shininess
+};
+
+// blue material
+Material blueMaterial = {
+    glm::vec3(1.0f),                // ambient
+    glm::vec3(0.0f, 0.0f, 1.0f),    // diffuse
+    glm::vec3(0.23f, 0.20f, 0.91f), // specular
     10.0f                           // shininess
 };
 
@@ -160,7 +176,7 @@ void createObjects() {
     // skydome
     SingleMesh* skydome = new SingleMesh(MODELS_PATH + (std::string)"skydome.obj",
                                          &skydomeShaderProgram,
-                                         &material2);
+                                         &whiteMaterial);
     skydome->setObjectID(objectIDs++);
     sceneRoot.addChild(skydome);
 
@@ -183,7 +199,7 @@ void createObjects() {
     // planet 1
     planet1 = new SingleMesh(MODELS_PATH + (std::string)"planet.obj",
                              &displacementShaderProgram,
-                             &material2);
+                             &whiteMaterial);
     planet1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                PLANET_1_POSITION));
     planet1->setDisplaceAnimated(false);
@@ -195,7 +211,7 @@ void createObjects() {
     // moon
     moon = new SingleMesh(MODELS_PATH + (std::string)"moon.obj",
                           &phongShaderProgram,
-                          &material2);
+                          &whiteMaterial);
     moon->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                              MOON_POSITION));
     moon->setObjectID(objectIDs++);
@@ -206,7 +222,7 @@ void createObjects() {
     // ufo
     ufo = new SingleMesh(MODELS_PATH + (std::string)"ufo.obj",
                          &phongShaderProgram,
-                         &material2);
+                         &whiteMaterial);
     ufo->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                             UFO_POSITION));
     ufo->setObjectID(objectIDs++);
@@ -217,7 +233,7 @@ void createObjects() {
     // planet 2
     planet2 = new SingleMesh(MODELS_PATH + (std::string)"planet2.obj",
                              &phongShaderProgram,
-                             &material2);
+                             &whiteMaterial);
     planet2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                PLANET_2_POSITION));
     planet2->setObjectID(objectIDs++);
@@ -228,7 +244,7 @@ void createObjects() {
     // planet 2 clouds
     planet2Clouds = new SingleMesh(MODELS_PATH + (std::string)"planet2_clouds.obj",
                                    &phongShaderProgram,
-                                   &material2);
+                                   &whiteMaterial);
     planet2Clouds->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                       PLANET_2_POSITION));
     planet2Clouds->setUVAnimated(true);
@@ -250,7 +266,7 @@ void createObjects() {
     // island
     SingleMesh* island = new SingleMesh(MODELS_PATH + (std::string)"island.obj",
                                         &phongShaderProgram,
-                                        &material2);
+                                        &whiteMaterial);
     island->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                FLOOR_OFFSET));
     island->setObjectID(objectIDs++);
@@ -261,7 +277,7 @@ void createObjects() {
     // island middle
     SingleMesh* islandMiddle = new SingleMesh(MODELS_PATH + (std::string)"island_middle.obj",
                                               &phongShaderProgram,
-                                              &material2);
+                                              &whiteMaterial);
     islandMiddle->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      FLOOR_OFFSET));
     islandMiddle->setObjectID(objectIDs++);
@@ -272,7 +288,7 @@ void createObjects() {
     // board stones
     SingleMesh* boardStones = new SingleMesh(MODELS_PATH + (std::string)"board_stones.obj",
                                              &phongShaderProgram,
-                                             &material2);
+                                             &whiteMaterial);
     boardStones->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                     BOARD_STONES_POSITION));
     boardStones->setObjectID(objectIDs++);
@@ -283,7 +299,7 @@ void createObjects() {
     // board
     SingleMesh* board = new SingleMesh(MODELS_PATH + (std::string)"board.obj",
                                        &phongShaderProgram,
-                                       &material2);
+                                       &whiteMaterial);
     board->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                               BOARD_POSITION));
     board->setObjectID(objectIDs++);
@@ -291,10 +307,54 @@ void createObjects() {
 
     // ------------------------------------------------------------------------
 
+    // button stand 1
+    SingleMesh* buttonStand1 = new SingleMesh(MODELS_PATH + (std::string)"button_stand.obj",
+                                              &phongShaderProgram,
+                                              &greyMaterial);
+    buttonStand1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     BUTTON_STAND_1_POSITION));
+    buttonStand1->setObjectID(objectIDs++);
+    sceneRoot.addChild(buttonStand1);
+
+    // ------------------------------------------------------------------------
+
+    // button 1
+    SingleMesh* button1 = new SingleMesh(MODELS_PATH + (std::string)"button.obj",
+                                         &phongShaderProgram,
+                                         &redMaterial);
+    button1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                BUTTON_OFFSET));
+    button1->setObjectID(objectIDs++);
+    buttonStand1->addChild(button1);
+
+    // ------------------------------------------------------------------------
+
+    // button stand 2
+    SingleMesh* buttonStand2 = new SingleMesh(MODELS_PATH + (std::string)"button_stand.obj",
+                                              &phongShaderProgram,
+                                              &greyMaterial);
+    buttonStand2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                     BUTTON_STAND_2_POSITION));
+    buttonStand2->setObjectID(objectIDs++);
+    sceneRoot.addChild(buttonStand2);
+
+    // ------------------------------------------------------------------------
+
+    // button 2
+    SingleMesh* button2 = new SingleMesh(MODELS_PATH + (std::string)"button.obj",
+                                         &phongShaderProgram,
+                                         &blueMaterial);
+    button2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                BUTTON_OFFSET));
+    button2->setObjectID(objectIDs++);
+    buttonStand2->addChild(button2);
+
+    // ------------------------------------------------------------------------
+
     // spaceship
     SingleMesh* spaceship = new SingleMesh(MODELS_PATH + (std::string)"spaceship.obj",
                                            &phongShaderProgram,
-                                           &material2);
+                                           &whiteMaterial);
     spaceship->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                   SPACESHIP_POSITION) *
                                    glm::rotate(glm::mat4(1.0f),
@@ -308,7 +368,7 @@ void createObjects() {
     // rocket flame 1
     rocketFlame1 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
                                   &rocketFlameShaderProgram,
-                                  &material2);
+                                  &whiteMaterial);
     rocketFlame1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_1_OFFSET));
     rocketFlame1->setVisible(false);
@@ -322,7 +382,7 @@ void createObjects() {
     // rocket flame 2
     rocketFlame2 = new SingleMesh(MODELS_PATH + (std::string)"rocket_flame.obj",
                                   &rocketFlameShaderProgram,
-                                  &material2);
+                                  &whiteMaterial);
     rocketFlame2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                      ROCKET_FLAME_2_OFFSET));
     rocketFlame2->setVisible(false);

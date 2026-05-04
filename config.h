@@ -83,11 +83,14 @@
 // ------------------------------- Other objects ------------------------------
 
 // object positions
-#define MANDELBROT_POSITION    glm::vec3(4.0741f, -0.7087f, -3.3598f)
-#define SPACESHIP_POSITION     glm::vec3(50.0f, 1.0f, 0.0f)
-#define ROCKET_FLAME_1_OFFSET  glm::vec3(10.095f, 0.0, -33.345f)
-#define ROCKET_FLAME_2_OFFSET  glm::vec3(-10.095f, 0.0, -33.345f)
-#define ITEM_POSITION          glm::vec3(0.0f, 20.0f, 0.0f)
-#define FLOOR_OFFSET           glm::vec3(0.0f, -1.0f, 0.0f)
-#define BOARD_STONES_POSITION  glm::vec3(0.0f, -1.0f, -5.2858f)
-#define BOARD_POSITION         glm::vec3(0.0f, 0.29122f, -4.9681f)
+#define MANDELBROT_POSITION      glm::vec3(4.0741f, -0.7087f, -3.3598f)
+#define SPACESHIP_POSITION       glm::vec3(50.0f, 1.0f, 0.0f)
+#define ROCKET_FLAME_1_OFFSET    glm::vec3(10.095f, 0.0, -33.345f)
+#define ROCKET_FLAME_2_OFFSET    glm::vec3(-10.095f, 0.0, -33.345f)
+#define ITEM_POSITION            glm::vec3(0.0f, 20.0f, 0.0f)
+#define FLOOR_OFFSET             glm::vec3(0.0f, -1.0f, 0.0f)
+#define BOARD_STONES_POSITION    glm::vec3(0.0f, -1.0f, -5.2858f)
+#define BOARD_POSITION           glm::vec3(0.0f, 0.29122f, -4.9681f)
+#define BUTTON_STAND_1_POSITION  glm::vec3(-0.5f, -1.0f, 5.0f)
+#define BUTTON_STAND_2_POSITION  glm::vec3(0.5f, -1.0f, 5.0f)
+#define BUTTON_OFFSET            glm::vec3(0.0f, 1.07185f, 0.0f)

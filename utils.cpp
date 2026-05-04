@@ -193,11 +193,11 @@ void checkObjectPick(bool& isLmbPressed,
             }
             break;
         // planet 1 displacement toggle case
-        case 3:
+        case 14:
             planet1->setDisplaceAnimated(!(planet1->getDisplaceAnimated()));
             break;
         // spaceship ignition case
-        case 13:
+        case 17:
             rocketFlamesEnabled = !rocketFlamesEnabled;
             if (rocketFlame1 != nullptr)
                 rocketFlame1->setVisible(rocketFlamesEnabled);
