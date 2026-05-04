@@ -9,6 +9,7 @@ SingleMesh::SingleMesh(std::string modelFileName,
     , initialized(false)
     , backFaceCullingOff(false)
     , isUVAnimated(false)
+    , isDisplaceAnimated(false)
     , additiveBlending(false) {
     if (modelFileName != "square") {
         if (!loadSingleMesh(modelFileName, shdrPrg, &geometry)) {
@@ -74,8 +75,10 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
 
         if (shaderProgram->locations.pvmMatrix != -1) {
             glm::mat4 pvmMatrix;
+            // boolean for rocketflame shader to exclude modelmatrix from PVM
             const bool isRocketFlameLikeShader =
                 (shaderProgram->locations.modelMatrix != -1) &&
+                (shaderProgram->locations.normalMatrix == -1) &&
                 (shaderProgram->locations.cameraPosition != -1) &&
                 (shaderProgram->locations.elapsedTime != -1) &&
                 (shaderProgram->locations.isUVAnimated == -1);
@@ -90,6 +93,7 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
             glUniformMatrix4fv(shaderProgram->locations.pvmMatrix, 1, GL_FALSE, glm::value_ptr(pvmMatrix));
         }
 
+        // texture flag uniforms
         const bool hasDiffuseTexture =
             (geometry != nullptr) && geometry->hasTexture && (geometry->diffuseTextureObject != 0);
         const bool hasNormalTexture =
@@ -166,6 +170,11 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
         if (shaderProgram->locations.isUVAnimated != -1) {
             glUniform1i(shaderProgram->locations.isUVAnimated, isUVAnimated ? 1 : 0);
         }
+        // turning on displacement animation if enabled
+        if (shaderProgram->locations.isDisplaceAnimated != -1) {
+            glUniform1i(shaderProgram->locations.isDisplaceAnimated,
+                        isDisplaceAnimated ? 1 : 0);
+        }
 
         // drawing
         glBindVertexArray(geometry->vertexArrayObject);
@@ -202,12 +211,20 @@ void SingleMesh::draw(const glm::mat4& viewMatrix, const glm::mat4& projectionMa
     Object::draw(viewMatrix, projectionMatrix);
 }
 
+bool SingleMesh::getDisplaceAnimated() {
+    return isDisplaceAnimated;
+}
+
 void SingleMesh::setBackfaceCullingOff(bool value) {
     backFaceCullingOff = value;
 }
 
 void SingleMesh::setUVAnimated(bool value) {
     isUVAnimated = value;
+}
+
+void SingleMesh::setDisplaceAnimated(bool value) {
+    isDisplaceAnimated = value;
 }
 
 void SingleMesh::setAdditiveBlending(bool value) {

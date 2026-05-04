@@ -21,6 +21,7 @@ ShaderProgram mandelrotShaderProgram;
 ShaderProgram phongShaderProgram;
 ShaderProgram rocketFlameShaderProgram;
 ShaderProgram skydomeShaderProgram;
+ShaderProgram displacementShaderProgram;
 
 // root of the scene - all objects are children of it or of other its children
 Object sceneRoot;
@@ -181,10 +182,11 @@ void createObjects() {
 
     // planet 1
     planet1 = new SingleMesh(MODELS_PATH + (std::string)"planet.obj",
-                             &phongShaderProgram,
+                             &displacementShaderProgram,
                              &material2);
     planet1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
                                                PLANET_1_POSITION));
+    planet1->setDisplaceAnimated(false);
     planet1->setObjectID(objectIDs++);
     sceneRoot.addChild(planet1);
 

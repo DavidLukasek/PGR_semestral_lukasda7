@@ -177,6 +177,7 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="data\shaders\displacement.vert" />
     <None Include="data\shaders\mandelbrot.frag" />
     <None Include="data\shaders\mandelbrot.vert" />
     <None Include="data\shaders\phong.frag" />

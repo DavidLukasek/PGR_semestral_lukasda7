@@ -1,8 +1,12 @@
 #include "utils.h"
 
+#include <algorithm>
 #include <cmath>
+#include <string>
 
 #include "config.h"
+#include "light.h"
+#include "renderableObject.h"
 
 glm::vec2 directionToYawPitch(const glm::vec3& direction) {
     const glm::vec3 dir = glm::normalize(direction);
@@ -14,7 +18,8 @@ glm::vec2 directionToYawPitch(const glm::vec3& direction) {
 void applyCameraPreset(Camera& camera,
                        const glm::vec3& presetPosition,
                        const glm::vec2& presetRotation) {
-    
+    camera.setPosition(presetPosition);
+    camera.setRotation(presetRotation.x, presetRotation.y);
 }
 
 void saveCurrentCameraToPreset(const Camera& camera,
@@ -161,6 +166,7 @@ void checkObjectPick(bool& isLmbPressed,
                      float& mandelbrotAnimPauseTime,
                      float elapsedTime,
                      bool& rocketFlamesEnabled,
+                     SingleMesh* planet1,
                      Object* rocketFlame1,
                      Object* rocketFlame2) {
     if (!isLmbPressed)
@@ -185,6 +191,10 @@ void checkObjectPick(bool& isLmbPressed,
                 mandelbrotAnimPaused = false;
                 mandelbrotAnimStartTime += (elapsedTime - mandelbrotAnimPauseTime);
             }
+            break;
+        // planet 1 displacement toggle case
+        case 3:
+            planet1->setDisplaceAnimated(!(planet1->getDisplaceAnimated()));
             break;
         // spaceship ignition case
         case 13:
@@ -323,5 +333,240 @@ void rotatePlanetarySystem(float deltaTime,
                                                 glm::vec3(0.0f, 1.0f, 0.0f));
 
     planet2->setLocalModelMatrix(planetsOrbit * planet2Offset * planet2SelfRotation);
+}
+
+void setMandelbrotStaticUniforms(const ShaderProgram& shaderProgram) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    if (shaderProgram.locations.mandelbrotMaxIterations != -1)
+        glUniform1i(shaderProgram.locations.mandelbrotMaxIterations,
+                    MANDELBROT_MAX_ITERATIONS);
+
+    if (shaderProgram.locations.mandelbrotZoomSpeed != -1)
+        glUniform1f(shaderProgram.locations.mandelbrotZoomSpeed,
+                    MANDELBROT_ZOOM_SPEED);
+
+    if (shaderProgram.locations.mandelbrotColorSpeed != -1)
+        glUniform1f(shaderProgram.locations.mandelbrotColorSpeed,
+                    MANDELBROT_COLOR_SPEED);
+
+    if (shaderProgram.locations.mandelbrotZoomTarget != -1)
+        glUniform2fv(shaderProgram.locations.mandelbrotZoomTarget,
+                     1, glm::value_ptr(MANDELBROT_ZOOM_TARGET));
+}
+
+void setFogUniforms(const ShaderProgram& shaderProgram,
+                    const glm::vec3& fogCenter,
+                    const glm::vec3& fogCenter2,
+                    const glm::vec3& fogColor,
+                    const glm::vec3& fogColor2,
+                    float fogRadius,
+                    float fogRadius2,
+                    float fogDensity,
+                    float fogDensity2) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    if (shaderProgram.locations.fogCenter != -1)
+        glUniform3fv(shaderProgram.locations.fogCenter, 1, glm::value_ptr(fogCenter));
+
+    if (shaderProgram.locations.fogCenter2 != -1)
+        glUniform3fv(shaderProgram.locations.fogCenter2, 1, glm::value_ptr(fogCenter2));
+
+    if (shaderProgram.locations.fogColor != -1)
+        glUniform3fv(shaderProgram.locations.fogColor, 1, glm::value_ptr(fogColor));
+
+    if (shaderProgram.locations.fogColor2 != -1)
+        glUniform3fv(shaderProgram.locations.fogColor2, 1, glm::value_ptr(fogColor2));
+
+    if (shaderProgram.locations.fogRadius != -1)
+        glUniform1f(shaderProgram.locations.fogRadius, fogRadius);
+
+    if (shaderProgram.locations.fogRadius2 != -1)
+        glUniform1f(shaderProgram.locations.fogRadius2, fogRadius2);
+
+    if (shaderProgram.locations.fogDensity != -1)
+        glUniform1f(shaderProgram.locations.fogDensity, fogDensity);
+
+    if (shaderProgram.locations.fogDensity2 != -1)
+        glUniform1f(shaderProgram.locations.fogDensity2, fogDensity2);
+}
+
+void setLightUniforms(const ShaderProgram& shaderProgram,
+                      const std::vector<Light*>& sceneLights) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    const GLint lightCountLocation = glGetUniformLocation(shaderProgram.program,
+                                                          "lightCount");
+
+    const int uploadedLightCount = std::min(static_cast<int>(sceneLights.size()),
+                                            MAX_SCENE_LIGHTS);
+
+    if (lightCountLocation != -1) glUniform1i(lightCountLocation, uploadedLightCount);
+
+    // getting and setting all light-related uniform arrays
+    for (int i = 0; i < uploadedLightCount; ++i) {
+        const Light* light = sceneLights[i];
+        const std::string lightIndex = std::to_string(i);
+        const glm::vec3 lightPosition = glm::vec3(light->getGlobalModelMatrix()[3]);
+        const glm::vec3 lightAmbient = light->getAmbient();
+        const glm::vec3 lightDiffuse = light->getDiffuse();
+        const glm::vec3 lightSpecular = light->getSpecular();
+        const glm::vec3 lightSpotDirection = glm::normalize(
+                                                glm::mat3(light->getGlobalModelMatrix())
+                                                * light->getSpotDirection());
+        const float lightSpotCutOff = light->getSpotCutOff();
+        const float lightSpotExponent = light->getSpotExponent();
+        const float lightIntensity = light->getIntensity();
+        const int lightType = static_cast<int>(light->getLightType());
+
+        const GLint typeLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightTypes[" + lightIndex + "]").c_str());
+
+        const GLint ambientLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightAmbients[" + lightIndex + "]").c_str());
+
+        const GLint diffuseLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightDiffuses[" + lightIndex + "]").c_str());
+
+        const GLint specularLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpeculars[" + lightIndex + "]").c_str());
+
+        const GLint positionLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightPositions[" + lightIndex + "]").c_str());
+
+        const GLint spotDirectionLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpotDirections[" + lightIndex + "]").c_str());
+
+        const GLint spotCutOffLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpotCutOffs[" + lightIndex + "]").c_str());
+
+        const GLint spotExponentLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightSpotExponents[" + lightIndex + "]").c_str());
+
+        const GLint intensityLocation = glGetUniformLocation(
+            shaderProgram.program, ("lightIntensities[" + lightIndex + "]").c_str());
+
+        if (typeLocation != -1)
+            glUniform1i(typeLocation, lightType);
+
+        if (ambientLocation != -1)
+            glUniform3fv(ambientLocation, 1, glm::value_ptr(lightAmbient));
+
+        if (diffuseLocation != -1)
+            glUniform3fv(diffuseLocation, 1, glm::value_ptr(lightDiffuse));
+
+        if (specularLocation != -1)
+            glUniform3fv(specularLocation, 1, glm::value_ptr(lightSpecular));
+
+        if (positionLocation != -1)
+            glUniform3fv(positionLocation, 1, glm::value_ptr(lightPosition));
+
+        if (spotDirectionLocation != -1)
+            glUniform3fv(spotDirectionLocation, 1, glm::value_ptr(lightSpotDirection));
+
+        if (spotCutOffLocation != -1)
+            glUniform1f(spotCutOffLocation, lightSpotCutOff);
+
+        if (spotExponentLocation != -1)
+            glUniform1f(spotExponentLocation, lightSpotExponent);
+
+        if (intensityLocation != -1)
+            glUniform1f(intensityLocation, lightIntensity);
+    }
+}
+
+void setMiscUniforms(const ShaderProgram& shaderProgram,
+                     float elapsedTime,
+                     const glm::vec3& cameraPosition,
+                     const glm::vec3& ambientColor) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    // elapsed time uniform update
+    if (shaderProgram.locations.elapsedTime != -1)
+        glUniform1f(shaderProgram.locations.elapsedTime, elapsedTime);
+
+    // camera position uniform update
+    if (shaderProgram.locations.cameraPosition != -1) {
+        glUniform3fv(shaderProgram.locations.cameraPosition,
+                     1, glm::value_ptr(cameraPosition));
+    }
+
+    // ambient uniform update
+    if (shaderProgram.locations.ambientColor != -1)
+        glUniform3fv(shaderProgram.locations.ambientColor,
+                     1, glm::value_ptr(ambientColor));
+}
+
+void setEnvironmentMapUniforms(const ShaderProgram& shaderProgram,
+                               GLuint environmentMapTextureObject) {
+    if (!shaderProgram.initialized || environmentMapTextureObject == 0)
+        return;
+
+    glUseProgram(shaderProgram.program);
+
+    // environment map uniform update
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, environmentMapTextureObject);
+
+    const GLint environmentSamplerLocation =
+        glGetUniformLocation(shaderProgram.program, "environmentSampler");
+    if (environmentSamplerLocation != -1)
+        glUniform1i(environmentSamplerLocation, 3);
+
+    glActiveTexture(GL_TEXTURE0);
+}
+
+void setSkydomeUniforms(const ShaderProgram& shaderProgram,
+                        const glm::vec3& cameraPosition) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    if (shaderProgram.locations.cameraPosition != -1)
+        glUniform3fv(shaderProgram.locations.cameraPosition,
+                     1, glm::value_ptr(cameraPosition));
+}
+
+void setMandelbrotAnimationUniforms(const ShaderProgram& shaderProgram,
+                                    float elapsedTime,
+                                    float mandelbrotAnimStartTime,
+                                    bool mandelbrotAnimStarted,
+                                    bool mandelbrotAnimPaused,
+                                    float mandelbrotAnimPauseTime) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    // update time and animation uniforms in the animated Mandelbrot shader
+    if (shaderProgram.locations.elapsedTime != -1)
+        glUniform1f(shaderProgram.locations.elapsedTime, elapsedTime);
+    if (shaderProgram.locations.mandelbrotAnimStartTime != -1)
+        glUniform1f(shaderProgram.locations.mandelbrotAnimStartTime,
+                    mandelbrotAnimStartTime);
+    if (shaderProgram.locations.mandelbrotAnimStarted != -1)
+        glUniform1i(shaderProgram.locations.mandelbrotAnimStarted,
+                    mandelbrotAnimStarted);
+    if (shaderProgram.locations.mandelbrotAnimPaused != -1)
+        glUniform1i(shaderProgram.locations.mandelbrotAnimPaused,
+                    mandelbrotAnimPaused);
+    if (shaderProgram.locations.mandelbrotAnimPauseTime != -1)
+        glUniform1f(shaderProgram.locations.mandelbrotAnimPauseTime,
+                    mandelbrotAnimPauseTime);
+}
+
+void setRocketFlameUniforms(const ShaderProgram& shaderProgram,
+                            const glm::vec3& cameraPosition,
+                            float elapsedTime) {
+    if (!shaderProgram.initialized) return;
+    glUseProgram(shaderProgram.program);
+
+    // update time in the animated rocket flame shader
+    if (shaderProgram.locations.cameraPosition != -1)
+        glUniform3fv(shaderProgram.locations.cameraPosition,
+                     1, glm::value_ptr(cameraPosition));
+    if (shaderProgram.locations.elapsedTime != -1)
+        glUniform1f(shaderProgram.locations.elapsedTime, elapsedTime);
 }
 

@@ -67,5 +67,8 @@
     <None Include="data\shaders\mandelbrot.vert">
       <Filter>data\shaders</Filter>
     </None>
+    <None Include="data\shaders\displacement.vert">
+      <Filter>data\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

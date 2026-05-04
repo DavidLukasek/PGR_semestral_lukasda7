@@ -14,7 +14,7 @@
 #define MAX_SCENE_LIGHTS    8  // also needs to be manually changed in phong.frag!
 #define AMBIENT_COLOR       glm::vec3(0.05f)
 
-#define GLOBAL_ANIM_SPEED   0.1f
+#define GLOBAL_ANIM_SPEED   0.5f
 
 #define MOUSE_SENSITIVITY   0.25f
 
@@ -60,18 +60,20 @@
 #define SUN_LOCATION       glm::vec3(-1.0f, 0.5f, 1.0f)
 
 // planetary system object rotation speeds
-#define UFO_AXIS_ROT_SPEED     -150.0f
-#define UFO_ORBIT_ROT_SPEED      70.0f
-#define MOON_AXIS_ROT_SPEED    -100.0f
-#define MOON_ORBIT_ROT_SPEED     20.0f
-#define PLANET_1_AXIS_ROT_SPEED  -5.0f
-#define PLANET_2_AXIS_ROT_SPEED  15.0f
-#define PLANET_ORBIT_ROT_SPEED    5.0f
+#define UFO_AXIS_ROT_SPEED        -150.0f
+#define UFO_ORBIT_ROT_SPEED         70.0f
+#define MOON_AXIS_ROT_SPEED       -100.0f
+#define MOON_ORBIT_ROT_SPEED        20.0f
+#define PLANET_1_AXIS_ROT_SPEED     -5.0f
+#define PLANET_2_AXIS_ROT_SPEED     15.0f
+#define PLANET_ORBIT_ROT_SPEED       5.0f
+
+#define PLANET_1_DISPLACEMENT_SIZE  10.0f
 
 // planet fog parameters
 #define FOG_1_CENTER      PLANET_1_POSITION
 #define FOG_1_COLOR       glm::vec3(0.64f, 0.62f, 0.9f)
-#define FOG_1_RADIUS      105.0f
+#define FOG_1_RADIUS      110.0f
 #define FOG_1_DENSITY       0.2f
 #define FOG_2_CENTER      PLANET_2_POSITION
 #define FOG_2_COLOR       glm::vec3(0.5f, 0.5f, 0.95f)

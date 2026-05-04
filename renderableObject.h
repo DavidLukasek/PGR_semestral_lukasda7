@@ -52,6 +52,8 @@ typedef struct _ShaderProgram {
         GLint hasNormalTexture;
         GLint hasSpecularTexture;
         GLint isUVAnimated;
+        GLint isDisplaceAnimated;
+        GLint displacementSize;
         
         // uniform mandelbrot locations
         GLint mandelbrotAnimStarted;
@@ -97,6 +99,8 @@ typedef struct _ShaderProgram {
         locations.hasNormalTexture = -1;
         locations.hasSpecularTexture = -1;
         locations.isUVAnimated = -1;
+        locations.isDisplaceAnimated = -1;
+        locations.displacementSize = -1;
 
         locations.mandelbrotAnimPaused = -1;
         locations.mandelbrotAnimStarted = -1;
@@ -114,18 +118,18 @@ typedef struct _ShaderProgram {
  * \brief Geometry of an object (vertices, triangles).
  */
 typedef struct _ObjectGeometry {
-    GLuint        vertexBufferObject;   ///< identifier for the vertex buffer object
-    GLuint        normalBufferObject;   ///< identifier for the normal buffer object
-    GLuint        elementBufferObject;  ///< identifier for the element buffer object
-    GLuint        texCoordBufferObject; ///< identifier for the texture coordinate buffer object
-    GLuint        vertexArrayObject;    ///< identifier for the vertex array object
-    GLuint        diffuseTextureObject; ///< identifier for the diffuse texture object
-    GLuint        normalTextureObject;  ///< identifier for the normal texture object
+    GLuint        vertexBufferObject;    ///< identifier for the vertex buffer object
+    GLuint        normalBufferObject;    ///< identifier for the normal buffer object
+    GLuint        elementBufferObject;   ///< identifier for the element buffer object
+    GLuint        texCoordBufferObject;  ///< identifier for the texture coordinate buffer object
+    GLuint        vertexArrayObject;     ///< identifier for the vertex array object
+    GLuint        diffuseTextureObject;  ///< identifier for the diffuse texture object
+    GLuint        normalTextureObject;   ///< identifier for the normal texture object
     GLuint        specularTextureObject; ///< identifier for the specular texture object
-    bool          hasTexture;           ///< whether has diffuse texture coordinates and texture assigned
-    bool          hasNormalTexture;     ///< whether has normal texture coordinates and texture assigned
-    bool          hasSpecularTexture;   ///< whether has specular texture coordinates and texture assigned
-    unsigned int  numTriangles;         ///< number of triangles in the mesh
+    bool          hasTexture;            ///< whether has diffuse texture coordinates and texture assigned
+    bool          hasNormalTexture;      ///< whether has normal texture coordinates and texture assigned
+    bool          hasSpecularTexture;    ///< whether has specular texture coordinates and texture assigned
+    unsigned int  numTriangles;          ///< number of triangles in the mesh
 } ObjectGeometry;
 
 typedef struct _Material {  // structure that describes currently used material

@@ -68,6 +68,8 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     prog.locations.hasNormalTexture = glGetUniformLocation(prog.program, "hasNormalTexture");
     prog.locations.hasSpecularTexture = glGetUniformLocation(prog.program, "hasSpecularTexture");
     prog.locations.isUVAnimated = glGetUniformLocation(prog.program, "isUVAnimated");
+    prog.locations.isDisplaceAnimated = glGetUniformLocation(prog.program, "isDisplaceAnimated");
+    prog.locations.displacementSize = glGetUniformLocation(prog.program, "displacementSize");
 
     prog.locations.mandelbrotAnimPaused = glGetUniformLocation(prog.program, "mandelbrotAnimPaused");
     prog.locations.mandelbrotAnimStarted = glGetUniformLocation(prog.program, "mandelbrotAnimStarted");
@@ -92,12 +94,14 @@ void loadShaderPrograms() {
     phongShaderProgram = loadShaderProgram("phong.vert", "phong.frag");
     rocketFlameShaderProgram = loadShaderProgram("rocketFlame.vert", "rocketFlame.frag");
     skydomeShaderProgram = loadShaderProgram("skydome.vert", "skydome.frag");
+    displacementShaderProgram = loadShaderProgram("displacement.vert", "phong.frag");
 
     // pushing them all into the global shader program vector
     shaderPrograms.push_back(mandelrotShaderProgram);
     shaderPrograms.push_back(phongShaderProgram);
     shaderPrograms.push_back(rocketFlameShaderProgram);
     shaderPrograms.push_back(skydomeShaderProgram);
+    shaderPrograms.push_back(displacementShaderProgram);
 }
 
 /**
@@ -106,140 +110,6 @@ void loadShaderPrograms() {
 void cleanupShaderPrograms(void) {
     for (ShaderProgram shdPrg : shaderPrograms) {
         pgr::deleteProgramAndShaders(shdPrg.program);
-    }
-}
-
-void setMandelbrotStaticUniforms(const ShaderProgram& shaderProgram) {
-    if (!shaderProgram.initialized) return;
-    glUseProgram(shaderProgram.program);
-
-    if (shaderProgram.locations.mandelbrotMaxIterations != -1)
-        glUniform1i(shaderProgram.locations.mandelbrotMaxIterations,
-                    MANDELBROT_MAX_ITERATIONS);
-
-    if (shaderProgram.locations.mandelbrotZoomSpeed != -1)
-        glUniform1f(shaderProgram.locations.mandelbrotZoomSpeed,
-                    MANDELBROT_ZOOM_SPEED);
-
-    if (shaderProgram.locations.mandelbrotColorSpeed != -1)
-        glUniform1f(shaderProgram.locations.mandelbrotColorSpeed,
-                    MANDELBROT_COLOR_SPEED);
-
-    if (shaderProgram.locations.mandelbrotZoomTarget != -1)
-        glUniform2fv(shaderProgram.locations.mandelbrotZoomTarget,
-                     1, glm::value_ptr(MANDELBROT_ZOOM_TARGET));
-}
-
-void setFogUniforms(const ShaderProgram& shaderProgram) {
-    if (!shaderProgram.initialized) return;
-    glUseProgram(shaderProgram.program);
-
-    if (shaderProgram.locations.fogCenter != -1)
-        glUniform3fv(shaderProgram.locations.fogCenter, 1, glm::value_ptr(fogBall1.center));
-
-    if (shaderProgram.locations.fogCenter2 != -1)
-        glUniform3fv(shaderProgram.locations.fogCenter2, 1, glm::value_ptr(fogBall2.center));
-
-    if (shaderProgram.locations.fogColor != -1)
-        glUniform3fv(shaderProgram.locations.fogColor, 1, glm::value_ptr(fogBall1.color));
-
-    if (shaderProgram.locations.fogColor2 != -1)
-        glUniform3fv(shaderProgram.locations.fogColor2, 1, glm::value_ptr(fogBall2.color));
-
-    if (shaderProgram.locations.fogRadius != -1)
-        glUniform1f(shaderProgram.locations.fogRadius, fogBall1.radius);
-
-    if (shaderProgram.locations.fogRadius2 != -1)
-        glUniform1f(shaderProgram.locations.fogRadius2, fogBall2.radius);
-
-    if (shaderProgram.locations.fogDensity != -1)
-        glUniform1f(shaderProgram.locations.fogDensity, fogBall1.density);
-
-    if (shaderProgram.locations.fogDensity2 != -1)
-        glUniform1f(shaderProgram.locations.fogDensity2, fogBall2.density);
-}
-
-void setLightUniforms(const ShaderProgram& shaderProgram,
-                      const std::vector<Light*>& sceneLights) {
-    if (!shaderProgram.initialized) return;
-
-    const GLint lightCountLocation = glGetUniformLocation(shaderProgram.program,
-                                                          "lightCount");
-
-    const int uploadedLightCount = std::min(static_cast<int>(sceneLights.size()),
-                                            MAX_SCENE_LIGHTS);
-
-    if (lightCountLocation != -1) glUniform1i(lightCountLocation, uploadedLightCount);
-
-    // getting and setting all light-related uniform arrays
-    for (int i = 0; i < uploadedLightCount; ++i) {
-        const Light* light = sceneLights[i];
-        const std::string lightIndex = std::to_string(i);
-        const glm::vec3 lightPosition = glm::vec3(light->getGlobalModelMatrix()[3]);
-        const glm::vec3 lightAmbient = light->getAmbient();
-        const glm::vec3 lightDiffuse = light->getDiffuse();
-        const glm::vec3 lightSpecular = light->getSpecular();
-        const glm::vec3 lightSpotDirection = glm::normalize(
-                                                glm::mat3(light->getGlobalModelMatrix())
-                                                * light->getSpotDirection());
-        const float lightSpotCutOff = light->getSpotCutOff();
-        const float lightSpotExponent = light->getSpotExponent();
-        const float lightIntensity = light->getIntensity();
-        const int lightType = static_cast<int>(light->getLightType());
-
-        const GLint typeLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightTypes[" + lightIndex + "]").c_str());
-
-        const GLint ambientLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightAmbients[" + lightIndex + "]").c_str());
-
-        const GLint diffuseLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightDiffuses[" + lightIndex + "]").c_str());
-
-        const GLint specularLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightSpeculars[" + lightIndex + "]").c_str());
-
-        const GLint positionLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightPositions[" + lightIndex + "]").c_str());
-
-        const GLint spotDirectionLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightSpotDirections[" + lightIndex + "]").c_str());
-
-        const GLint spotCutOffLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightSpotCutOffs[" + lightIndex + "]").c_str());
-
-        const GLint spotExponentLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightSpotExponents[" + lightIndex + "]").c_str());
-
-        const GLint intensityLocation = glGetUniformLocation(
-            shaderProgram.program, ("lightIntensities[" + lightIndex + "]").c_str());
-
-        if (typeLocation != -1)
-            glUniform1i(typeLocation, lightType);
-
-        if (ambientLocation != -1)
-            glUniform3fv(ambientLocation, 1, glm::value_ptr(lightAmbient));
-
-        if (diffuseLocation != -1)
-            glUniform3fv(diffuseLocation, 1, glm::value_ptr(lightDiffuse));
-
-        if (specularLocation != -1)
-            glUniform3fv(specularLocation, 1, glm::value_ptr(lightSpecular));
-
-        if (positionLocation != -1)
-            glUniform3fv(positionLocation, 1, glm::value_ptr(lightPosition));
-
-        if (spotDirectionLocation != -1)
-            glUniform3fv(spotDirectionLocation, 1, glm::value_ptr(lightSpotDirection));
-
-        if (spotCutOffLocation != -1)
-            glUniform1f(spotCutOffLocation, lightSpotCutOff);
-
-        if (spotExponentLocation != -1)
-            glUniform1f(spotExponentLocation, lightSpotExponent);
-
-        if (intensityLocation != -1)
-            glUniform1f(intensityLocation, lightIntensity);
     }
 }
 
@@ -253,65 +123,45 @@ void drawScene(void) {
                                    (float)gameState.windowHeight);
     const glm::vec3 cameraPosition = camera.getPosition();
 
-    glUseProgram(phongShaderProgram.program);
-
-    // elapsed time uniform update
-    if (phongShaderProgram.locations.elapsedTime != -1)
-        glUniform1f(phongShaderProgram.locations.elapsedTime, gameState.elapsedTime);
-
-    // camera position uniform update
-    if (phongShaderProgram.locations.cameraPosition != -1) {
-        glUniform3fv(phongShaderProgram.locations.cameraPosition,
-                     1, glm::value_ptr(cameraPosition));
-    }
-
-    // ambient uniform update
-    if (phongShaderProgram.locations.ambientColor != -1)
-        glUniform3fv(phongShaderProgram.locations.ambientColor,
-                     1, glm::value_ptr(gameState.ambientColor));
+    // elapsed time, camera position and ambient color uniform update
+    setMiscUniforms(phongShaderProgram, gameState.elapsedTime,
+                     cameraPosition, gameState.ambientColor);
+    setMiscUniforms(displacementShaderProgram, gameState.elapsedTime,
+                     cameraPosition, gameState.ambientColor);
 
     // environment map uniform update
-    if (environmentMapTextureObject != 0) {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, environmentMapTextureObject);
-
-        const GLint environmentSamplerLocation =
-            glGetUniformLocation(phongShaderProgram.program, "environmentSampler");
-        if (environmentSamplerLocation != -1)
-            glUniform1i(environmentSamplerLocation, 3);
-
-        glActiveTexture(GL_TEXTURE0);
-    }
+    setEnvironmentMapUniforms(phongShaderProgram, environmentMapTextureObject);
 
     // light uniforms update
     setLightUniforms(phongShaderProgram, sceneLightsCache);
+    setLightUniforms(displacementShaderProgram, sceneLightsCache);
 
     // fog uniforms update for all shaders
-    for (const ShaderProgram& prog : shaderPrograms)
-        setFogUniforms(prog);
+    for (const ShaderProgram& shaderProgram : shaderPrograms)
+        setFogUniforms(shaderProgram,
+                       fogBall1.center,
+                       fogBall2.center,
+                       fogBall1.color,
+                       fogBall2.color,
+                       fogBall1.radius,
+                       fogBall2.radius,
+                       fogBall1.density,
+                       fogBall2.density);
 
-    glUseProgram(skydomeShaderProgram.program);
-    if (skydomeShaderProgram.locations.cameraPosition != -1)
-        glUniform3fv(skydomeShaderProgram.locations.cameraPosition,
-                     1, glm::value_ptr(cameraPosition));
+    setSkydomeUniforms(skydomeShaderProgram, cameraPosition);
 
     // update time and animation uniforms in the animated Mandelbrot shader
-    glUseProgram(mandelrotShaderProgram.program);
-    glUniform1f(mandelrotShaderProgram.locations.elapsedTime, gameState.elapsedTime);
-    glUniform1f(mandelrotShaderProgram.locations.mandelbrotAnimStartTime,
-                gameState.mandelbrotAnimStartTime);
-    glUniform1i(mandelrotShaderProgram.locations.mandelbrotAnimStarted,
-                gameState.mandelbrotAnimStarted);
-    glUniform1i(mandelrotShaderProgram.locations.mandelbrotAnimPaused,
-                gameState.mandelbrotAnimPaused);
-    glUniform1f(mandelrotShaderProgram.locations.mandelbrotAnimPauseTime,
-                gameState.mandelbrotAnimPauseTime);
+    setMandelbrotAnimationUniforms(mandelrotShaderProgram,
+                                   gameState.elapsedTime,
+                                   gameState.mandelbrotAnimStartTime,
+                                   gameState.mandelbrotAnimStarted,
+                                   gameState.mandelbrotAnimPaused,
+                                   gameState.mandelbrotAnimPauseTime);
 
     // update time in the animated rocket flame shader
-    glUseProgram(rocketFlameShaderProgram.program);
-    glUniform3fv(rocketFlameShaderProgram.locations.cameraPosition,
-                 1, glm::value_ptr(cameraPosition));
-    glUniform1f(rocketFlameShaderProgram.locations.elapsedTime, gameState.elapsedTime);
+    setRocketFlameUniforms(rocketFlameShaderProgram,
+                           cameraPosition,
+                           gameState.elapsedTime);
 
     // draw all scene objects recursively from the root node
     sceneRoot.draw(viewMatrix, projectionMatrix);
@@ -549,6 +399,7 @@ void timerCb(int) {
                     gameState.mandelbrotAnimPauseTime,
                     gameState.elapsedTime,
                     gameState.rocketFlamesEnabled,
+                    planet1,
                     rocketFlame1,
                     rocketFlame2);
 
@@ -574,6 +425,12 @@ void initApplication() {
     // init OpenGL
     // - all programs (shaders), buffers, textures, ...
     loadShaderPrograms();
+    if (displacementShaderProgram.initialized) {
+        glUseProgram(displacementShaderProgram.program);
+        if (displacementShaderProgram.locations.displacementSize != -1)
+            glUniform1f(displacementShaderProgram.locations.displacementSize,
+                        PLANET_1_DISPLACEMENT_SIZE);
+    }
     setMandelbrotStaticUniforms(mandelrotShaderProgram);
     environmentMapTextureObject = pgr::createTexture("data/textures/space_skydome_black_hole.png");
     if (environmentMapTextureObject == 0) {
