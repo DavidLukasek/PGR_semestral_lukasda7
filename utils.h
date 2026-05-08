@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "camera.h"
 #include "object.h"
 #include "singlemesh.h"
@@ -75,10 +77,19 @@ void checkObjectPick(bool& isLmbPressed,
                      float& mandelbrotAnimStartTime,
                      float& mandelbrotAnimPauseTime,
                      float elapsedTime,
+                     bool& stageLightsAnimStarted,
+                     bool& stageLightsAnimRunning,
+                     std::vector<SingleMesh*>& stageLights,
+                     std::vector<SingleMesh*>& lightHolders,
                      bool& rocketFlamesEnabled,
                      SingleMesh* planet1,
                      Object* rocketFlame1,
                      Object* rocketFlame2);
+
+void updateStageLightsAnimation(float deltaTime,
+                                bool stageLightsAnimRunning,
+                                std::vector<SingleMesh*>& stageLights,
+                                std::vector<SingleMesh*>& lightHolders);
 
 void updateCamera(float deltaTime,
                   Camera& camera,

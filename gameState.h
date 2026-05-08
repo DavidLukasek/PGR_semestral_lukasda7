@@ -37,6 +37,8 @@ public:
     bool mandelbrotAnimPaused = false;
     float mandelbrotAnimStartTime = 0.0f;
     float mandelbrotAnimPauseTime = 0.0f;
+    bool stageLightsAnimStarted = false;
+    bool stageLightsAnimRunning = false;
     bool rocketFlamesEnabled = false;
 
     bool keyMap[KEYS_COUNT] = { false };

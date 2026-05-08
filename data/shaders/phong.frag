@@ -9,7 +9,7 @@
 
 #define PI 3.14159265359
 
-#define MAX_SCENE_LIGHTS 8
+#define MAX_SCENE_LIGHTS 10
 
 // ------------------------------- Uniforms -----------------------------------
 

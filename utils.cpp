@@ -153,6 +153,92 @@ unsigned char pickObject(int mouseX,
     return objectID;
 }
 
+std::vector<glm::mat4> stageLightsBaseMatrices;
+std::vector<glm::mat4> lightHoldersBaseMatrices;
+float stageLightsAnimTime = 0.0f;
+bool stageLightsBaseMatricesCaptured = false;
+bool lightHoldersBaseMatricesCaptured = false;
+
+void resetStageLightsAnimationState() {
+    stageLightsBaseMatrices.clear();
+    lightHoldersBaseMatrices.clear();
+    stageLightsAnimTime = 0.0f;
+    stageLightsBaseMatricesCaptured = false;
+    lightHoldersBaseMatricesCaptured = false;
+}
+
+void rotateStageLightsLocally(std::vector<SingleMesh*>& stageLights,
+                              float degrees,
+                              const glm::vec3& axis) {
+    const glm::mat4 localRotation = glm::rotate(glm::mat4(1.0f),
+                                                glm::radians(degrees),
+                                                axis);
+    for (SingleMesh* stageLight : stageLights) {
+        if (stageLight == nullptr)
+            continue;
+
+        stageLight->setLocalModelMatrix(stageLight->getLocalModelMatrix() * localRotation);
+    }
+}
+
+void captureStageLightsBaseMatrices(std::vector<SingleMesh*>& stageLights) {
+    stageLightsBaseMatrices.clear();
+    stageLightsBaseMatrices.reserve(stageLights.size());
+    for (SingleMesh* stageLight : stageLights) {
+        if (stageLight == nullptr)
+            stageLightsBaseMatrices.push_back(glm::mat4(1.0f));
+        else
+            stageLightsBaseMatrices.push_back(stageLight->getLocalModelMatrix());
+    }
+    stageLightsBaseMatricesCaptured = true;
+}
+
+void captureLightHoldersBaseMatrices(std::vector<SingleMesh*>& lightHolders) {
+    lightHoldersBaseMatrices.clear();
+    lightHoldersBaseMatrices.reserve(lightHolders.size());
+    for (SingleMesh* lightHolder : lightHolders) {
+        if (lightHolder == nullptr)
+            lightHoldersBaseMatrices.push_back(glm::mat4(1.0f));
+        else
+            lightHoldersBaseMatrices.push_back(lightHolder->getLocalModelMatrix());
+    }
+    lightHoldersBaseMatricesCaptured = true;
+}
+
+void applyStageLightsSineAnimation(std::vector<SingleMesh*>& stageLights,
+                                   std::vector<SingleMesh*>& lightHolders) {
+    if (!stageLightsBaseMatricesCaptured || stageLightsBaseMatrices.size() != stageLights.size())
+        captureStageLightsBaseMatrices(stageLights);
+    if (!lightHoldersBaseMatricesCaptured || lightHoldersBaseMatrices.size() != lightHolders.size())
+        captureLightHoldersBaseMatrices(lightHolders);
+
+    for (size_t i = 0; i < stageLights.size(); ++i) {
+        const float perLightPhaseOffset = static_cast<float>(i) * LIGHT_SINE_PER_LIGHT_OFFSET;
+        const float xPhase = stageLightsAnimTime * LIGHT_SINE_SPEED_X + perLightPhaseOffset;
+        const float yPhase = stageLightsAnimTime * LIGHT_SINE_SPEED_Y +
+                             LIGHT_SINE_XY_PHASE_OFFSET + perLightPhaseOffset;
+        const float xAngle = LIGHT_SINE_STAGE_X_DEGREES * std::sin(xPhase);
+        const float yAngle = LIGHT_SINE_HOLDER_Y_DEGREES * std::sin(yPhase);
+
+        const glm::mat4 xRotation = glm::rotate(glm::mat4(1.0f),
+                                                glm::radians(xAngle),
+                                                glm::vec3(1.0f, 0.0f, 0.0f));
+        const glm::mat4 yRotation = glm::rotate(glm::mat4(1.0f),
+                                                glm::radians(yAngle),
+                                                glm::vec3(0.0f, 1.0f, 0.0f));
+
+        SingleMesh* stageLight = stageLights[i];
+        if (stageLight != nullptr)
+            stageLight->setLocalModelMatrix(stageLightsBaseMatrices[i] * xRotation);
+
+        if (i < lightHolders.size()) {
+            SingleMesh* lightHolder = lightHolders[i];
+            if (lightHolder != nullptr)
+                lightHolder->setLocalModelMatrix(lightHoldersBaseMatrices[i] * yRotation);
+        }
+    }
+}
+
 void checkObjectPick(bool& isLmbPressed,
                      int mouseX,
                      int mouseY,
@@ -165,6 +251,10 @@ void checkObjectPick(bool& isLmbPressed,
                      float& mandelbrotAnimStartTime,
                      float& mandelbrotAnimPauseTime,
                      float elapsedTime,
+                     bool& stageLightsAnimStarted,
+                     bool& stageLightsAnimRunning,
+                     std::vector<SingleMesh*>& stageLights,
+                     std::vector<SingleMesh*>& lightHolders,
                      bool& rocketFlamesEnabled,
                      SingleMesh* planet1,
                      Object* rocketFlame1,
@@ -192,12 +282,27 @@ void checkObjectPick(bool& isLmbPressed,
                 mandelbrotAnimStartTime += (elapsedTime - mandelbrotAnimPauseTime);
             }
             break;
-        // planet 1 displacement toggle case
+        // button 1 -> planet 1 displacement toggle case
         case 14:
             planet1->setDisplaceAnimated(!(planet1->getDisplaceAnimated()));
             break;
+        // button 2 -> stage lights animation
+        case 16:
+            if (!stageLightsAnimStarted) {
+                rotateStageLightsLocally(stageLights,
+                                         LIGHT_LOCAL_X_ROTATION,
+                                         glm::vec3(1.0f, 0.0f, 0.0f));
+                resetStageLightsAnimationState();
+                captureStageLightsBaseMatrices(stageLights);
+                captureLightHoldersBaseMatrices(lightHolders);
+                stageLightsAnimStarted = true;
+                stageLightsAnimRunning = true;
+            }
+            else
+                stageLightsAnimRunning = !stageLightsAnimRunning;
+            break;
         // spaceship ignition case
-        case 17:
+        case 41:
             rocketFlamesEnabled = !rocketFlamesEnabled;
             if (rocketFlame1 != nullptr)
                 rocketFlame1->setVisible(rocketFlamesEnabled);
@@ -207,6 +312,17 @@ void checkObjectPick(bool& isLmbPressed,
     }
 
     isLmbPressed = false;
+}
+
+void updateStageLightsAnimation(float deltaTime,
+                                bool stageLightsAnimRunning,
+                                std::vector<SingleMesh*>& stageLights,
+                                std::vector<SingleMesh*>& lightHolders) {
+    if (!stageLightsAnimRunning)
+        return;
+
+    stageLightsAnimTime += deltaTime;
+    applyStageLightsSineAnimation(stageLights, lightHolders);
 }
 
 void updateCamera(float deltaTime,

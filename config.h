@@ -11,7 +11,7 @@
 #define WINDOW_WIDTH  1920
 #define WINDOW_HEIGHT 1080
 
-#define MAX_SCENE_LIGHTS    8  // also needs to be manually changed in phong.frag!
+#define MAX_SCENE_LIGHTS    10 // also needs to be manually changed in phong.frag!
 #define AMBIENT_COLOR       glm::vec3(0.05f)
 
 #define GLOBAL_ANIM_SPEED   0.5f
@@ -82,15 +82,51 @@
 
 // ------------------------------- Other objects ------------------------------
 
-// object positions
 #define MANDELBROT_POSITION      glm::vec3(4.0741f, -0.7087f, -3.3598f)
+#define MANDELBROT_Y_ROTATE      -56.3482f
+
 #define SPACESHIP_POSITION       glm::vec3(50.0f, 1.0f, 0.0f)
 #define ROCKET_FLAME_1_OFFSET    glm::vec3(10.095f, 0.0, -33.345f)
 #define ROCKET_FLAME_2_OFFSET    glm::vec3(-10.095f, 0.0, -33.345f)
+
 #define ITEM_POSITION            glm::vec3(0.0f, 20.0f, 0.0f)
+
 #define FLOOR_OFFSET             glm::vec3(0.0f, -1.0f, 0.0f)
+
 #define BOARD_STONES_POSITION    glm::vec3(0.0f, -1.0f, -5.2858f)
 #define BOARD_POSITION           glm::vec3(0.0f, 0.29122f, -4.9681f)
+
 #define BUTTON_STAND_1_POSITION  glm::vec3(-0.5f, -1.0f, 5.0f)
 #define BUTTON_STAND_2_POSITION  glm::vec3(0.5f, -1.0f, 5.0f)
 #define BUTTON_OFFSET            glm::vec3(0.0f, 1.07185f, 0.0f)
+
+#define BUTTON_LIGHT_POSITION    glm::vec3(0.0f, 1.0f, 5.0f)
+
+// stage lights
+#define LIGHT_OFFSET             glm::vec3(0.0f, 0.286f, 0.0f)
+#define LIGHT_LOCAL_X_ROTATION   -130.0f
+#define LIGHT_SINE_STAGE_X_DEGREES   20.0f
+#define LIGHT_SINE_HOLDER_Y_DEGREES  24.0f
+#define LIGHT_SINE_SPEED_X           4.5f
+#define LIGHT_SINE_SPEED_Y           3.6f
+#define LIGHT_SINE_XY_PHASE_OFFSET   1.3472f
+#define LIGHT_SINE_PER_LIGHT_OFFSET  0.7236f
+#define LIGHTSTAND_1_POSITION    glm::vec3(-1.67f, -1.0f, 5.45f)
+#define LIGHTSTAND_1_Y_ROTATE    -20.0f
+#define LIGHT_1_COLOR            glm::vec3(1.0f, 0.0f, 0.0f)
+#define LIGHTSTAND_2_POSITION    glm::vec3(1.67f, -1.0f, 5.45f)
+#define LIGHTSTAND_2_Y_ROTATE    -(LIGHTSTAND_1_Y_ROTATE)
+#define LIGHT_2_COLOR            glm::vec3(0.0f, 1.0f, 0.0f)
+#define LIGHTSTAND_3_POSITION    glm::vec3(-3.646f, -1.0f, 4.386f)
+#define LIGHTSTAND_3_Y_ROTATE    2*LIGHTSTAND_1_Y_ROTATE
+#define LIGHT_3_COLOR            glm::vec3(0.0f, 0.0f, 1.0f)
+#define LIGHTSTAND_4_POSITION    glm::vec3(3.646f, -1.0f, 4.386f)
+#define LIGHTSTAND_4_Y_ROTATE    -(LIGHTSTAND_3_Y_ROTATE)
+#define LIGHT_4_COLOR            glm::vec3(1.0f, 1.0f, 0.0f)
+#define LIGHTSTAND_5_POSITION    glm::vec3(-5.045f, -1.0f, 2.666f)
+#define LIGHTSTAND_5_Y_ROTATE    3*LIGHTSTAND_1_Y_ROTATE
+#define LIGHT_5_COLOR            glm::vec3(1.0f, 0.0f, 1.0f)
+#define LIGHTSTAND_6_POSITION    glm::vec3(5.045f, -1.0f, 2.666f)
+#define LIGHTSTAND_6_Y_ROTATE    -(LIGHTSTAND_5_Y_ROTATE)
+#define LIGHT_6_COLOR            glm::vec3(0.0f, 1.0f, 1.0f)
+#define LIGHT_HOLDER_OFFSET      glm::vec3(0.0f, 3.0f, 0.0f)

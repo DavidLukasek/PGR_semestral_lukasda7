@@ -28,6 +28,10 @@ Object sceneRoot;
 
 // cache storing references to all scene lights for faster updates
 std::vector<Light*> sceneLightsCache;
+// cache with all stage light mesh nodes controlled by button 2
+std::vector<SingleMesh*> stageLightsCache;
+// cache with all light holder nodes controlled by button 2
+std::vector<SingleMesh*> lightHoldersCache;
 
 // scene camera
 Camera camera;
@@ -38,13 +42,13 @@ GameState gameState;
 GLuint environmentMapTextureObject = 0;
 
 // holding on moon and planet references to rotate them later in rotateMoonAndPlanet
-SingleMesh* ufo;
-SingleMesh* planet1;
-SingleMesh* planet2;
-SingleMesh* planet2Clouds;
-SingleMesh* moon;
-SingleMesh* rocketFlame1 = nullptr;
-SingleMesh* rocketFlame2 = nullptr;
+SingleMesh* ufo           = nullptr;
+SingleMesh* planet1       = nullptr;
+SingleMesh* planet2       = nullptr;
+SingleMesh* planet2Clouds = nullptr;
+SingleMesh* moon          = nullptr;
+SingleMesh* rocketFlame1  = nullptr;
+SingleMesh* rocketFlame2  = nullptr;
 
 // fog ball
 FogBall fogBall1 = { FOG_1_CENTER, FOG_1_COLOR, FOG_1_RADIUS, FOG_1_DENSITY };
@@ -89,7 +93,7 @@ void createLights() {
                                    glm::vec3(1.0f),     // diffuse
                                    glm::vec3(1.0f));    // specular
     pointLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                    glm::vec3(-1.5f, 0.0f, 3.5f)));
+                                                    BUTTON_LIGHT_POSITION));
     sceneRoot.addChild(pointLight1);
     sceneLightsCache.push_back(pointLight1);
 
@@ -109,54 +113,6 @@ void createLights() {
 
     // ------------------------------------------------------------------------
 
-    // spot light 1
-    Light* spotLight1 = new Light(SPOT_LIGHT,                   // light type
-                                  glm::vec3(0.0f),              // ambient
-                                  glm::vec3(1.0f, 0.0f, 0.0f),  // diffuse
-                                  glm::vec3(1.0f, 0.0f, 0.0f),  // specular
-                                  glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
-                                  cos(glm::radians(45.0f)),     // spot cutoff
-                                  5.0f,                         // spot exponent
-                                  5.0f);                        // light intensity
-    spotLight1->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                   glm::vec3(0.0f, 0.0f, 1.0f)));
-    sceneRoot.addChild(spotLight1);
-    sceneLightsCache.push_back(spotLight1);
-
-    // ------------------------------------------------------------------------
-
-    // spot light 2
-    Light* spotLight2 = new Light(SPOT_LIGHT,                   // light type
-                                  glm::vec3(0.0f),              // ambient
-                                  glm::vec3(0.0f, 1.0f, 0.0f),  // diffuse
-                                  glm::vec3(0.0f, 1.0f, 0.0f),  // specular
-                                  glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
-                                  cos(glm::radians(45.0f)),     // spot cutoff
-                                  5.0f,                         // spot exponent
-                                  5.0f);                        // light intensity
-    spotLight2->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                   glm::vec3(-0.4f, 0.0f, 1.5f)));
-    sceneRoot.addChild(spotLight2);
-    sceneLightsCache.push_back(spotLight2);
-
-    // ------------------------------------------------------------------------
-
-    // spot light 3
-    Light* spotLight3 = new Light(SPOT_LIGHT,                   // light type
-                                  glm::vec3(0.0f),              // ambient
-                                  glm::vec3(0.0f, 0.0f, 1.0f),  // diffuse
-                                  glm::vec3(0.0f, 0.0f, 1.0f),  // specular
-                                  glm::vec3(0.0f, -1.0f, 0.0f), // spot direction
-                                  cos(glm::radians(45.0f)),     // spot cutoff
-                                  5.0f,                         // spot exponent
-                                  5.0f);                        // light intensity
-    spotLight3->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
-                                                   glm::vec3(0.4f, 0.0f, 1.5f)));
-    sceneRoot.addChild(spotLight3);
-    sceneLightsCache.push_back(spotLight3);
-
-    // ------------------------------------------------------------------------
-
     // directional light
     Light* sunLight = new Light(DIRECTION_LIGHT,                // light type
                                 glm::vec3(0.0f),                // ambient
@@ -165,6 +121,67 @@ void createLights() {
                                 glm::normalize(-SUN_LOCATION)); // light direction
     sceneRoot.addChild(sunLight);
     sceneLightsCache.push_back(sunLight);
+}
+
+void createLightStandHierarchy(glm::vec3 lightStandPosition, float yRotate,
+                               glm::vec3 lightColor, int& objectIDs) {
+    // light stand
+    SingleMesh* lightStand = new SingleMesh(MODELS_PATH + (std::string)"light_pole.obj",
+                                            &phongShaderProgram,
+                                            &whiteMaterial);
+    lightStand->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                   lightStandPosition) *
+                                    glm::rotate(glm::mat4(1.0f),
+                                                glm::radians(yRotate),
+                                                glm::vec3(0.0f, 1.0f, 0.0f)));
+    lightStand->setObjectID(objectIDs++);
+    sceneRoot.addChild(lightStand);
+
+    // ------------------------------------------------------------------------
+
+    // light holder
+    SingleMesh* lightHolder = new SingleMesh(MODELS_PATH + (std::string)"light_holder.obj",
+                                             &phongShaderProgram,
+                                             &whiteMaterial);
+    lightHolder->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                    LIGHT_HOLDER_OFFSET));
+    lightHolder->setObjectID(objectIDs++);
+    lightStand->addChild(lightHolder);
+    lightHoldersCache.push_back(lightHolder);
+
+    // ------------------------------------------------------------------------
+
+    // stage light
+    SingleMesh* stageLight = new SingleMesh(MODELS_PATH + (std::string)"light.obj",
+                                            &phongShaderProgram,
+                                            &whiteMaterial);
+    stageLight->setLocalModelMatrix(glm::translate(glm::mat4(1.0f),
+                                                   LIGHT_OFFSET));
+    stageLight->setObjectID(objectIDs++);
+    lightHolder->addChild(stageLight);
+    stageLightsCache.push_back(stageLight);
+    // ------------------------------------------------------------------------
+
+    // light front
+    SingleMesh* lightFront = new SingleMesh(MODELS_PATH + (std::string)"light_front.obj",
+                                            &phongShaderProgram,
+                                            &whiteMaterial);
+    lightFront->setObjectID(objectIDs++);
+    stageLight->addChild(lightFront);
+
+    // ------------------------------------------------------------------------
+
+    // spot light
+    Light* spotLight = new Light(SPOT_LIGHT,                  // light type
+                                 glm::vec3(0.0f),             // ambient
+                                 lightColor,                  // diffuse
+                                 lightColor,                  // specular
+                                 glm::vec3(0.0f, 1.0f, 0.0f), // spot direction
+                                 cos(glm::radians(15.0f)),    // spot cutoff
+                                 15.0f,                       // spot exponent
+                                 30.0f);                      // light intensity
+    lightFront->addChild(spotLight);
+    sceneLightsCache.push_back(spotLight);
 }
 
 void createObjects() {
@@ -187,10 +204,10 @@ void createObjects() {
     mandelbrot->setLocalModelMatrix(glm::translate(glm::mat4(1.0f), 
                                                    MANDELBROT_POSITION) *
                                     glm::rotate(glm::mat4(1.0f),
-                                                glm::radians(-56.3482f),
+                                                glm::radians(MANDELBROT_Y_ROTATE),
                                                 glm::vec3(0.0f, 1.0f, 0.0f)) *
                                     glm::scale(glm::mat4(1.0f),
-                                               glm::vec3(2.0f, 2.0f, 2.0f)));
+                                               glm::vec3(2.0f)));
     mandelbrot->setObjectID(objectIDs++);
     sceneRoot.addChild(mandelbrot);
 
@@ -349,6 +366,16 @@ void createObjects() {
     button2->setObjectID(objectIDs++);
     buttonStand2->addChild(button2);
 
+    // ------------------------------------------------------------------------
+
+    // light stands
+    createLightStandHierarchy(LIGHTSTAND_1_POSITION, LIGHTSTAND_1_Y_ROTATE, LIGHT_1_COLOR, objectIDs);
+    createLightStandHierarchy(LIGHTSTAND_2_POSITION, LIGHTSTAND_2_Y_ROTATE, LIGHT_2_COLOR, objectIDs);
+    createLightStandHierarchy(LIGHTSTAND_3_POSITION, LIGHTSTAND_3_Y_ROTATE, LIGHT_3_COLOR, objectIDs);
+    createLightStandHierarchy(LIGHTSTAND_4_POSITION, LIGHTSTAND_4_Y_ROTATE, LIGHT_4_COLOR, objectIDs);
+    createLightStandHierarchy(LIGHTSTAND_5_POSITION, LIGHTSTAND_5_Y_ROTATE, LIGHT_5_COLOR, objectIDs);
+    createLightStandHierarchy(LIGHTSTAND_6_POSITION, LIGHTSTAND_6_Y_ROTATE, LIGHT_6_COLOR, objectIDs);
+    
     // ------------------------------------------------------------------------
 
     // spaceship

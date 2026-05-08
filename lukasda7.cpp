@@ -373,6 +373,10 @@ void timerCb(int) {
                  cameraPresets[2].rotation,
                  gameState.currentCameraPresetIndex);
     rotatePlanetarySystem(deltaTime, moon, ufo, planet1, planet2);
+    updateStageLightsAnimation(deltaTime,
+                               gameState.stageLightsAnimRunning,
+                               stageLightsCache,
+                               lightHoldersCache);
     sceneRoot.update(gameState.elapsedTime, nullptr);
 
     // update the fog's positions to follow planets
@@ -398,6 +402,10 @@ void timerCb(int) {
                     gameState.mandelbrotAnimStartTime,
                     gameState.mandelbrotAnimPauseTime,
                     gameState.elapsedTime,
+                    gameState.stageLightsAnimStarted,
+                    gameState.stageLightsAnimRunning,
+                    stageLightsCache,
+                    lightHoldersCache,
                     gameState.rocketFlamesEnabled,
                     planet1,
                     rocketFlame1,
