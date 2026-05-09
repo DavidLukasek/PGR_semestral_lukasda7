@@ -1,4 +1,17 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       mandelbrot.frag
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Mandelbrot fragment shader.
+ *
+ *  Computes Mandelbrot set coloring per pixel and outputs the final fractal image.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #version 140
+// Mandelbrot fragment shader.
+// Renders animated Mandelbrot set with palette-based color cycling.
 
 // -------------------------------- Macros ------------------------------------
 
@@ -8,30 +21,30 @@
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform float elapsedTime;
-uniform vec3  asteroidLocation;
+uniform float elapsedTime;      // elapsed application time
+uniform vec3  asteroidLocation; // reserved uniform kept for program compatibility
 
-uniform bool  mandelbrotAnimStarted;
-uniform bool  mandelbrotAnimPaused;
-uniform float mandelbrotAnimStartTime;
-uniform float mandelbrotAnimPauseTime;
+uniform bool  mandelbrotAnimStarted;   // animation enabled by interaction
+uniform bool  mandelbrotAnimPaused;    // animation pause flag
+uniform float mandelbrotAnimStartTime; // absolute time when animation started
+uniform float mandelbrotAnimPauseTime; // absolute time captured on pause
 
-uniform int   mandelbrotMaxIterations;
-uniform float mandelbrotZoomSpeed;
-uniform float mandelbrotColorSpeed;
-uniform vec2  mandelbrotZoomtarget;
+uniform int   mandelbrotMaxIterations; // bailout loop limit
+uniform float mandelbrotZoomSpeed;     // reserved zoom speed parameter
+uniform float mandelbrotColorSpeed;    // palette animation speed
+uniform vec2  mandelbrotZoomtarget;    // zoom center in fractal coordinates
 
 // ------------------------------- Attributes ---------------------------------
 
-in vec2 UV;
+in vec2 UV; // normalized quad UV coordinates
 
-out vec4 fragmentColor;
+out vec4 fragmentColor; // final RGBA output
 
 // ------------------------------- Functions ----------------------------------
 
 
-//palette equation:     https://iquilezles.org/articles/palettes/
-//palette parameters:   https://dev.thi.ng/gradients/
+// Palette equation based on cosine interpolation:
+// https://iquilezles.org/articles/palettes/
 vec3 palette(float t) {
     vec3 a = vec3(HALF, HALF, HALF);
     vec3 b = vec3(HALF, HALF, HALF);
@@ -46,6 +59,7 @@ vec3 palette(float t) {
 // ############################################################################
 
 void main() {
+    // animation time starts only after object interaction
     float animatedTime = 0.0;
 
     // animation only if picked
@@ -57,12 +71,12 @@ void main() {
         animatedTime = max(mandelbrotTime - mandelbrotAnimStartTime, 0.0);
     }
 
-    //center coordinates scaled up to <-2;2>
+    // map board UVs to the complex-plane viewing window
     vec2 uv = UV * 3.0;
     uv.x -= 0.85;
     uv.y -= 1.8;
 
-    //slow zoom
+    // smooth zoom towards configured target
     vec2 target = mandelbrotZoomtarget;
     float zoom = 1.0;
     zoom = exp(-0.2 * animatedTime);
@@ -76,7 +90,7 @@ void main() {
     float dist_sq = 0.0;     //distance squared from origin
     int iterations = 0;      //number of iterations until divergence
     
-    //fractal loop
+    // Mandelbrot iteration loop z = z^2 + c
     for(int i = 0; i < mandelbrotMaxIterations && dist_sq < 4.0; ++i) {
         float tempReal = real;
         
@@ -88,7 +102,7 @@ void main() {
 
     vec3 color = vec3(1.0);
     
-    // color divergent fragments, if convergent then black
+    // divergent points get palette color, convergent points remain black
     if(dist_sq > 4.0) {
         float t = float(iterations) / 20.0;
         color = palette(t + animatedTime * mandelbrotColorSpeed);

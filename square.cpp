@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       square.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Square primitive implementation.
+ *
+ *  Implements vertex/index setup and rendering support for a square primitive.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include <iostream>
 #include "square.h"
 

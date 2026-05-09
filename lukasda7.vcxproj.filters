@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="singlemesh.cpp" />
     <ClCompile Include="lukasda7.cpp" />
-    <ClCompile Include="triangle.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="object.cpp" />
@@ -17,7 +16,6 @@
     <ClInclude Include="object.h" />
     <ClInclude Include="renderableObject.h" />
     <ClInclude Include="singlemesh.h" />
-    <ClInclude Include="triangle.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="gameState.h" />
     <ClInclude Include="light.h" />

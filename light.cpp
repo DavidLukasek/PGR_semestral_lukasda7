@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       light.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Light source class implementation.
+ *
+ *  Implements light data handling and helper logic used during shading and scene setup.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include "light.h"
 
 Light::Light(

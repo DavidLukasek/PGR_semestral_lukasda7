@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       singlemesh.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Single mesh wrapper implementation.
+ *
+ *  Implements loading, storage and draw helper logic for a single mesh instance.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include <iostream>
 #include <vector>
 #include "singlemesh.h"
@@ -231,10 +242,12 @@ void SingleMesh::setAdditiveBlending(bool value) {
     additiveBlending = value;
 }
 
-/** Load one mesh using assimp library (vertices only, for more attributes see method extended version in Asteroids)
- * \param fileName [in] file to open/load
- * \param shader [in] vao will connect loaded data to shader
- * \param geometry
+/**
+ * \brief      Single mesh wrapper implementation.
+ *        Vertices-only variant for this project.
+ * \param fileName [in] File to open and load.
+ * \param shader [in] Shader used to connect loaded data to VAO attributes.
+ * \param geometry [out] Output mesh geometry structure.
  */
 bool SingleMesh::loadSingleMesh(const std::string& fileName, ShaderProgram* shader, ObjectGeometry** geometry) {
     Assimp::Importer importer;

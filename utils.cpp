@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       utils.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Utility function implementations.
+ *
+ *  Implements shared helper routines used by multiple systems in the application.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include "utils.h"
 
 #include <algorithm>
@@ -153,12 +164,20 @@ unsigned char pickObject(int mouseX,
     return objectID;
 }
 
+/// \brief Cached base local matrices for stage light meshes.
 std::vector<glm::mat4> stageLightsBaseMatrices;
+/// \brief Cached base local matrices for stage light holder meshes.
 std::vector<glm::mat4> lightHoldersBaseMatrices;
+/// \brief Accumulated time driving procedural stage light animation.
 float stageLightsAnimTime = 0.0f;
+/// \brief Whether stage light base matrices were captured.
 bool stageLightsBaseMatricesCaptured = false;
+/// \brief Whether stage light holder base matrices were captured.
 bool lightHoldersBaseMatricesCaptured = false;
 
+/**
+ * \brief      Utility function implementations.
+ */
 void resetStageLightsAnimationState() {
     stageLightsBaseMatrices.clear();
     lightHoldersBaseMatrices.clear();
@@ -167,6 +186,12 @@ void resetStageLightsAnimationState() {
     lightHoldersBaseMatricesCaptured = false;
 }
 
+/**
+ * \brief      Utility function implementations.
+ * \param stageLights Stage light mesh list.
+ * \param degrees Rotation angle in degrees.
+ * \param axis Rotation axis.
+ */
 void rotateStageLightsLocally(std::vector<SingleMesh*>& stageLights,
                               float degrees,
                               const glm::vec3& axis) {
@@ -181,6 +206,10 @@ void rotateStageLightsLocally(std::vector<SingleMesh*>& stageLights,
     }
 }
 
+/**
+ * \brief      Utility function implementations.
+ * \param stageLights Stage light mesh list.
+ */
 void captureStageLightsBaseMatrices(std::vector<SingleMesh*>& stageLights) {
     stageLightsBaseMatrices.clear();
     stageLightsBaseMatrices.reserve(stageLights.size());
@@ -193,6 +222,10 @@ void captureStageLightsBaseMatrices(std::vector<SingleMesh*>& stageLights) {
     stageLightsBaseMatricesCaptured = true;
 }
 
+/**
+ * \brief      Utility function implementations.
+ * \param lightHolders Stage light holder mesh list.
+ */
 void captureLightHoldersBaseMatrices(std::vector<SingleMesh*>& lightHolders) {
     lightHoldersBaseMatrices.clear();
     lightHoldersBaseMatrices.reserve(lightHolders.size());
@@ -205,6 +238,11 @@ void captureLightHoldersBaseMatrices(std::vector<SingleMesh*>& lightHolders) {
     lightHoldersBaseMatricesCaptured = true;
 }
 
+/**
+ * \brief      Utility function implementations.
+ * \param stageLights Stage light mesh list.
+ * \param lightHolders Stage light holder mesh list.
+ */
 void applyStageLightsSineAnimation(std::vector<SingleMesh*>& stageLights,
                                    std::vector<SingleMesh*>& lightHolders) {
     if (!stageLightsBaseMatricesCaptured || stageLightsBaseMatrices.size() != stageLights.size())

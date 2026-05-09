@@ -1,4 +1,17 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       phong.frag
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Phong fragment shader.
+ *
+ *  Calculates per-fragment Phong lighting with textures, reflections and atmospheric effects.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #version 140
+// Phong fragment shader.
+// Computes textured lighting, reflections and volumetric fog blending.
 
 // -------------------------------- Macros ------------------------------------
 
@@ -15,11 +28,11 @@
 
 // misc uniforms
 uniform float elapsedTime;          // elapsed application time
-uniform vec3  ambientColor;         // ambient color
-uniform vec3  cameraPosition;       // position of the camera
-uniform int   hasDiffuseTexture;    // flag for material with diffuse texture
-uniform int   hasNormalTexture;     // flag for material with normal texture
-uniform int   hasSpecularTexture;   // flag for material with specular texture
+uniform vec3  ambientColor;         // global ambient lighting color
+uniform vec3  cameraPosition;       // camera position in world space
+uniform int   hasDiffuseTexture;    // flag for diffuse texture sampling
+uniform int   hasNormalTexture;     // flag for normal map sampling
+uniform int   hasSpecularTexture;   // flag for specular map sampling
 
 // texture sampler uniforms
 uniform sampler2D diffuseSampler;   // diffuse texture sampler
@@ -28,10 +41,10 @@ uniform sampler2D specularSampler;  // specular texture sampler
 uniform sampler2D environmentSampler; // environment texture sampler
 
 // current material uniforms
-uniform vec3  matDiffuse;           // diffuse parameter of the material
-uniform vec3  matSpecular;          // specular parameter of the material
-uniform vec3  matAmbient;           // ambient parameter of the material
-uniform float matShininess;         // shininess parameter of the material
+uniform vec3  matDiffuse;           // material diffuse color multiplier
+uniform vec3  matSpecular;          // material specular color multiplier
+uniform vec3  matAmbient;           // material ambient color multiplier
+uniform float matShininess;         // specular highlight exponent
 
 // fog uniforms
 uniform vec3  fogCenter;            // fog center
@@ -44,16 +57,16 @@ uniform float fogDensity;           // fog density
 uniform float fogDensity2;          // second fog density
 
 // all scene lights uniforms
-uniform int   lightCount;
-uniform int   lightTypes[MAX_SCENE_LIGHTS];
-uniform vec3  lightAmbients[MAX_SCENE_LIGHTS];
-uniform vec3  lightDiffuses[MAX_SCENE_LIGHTS];
-uniform vec3  lightSpeculars[MAX_SCENE_LIGHTS];
-uniform vec3  lightPositions[MAX_SCENE_LIGHTS];
-uniform vec3  lightSpotDirections[MAX_SCENE_LIGHTS];
-uniform float lightSpotCutOffs[MAX_SCENE_LIGHTS];
-uniform float lightSpotExponents[MAX_SCENE_LIGHTS];
-uniform float lightIntensities[MAX_SCENE_LIGHTS];
+uniform int   lightCount;                        // number of active lights
+uniform int   lightTypes[MAX_SCENE_LIGHTS];      // POINT/SPOT/DIRECTIONAL type
+uniform vec3  lightAmbients[MAX_SCENE_LIGHTS];   // ambient component per light
+uniform vec3  lightDiffuses[MAX_SCENE_LIGHTS];   // diffuse component per light
+uniform vec3  lightSpeculars[MAX_SCENE_LIGHTS];  // specular component per light
+uniform vec3  lightPositions[MAX_SCENE_LIGHTS];  // world-space position per light
+uniform vec3  lightSpotDirections[MAX_SCENE_LIGHTS]; // spotlight direction per light
+uniform float lightSpotCutOffs[MAX_SCENE_LIGHTS];    // spotlight cosine cutoff
+uniform float lightSpotExponents[MAX_SCENE_LIGHTS];  // spotlight focus exponent
+uniform float lightIntensities[MAX_SCENE_LIGHTS];    // scalar intensity per light
 
 
 // ------------------------------- Attributes ---------------------------------
@@ -66,6 +79,7 @@ out vec4 fragmentColor;
 
 // ------------------------------- Functions ----------------------------------
 
+// Returns ambient + diffuse + specular contribution of one light source.
 vec3 getColorFromLight(vec3 albedo, vec3 specularStrength, vec3 position, vec3 normal, int index) {
     vec3 lightVec = lightPositions[index] - position;
     float lightDist = length(lightVec);
@@ -73,7 +87,7 @@ vec3 getColorFromLight(vec3 albedo, vec3 specularStrength, vec3 position, vec3 n
 
     vec3 L = normalize(lightVec);
 
-    // oprava directional light
+    // directional light uses uniform direction and no distance attenuation
     if (lightTypes[index] == DIRECTION_LIGHT) {
         L = normalize(-lightSpotDirections[index]);
         lightFallof = 1.0;
@@ -126,11 +140,13 @@ vec3 getColorFromLight(vec3 albedo, vec3 specularStrength, vec3 position, vec3 n
     return ambient + lightIntensities[index] * (diffuse + specular);
 }
 
+// Returns radial density profile for a normalized fog radius.
 float fogRadialDensity(float normalizedRadius) {
     // keep a soft outer boundary for smoother transition to empty space
     return 1.0 - smoothstep(0.72, 1.0, normalizedRadius);
 }
 
+// Approximates integrated fog density along ray segment inside one fog sphere.
 float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec3 center, float radius) {
     vec3 oc = rayOrigin - center;
     float b = dot(oc, rayDirection);
@@ -172,6 +188,7 @@ float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec
     return segmentLength * densityScale;
 }
 
+// Reconstructs world-space normal from normal map using derivative-based TBN.
 vec3 getNormalFromMap(vec3 position, vec3 baseNormal, vec2 texCoord) {
     vec3 tangentNormal = texture(normalSampler, texCoord).xyz * 2.0 - 1.0;
 
@@ -189,6 +206,7 @@ vec3 getNormalFromMap(vec3 position, vec3 baseNormal, vec2 texCoord) {
     return normalize(TBN * tangentNormal);
 }
 
+// Converts direction vector to equirectangular environment map UV.
 vec2 getEquirectangularUV(vec3 direction) {
     vec3 dir = normalize(direction);
 
@@ -204,6 +222,7 @@ vec2 getEquirectangularUV(vec3 direction) {
 // ############################################################################
 
 void main() {
+    // base fragment data
     // world-coordinates position and normal of fragment
     vec3 position = worldPosition;
     vec3 baseNormal = normalize(worldNormal);
@@ -233,12 +252,12 @@ void main() {
     // ambient * diffuse color
     vec3 color = ambientColor * matAmbient * albedo;
 
-    // adding color from all lights in the scene
+    // accumulate all scene light contributions
     for (int i = 0; i < lightCount; i++) {
         color += getColorFromLight(albedo, specularStrength, position, normal, i);
     }
 
-    // environment map reflection
+    // add environment reflection weighted by Fresnel-like term
     vec3 V = normalize(cameraPosition - position);
     vec3 reflectionDirection = reflect(-V, normal);
     vec2 envTexCoord = getEquirectangularUV(reflectionDirection);
@@ -247,7 +266,7 @@ void main() {
     float reflectionStrength = (0.08 + 0.35 * fresnel) * dot(specularStrength, vec3(0.3333333));
     color += envColor * reflectionStrength;
 
-    // setup for fog
+    // compute fog traveled lengths from camera to fragment
     vec3 viewVector = position - cameraPosition;
     float maxDistance = length(viewVector);
     float traveledInFog1 = 0.0;
@@ -260,7 +279,7 @@ void main() {
         traveledInFog2 = fogSegmentLength(cameraPosition, rayDirection, maxDistance, fogCenter2, fogRadius2);
     }
 
-    // adding fog to the color
+    // blend final color with fog
     float fogAmount1 = traveledInFog1 * fogDensity;
     float fogAmount2 = traveledInFog2 * fogDensity2;
     float totalFogAmount = fogAmount1 + fogAmount2;

@@ -1,32 +1,47 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       skydome.frag
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Skydome fragment shader.
+ *
+ *  Samples sky textures and computes final skydome color, including atmospheric blending effects.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #version 140
+// Skydome fragment shader.
+// Samples equirectangular sky texture and blends scene fog along view ray.
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform sampler2D diffuseTex;
-uniform vec3  cameraPosition;
-uniform vec3  fogCenter;
-uniform vec3  fogCenter2;
-uniform vec3  fogColor;
-uniform vec3  fogColor2;
-uniform float fogRadius;
-uniform float fogRadius2;
-uniform float fogDensity;
-uniform float fogDensity2;
+uniform sampler2D diffuseTex; // skydome texture sampler
+uniform vec3  cameraPosition; // camera position in world space
+uniform vec3  fogCenter;      // center of primary fog sphere
+uniform vec3  fogCenter2;     // center of secondary fog sphere
+uniform vec3  fogColor;       // color of primary fog sphere
+uniform vec3  fogColor2;      // color of secondary fog sphere
+uniform float fogRadius;      // radius of primary fog sphere
+uniform float fogRadius2;     // radius of secondary fog sphere
+uniform float fogDensity;     // density multiplier for primary fog
+uniform float fogDensity2;    // density multiplier for secondary fog
 
 // ------------------------------- Attributes ---------------------------------
 
-in vec2 theTexCoord;
-in vec3 thePosition;
+in vec2 theTexCoord; // texture coordinates on skydome
+in vec3 thePosition; // direction vector used for fog ray
 
-out vec4 fragmentColor;
+out vec4 fragmentColor; // final RGBA output
 
 // ------------------------------- Functions ----------------------------------
 
+// Returns radial density profile for a normalized fog radius.
 float fogRadialDensity(float normalizedRadius) {
     // keep a soft outer boundary for smoother transition to empty space
     return 1.0 - smoothstep(0.72, 1.0, normalizedRadius);
 }
 
+// Approximates integrated fog density along ray segment inside one fog sphere.
 float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec3 center, float radius) {
     vec3 oc = rayOrigin - center;
     float b = dot(oc, rayDirection);
@@ -68,6 +83,7 @@ float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec
     return segmentLength * densityScale;
 }
 
+// Converts integrated fog amount to blend factor.
 float fogFactorFromAmount(float fogAmount) {
     return 1.0 - exp(-fogAmount);
 }
@@ -77,14 +93,17 @@ float fogFactorFromAmount(float fogAmount) {
 // ############################################################################
 
 void main() {
+    // sample sky color from skydome texture
     vec3 skyColor = texture(diffuseTex, theTexCoord).rgb;
     vec3 rayDirection = normalize(thePosition);
 
+    // integrate fog through infinite-looking ray toward the skydome
     float traveledInFog1 = fogSegmentLength(cameraPosition, rayDirection, -1.0, fogCenter, fogRadius);
     float traveledInFog2 = fogSegmentLength(cameraPosition, rayDirection, -1.0, fogCenter2, fogRadius2);
     float fogAmount1 = traveledInFog1 * fogDensity;
     float fogAmount2 = traveledInFog2 * fogDensity2;
     float totalFogAmount = fogAmount1 + fogAmount2;
+    // mix sky with fog contribution from both fog volumes
     vec3 mixedFogColor = (totalFogAmount > 0.0)
         ? (fogColor * fogAmount1 + fogColor2 * fogAmount2) / totalFogAmount
         : fogColor;

@@ -1,4 +1,17 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       rocketFlame.vert
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Rocket flame vertex shader.
+ *
+ *  Processes flame billboard or mesh vertices and forwards animation inputs to the fragment stage.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #version 140
+// Rocket flame vertex shader.
+// Builds axis-constrained billboard and animates sprite-sheet UV frames.
 
 // -------------------------------- Macros ------------------------------------
 
@@ -8,20 +21,20 @@
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform mat4 modelMatrix;
-uniform mat4 pvmMatrix;
-uniform float elapsedTime;
-uniform vec3 cameraPosition;
+uniform mat4 modelMatrix;   // model -> world transform
+uniform mat4 pvmMatrix;     // projection * view * model matrix
+uniform float elapsedTime;  // elapsed application time
+uniform vec3 cameraPosition;// camera position in world space
 
 // ------------------------------- Attributes ---------------------------------
 
-in vec3 position;
-in vec3 normal;
-in vec2 texCoord;
+in vec3 position; // vertex position in object space
+in vec3 normal;   // vertex normal in object space
+in vec2 texCoord; // vertex texture coordinates
 
-out vec3 worldPosition;
-out vec3 worldNormal;
-out vec2 theTexCoord;
+out vec3 worldPosition; // fragment position in world space
+out vec3 worldNormal;   // billboard-oriented normal in world space
+out vec2 theTexCoord;   // animated sprite UV coordinates
 
 // ############################################################################
 //                                  Main
@@ -53,11 +66,13 @@ void main() {
     vec3 billboardX = normalize(cross(billboardY, axisZ));
     billboardY = normalize(cross(axisZ, billboardX));
 
+    // reconstruct world-space vertex on billboard plane with preserved local scale
     vec3 worldPos = objectPosition
                   + billboardX * (position.x * scaleX)
                   + billboardY * (position.y * scaleY)
                   + axisZ      * (position.z * scaleZ);
 
+    // project transformed vertex and output interpolated per-fragment data
     gl_Position = pvmMatrix * vec4(worldPos, 1.0);
     worldPosition = worldPos;
     worldNormal = normalize(billboardX * normal.x + billboardY * normal.y + axisZ * normal.z);

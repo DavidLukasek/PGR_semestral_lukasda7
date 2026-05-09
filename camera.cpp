@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       camera.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Camera class implementation.
+ *
+ *  Implements camera transforms, movement updates and matrix calculations for scene rendering.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include "camera.h"
 
 Camera::Camera(

@@ -1,13 +1,33 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       renderableObject.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Renderable object class implementation.
+ *
+ *  Implements rendering behavior, material usage and draw-time updates for renderable entities.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include <unordered_map>
 
 #include "renderableObject.h"
 
 namespace {
+/**
+ * \brief      Renderable object class implementation.
+ */
 struct MaterialCacheEntry {
     Material material{glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.0f), 0.0f};
     bool valid = false;
 };
 
+/**
+ * \brief      Renderable object class implementation.
+ * \param lhs First material.
+ * \param rhs Second material.
+ * \return True when all material components are exactly equal.
+ */
 bool areMaterialsEqual(const Material& lhs, const Material& rhs) {
     return lhs.ambient.x == rhs.ambient.x &&
            lhs.ambient.y == rhs.ambient.y &&

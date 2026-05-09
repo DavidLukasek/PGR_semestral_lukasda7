@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       Item.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Hardcoded model implementation.
+ *
+ *  Implements hardcoded model item behavior including data handling and scene integration logic.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include <iostream>
 #include "Item.h"
 

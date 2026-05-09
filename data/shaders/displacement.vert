@@ -1,30 +1,44 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       displacement.vert
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Displacement vertex shader.
+ *
+ *  Transforms mesh vertices and applies displacement-related logic before rasterization.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #version 140
+// Displacement vertex shader.
+// Animates mesh surface by moving vertices along radial direction.
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform mat4 modelMatrix;
-uniform mat4 normalMatrix;
-uniform mat4 pvmMatrix;
+uniform mat4 modelMatrix;   // model -> world transform
+uniform mat4 normalMatrix;  // inverse-transpose model matrix for normal transform
+uniform mat4 pvmMatrix;     // projection * view * model matrix
 
-uniform float elapsedTime;
-uniform float displacementSize;
-uniform bool isDisplaceAnimated;
+uniform float elapsedTime;       // elapsed application time
+uniform float displacementSize;  // displacement amplitude
+uniform bool isDisplaceAnimated; // enables procedural displacement
 
 // ------------------------------- Attributes ---------------------------------
 
-in vec3 position;
-in vec3 normal;
-in vec2 texCoord;
+in vec3 position; // vertex position in object space
+in vec3 normal;   // vertex normal in object space
+in vec2 texCoord; // vertex texture coordinates
 
-out vec3 worldPosition;
-out vec3 worldNormal;
-out vec2 theTexCoord;
+out vec3 worldPosition; // fragment position in world space
+out vec3 worldNormal;   // fragment normal in world space
+out vec2 theTexCoord;   // propagated texture coordinates
 
 // ############################################################################
 //                                  Main
 // ############################################################################
 
 void main() {
+    // normalized radial direction used for sphere-like deformation
     vec3 dir = normalize(position);
     float t = elapsedTime;
 
@@ -54,11 +68,13 @@ void main() {
         displacedPosition = position + dir * (wave * displacementSize);
     }
 
+    // project displaced vertex and output derived world-space data
     gl_Position = pvmMatrix * vec4(displacedPosition, 1.0);
     worldPosition = vec3(modelMatrix * vec4(displacedPosition, 1.0));
 
     vec3 displacedNormal = normalize(displacedPosition);
     worldNormal = normalize(vec3(normalMatrix * vec4(displacedNormal, 0.0)));
 
+    // preserve base UV coordinates for texturing in fragment stage
     theTexCoord = texCoord;
 }

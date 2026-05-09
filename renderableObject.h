@@ -1,18 +1,28 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       renderableObject.h
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Renderable object class declaration.
+ *
+ *  Declares drawable object data and interfaces for mesh, material and transform-driven rendering.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #pragma once
 
 #include "object.h"
 
 /**
- * \brief Shader program related stuff (id, locations, ...).
+ * \brief      Renderable object class declaration.
  */
 typedef struct _ShaderProgram {
-    /// identifier for the shader program
-    GLuint program;
+    GLuint program;       ///< Shader program identifier.
 
-    bool initialized;
+    bool initialized;     ///< Whether required shader locations are loaded.
 
     /**
-      * \brief Indices of the vertex shader inputs (locations)
+      * \brief Indices of the vertex shader inputs (locations).
       */
     struct {
         // vertex attributes locations
@@ -66,6 +76,7 @@ typedef struct _ShaderProgram {
         GLint mandelbrotZoomTarget;
     } locations;
 
+    /// \brief Creates an empty structure with all locations set to -1.
     _ShaderProgram() : program(0), initialized(false) {
         locations.position = -1;
         locations.normal = -1;
@@ -115,40 +126,44 @@ typedef struct _ShaderProgram {
 } ShaderProgram;
 
 /**
- * \brief Geometry of an object (vertices, triangles).
+ * \brief      Renderable object class declaration.
  */
 typedef struct _ObjectGeometry {
-    GLuint        vertexBufferObject;    ///< identifier for the vertex buffer object
-    GLuint        normalBufferObject;    ///< identifier for the normal buffer object
-    GLuint        elementBufferObject;   ///< identifier for the element buffer object
-    GLuint        texCoordBufferObject;  ///< identifier for the texture coordinate buffer object
-    GLuint        vertexArrayObject;     ///< identifier for the vertex array object
-    GLuint        diffuseTextureObject;  ///< identifier for the diffuse texture object
-    GLuint        normalTextureObject;   ///< identifier for the normal texture object
-    GLuint        specularTextureObject; ///< identifier for the specular texture object
-    bool          hasTexture;            ///< whether has diffuse texture coordinates and texture assigned
-    bool          hasNormalTexture;      ///< whether has normal texture coordinates and texture assigned
-    bool          hasSpecularTexture;    ///< whether has specular texture coordinates and texture assigned
-    unsigned int  numTriangles;          ///< number of triangles in the mesh
+    GLuint        vertexBufferObject;    ///< Identifier for the vertex buffer object.
+    GLuint        normalBufferObject;    ///< Identifier for the normal buffer object.
+    GLuint        elementBufferObject;   ///< Identifier for the element buffer object.
+    GLuint        texCoordBufferObject;  ///< Identifier for the texture coordinate buffer object.
+    GLuint        vertexArrayObject;     ///< Identifier for the vertex array object.
+    GLuint        diffuseTextureObject;  ///< Identifier for the diffuse texture object.
+    GLuint        normalTextureObject;   ///< Identifier for the normal texture object.
+    GLuint        specularTextureObject; ///< Identifier for the specular texture object.
+    bool          hasTexture;            ///< Whether has diffuse texture coordinates and texture assigned.
+    bool          hasNormalTexture;      ///< Whether has normal texture coordinates and texture assigned.
+    bool          hasSpecularTexture;    ///< Whether has specular texture coordinates and texture assigned.
+    unsigned int  numTriangles;          ///< Number of triangles in the mesh.
 } ObjectGeometry;
 
-typedef struct _Material {  // structure that describes currently used material
-    glm::vec3 ambient;      // ambient component
-    glm::vec3 diffuse;      // diffuse component
-    glm::vec3 specular;     // specular component
-    float     shininess;    // sharpness of specular reflection
+/**
+ * \brief      Renderable object class declaration.
+ */
+typedef struct _Material {
+    glm::vec3 ambient;      ///< Material ambient component.
+    glm::vec3 diffuse;      ///< Material diffuse component.
+    glm::vec3 specular;     ///< Material specular component.
+    float     shininess;    ///< Material specular highlight sharpness.
 } Material;
 
 /**
- * \brief Scene object that can be rendered using geometry and shader program.
+ * \brief      Renderable object class declaration.
  */
 class RenderableObject : public Object {
 protected:
-    ObjectGeometry* geometry;
-    ShaderProgram* shaderProgram;
-    Material material;
-    bool hasMaterial;
+    ObjectGeometry* geometry;      ///< Object geometry uploaded to GPU.
+    ShaderProgram* shaderProgram;  ///< Shader program used for rendering.
+    Material material;             ///< Object material parameters.
+    bool hasMaterial;              ///< Whether material was explicitly assigned.
 
+    /// \brief Uploads material uniforms to active shader.
     void applyMaterialUniforms() const {
         if ((shaderProgram == nullptr) || !hasMaterial)
             return;
@@ -167,6 +182,11 @@ protected:
     }
 
 public:
+    /**
+     * \brief Creates a renderable object.
+     * \param shdrPrg Shader program used for drawing.
+     * \param mat Optional material settings.
+     */
     explicit RenderableObject(ShaderProgram* shdrPrg = nullptr,
                               const Material* mat = nullptr)
         : Object()
@@ -177,5 +197,6 @@ public:
         if (mat != nullptr)
             material = *mat;
     }
+    /// \brief Virtual destructor.
     ~RenderableObject() override = default;
 };

@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       object.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Scene object class implementation.
+ *
+ *  Implements base scene object behavior, including transform management and shared object logic.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include "object.h"
 
 bool Object::suppressChildrenDraw = false;

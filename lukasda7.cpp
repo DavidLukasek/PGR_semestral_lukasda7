@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       lukasda7.cpp
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Application entry point.
+ *
+ *  Contains main initialization, render loop orchestration and high-level application wiring.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #include <iostream>
 #include <string>
 #include <vector>
@@ -15,9 +26,9 @@
 // ############################################################################
 
 /**
- * \brief Load and compile single shader program from the given shader paths.
- * \param vs Vertex shader path
- * \param fs Fragment shader path
+ * \brief      Application entry point.
+ * \param vs Vertex shader path.
+ * \param fs Fragment shader path.
  */
 ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
     GLuint shaders[] = {
@@ -86,7 +97,7 @@ ShaderProgram loadShaderProgram(std::string vs, std::string fs) {
 }
 
 /**
- * \brief Load and compile shader programs. Get attribute locations.
+ * \brief      Application entry point.
  */
 void loadShaderPrograms() {
     // creating all shader programs
@@ -105,7 +116,7 @@ void loadShaderPrograms() {
 }
 
 /**
- * \brief Delete all shader program objects.
+ * \brief      Application entry point.
  */
 void cleanupShaderPrograms(void) {
     for (ShaderProgram shdPrg : shaderPrograms) {
@@ -114,7 +125,7 @@ void cleanupShaderPrograms(void) {
 }
 
 /**
- * \brief Draw all scene objects and update their uniforms
+ * \brief      Application entry point.
  */
 void drawScene(void) {
     glm::mat4 viewMatrix = camera.getViewMatrix();
@@ -172,7 +183,7 @@ void drawScene(void) {
 // ############################################################################
 
 /**
- * \brief Draw the window contents.
+ * \brief      Application entry point.
  */
 void displayCb() {
 
@@ -185,9 +196,9 @@ void displayCb() {
 }
 
 /**
- * \brief Window was reshaped.
- * \param newWidth New window width
- * \param newHeight New window height
+ * \brief      Application entry point.
+ * \param newWidth New window width.
+ * \param newHeight New window height.
  */
 void reshapeCb(int newWidth, int newHeight) {
     gameState.windowWidth = newWidth;
@@ -197,13 +208,13 @@ void reshapeCb(int newWidth, int newHeight) {
 }
 
 /**
- * \brief Handle the key pressed event.
+ * \brief      Application entry point.
  * Called whenever a key on the keyboard was pressed. The key is given by the "keyPressed"
  * parameter, which is an ASCII character. It's often a good idea to have the escape key (ASCII value 27)
  * to call glutLeaveMainLoop() to exit the program.
- * \param keyPressed ASCII code of the key
- * \param mouseX mouse (cursor) X position
- * \param mouseY mouse (cursor) Y position
+ * \param keyPressed ASCII code of the key.
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
  */
 void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
     switch (keyPressed) {
@@ -234,10 +245,10 @@ void keyboardCb(unsigned char keyPressed, int mouseX, int mouseY) {
 // Called whenever a key on the keyboard was released. The key
 // is given by the "keyReleased" parameter, which is in ASCII.
 /**
- * \brief Handle the key released event.
- * \param keyReleased ASCII code of the released key
- * \param mouseX mouse (cursor) X position
- * \param mouseY mouse (cursor) Y position
+ * \brief      Application entry point.
+ * \param keyReleased ASCII code of the released key.
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
  */
 void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
     switch (keyReleased) {
@@ -252,12 +263,12 @@ void keyboardUpCb(unsigned char keyReleased, int mouseX, int mouseY) {
 
 //
 /**
- * \brief Handle the non-ASCII key pressed event (such as arrows or F1).
+ * \brief      Application entry point.
  *  The special keyboard callback is triggered when keyboard function (Fx) or directional
  *  keys are pressed.
- * \param specKeyPressed int value of a predefined glut constant such as GLUT_KEY_UP
- * \param mouseX mouse (cursor) X position
- * \param mouseY mouse (cursor) Y position
+ * \param specKeyPressed Int value of a predefined glut constant such as GLUT_KEY_UP.
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
  */
 void specialKeyboardCb(int specKeyPressed, int mouseX, int mouseY) {
     switch (specKeyPressed) {
@@ -268,6 +279,12 @@ void specialKeyboardCb(int specKeyPressed, int mouseX, int mouseY) {
     gameState.keyMap[KEY_SHIFT] = (glutGetModifiers() & GLUT_ACTIVE_SHIFT) != 0;
 }
 
+/**
+ * \brief      Application entry point.
+ * \param specKeyReleased Int value of a predefined glut constant such as GLUT_KEY_UP.
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
+ */
 void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
     switch (specKeyReleased) {
         case GLUT_KEY_UP:   gameState.keyMap[KEY_ARROW_UP]   = false; break;
@@ -279,14 +296,14 @@ void specialKeyboardUpCb(int specKeyReleased, int mouseX, int mouseY) {
 
 // 
 /**
- * \brief React to mouse button press and release (mouse click).
+ * \brief      Application entry point.
  * When the user presses and releases mouse buttons in the window, each press
  * and each release generates a mouse callback (including release after dragging).
  *
- * \param buttonPressed button code (GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON)
- * \param buttonState GLUT_DOWN when pressed, GLUT_UP when released
- * \param mouseX mouse (cursor) X position
- * \param mouseY mouse (cursor) Y position
+ * \param buttonPressed Button code (GLUT_LEFT_BUTTON, GLUT_MIDDLE_BUTTON, or GLUT_RIGHT_BUTTON).
+ * \param buttonState GLUT_DOWN when pressed, GLUT_UP when released.
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
  */
 void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
     switch (buttonPressed) {
@@ -306,10 +323,10 @@ void mouseCb(int buttonPressed, int buttonState, int mouseX, int mouseY) {
 }
 
 /**
- * \brief Handle mouse dragging (mouse move with any button pressed).
+ * \brief      Application entry point.
  *        This event follows the glutMouseFunc(mouseCb) event.
- * \param mouseX mouse (cursor) X position
- * \param mouseY mouse (cursor) Y position
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
  */
 void mouseMotionCb(int mouseX, int mouseY) {
     if (gameState.keyMap[RMB]) {
@@ -325,9 +342,9 @@ void mouseMotionCb(int mouseX, int mouseY) {
 }
 
 /**
- * \brief Handle mouse movement over the window (with no button pressed).
- * \param mouseX mouse (cursor) X position
- * \param mouseY mouse (cursor) Y position
+ * \brief      Application entry point.
+ * \param mouseX Mouse (cursor) X position.
+ * \param mouseY Mouse (cursor) Y position.
  */
 void passiveMouseMotionCb(int mouseX, int mouseY) {
 
@@ -338,7 +355,7 @@ void passiveMouseMotionCb(int mouseX, int mouseY) {
 }
 
 /**
- * \brief Callback responsible for the scene update.
+ * \brief      Application entry point.
  */
 void timerCb(int) {
     // getting current time and time from last frame
@@ -423,7 +440,7 @@ void timerCb(int) {
 // ############################################################################
 
 /**
- * \brief Initialize application data and OpenGL stuff.
+ * \brief      Application entry point.
  */
 void initApplication() {
     applyCameraPreset(camera,
@@ -466,7 +483,7 @@ void initApplication() {
 }
 
 /**
- * \brief Delete all OpenGL objects and application data.
+ * \brief      Application entry point.
  */
 void finalizeApplication(void) {
 
@@ -490,10 +507,10 @@ void finalizeApplication(void) {
 
 
 /**
- * \brief Entry point of the application.
- * \param argc number of command line arguments
- * \param argv array with argument strings
- * \return 0 if OK, <> elsewhere
+ * \brief      Application entry point.
+ * \param argc Number of command line arguments.
+ * \param argv Array with argument strings.
+ * \return 0 if OK, <> elsewhere.
  */
 int main(int argc, char** argv) {
 

@@ -1,36 +1,51 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       rocketFlame.frag
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Rocket flame fragment shader.
+ *
+ *  Generates animated rocket flame color and transparency effects for a dynamic exhaust look.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #version 140
+// Rocket flame fragment shader.
+// Samples animated flame sprite, applies color-key alpha and volumetric fog.
 
 // ------------------------------- Uniforms -----------------------------------
 
-uniform sampler2D diffuseTex;
-uniform vec3  asteroidLocation;
-uniform vec3  cameraPosition;
+uniform sampler2D diffuseTex;     // flame sprite-sheet texture
+uniform vec3  asteroidLocation;   // reserved uniform kept for program compatibility
+uniform vec3  cameraPosition;     // camera position in world space
 
 // fog uniforms
-uniform vec3  fogCenter;
-uniform vec3  fogCenter2;
-uniform vec3  fogColor;
-uniform vec3  fogColor2;
-uniform float fogRadius;
-uniform float fogRadius2;
-uniform float fogDensity;
-uniform float fogDensity2;
+uniform vec3  fogCenter;   // center of primary fog sphere
+uniform vec3  fogCenter2;  // center of secondary fog sphere
+uniform vec3  fogColor;    // color of primary fog sphere
+uniform vec3  fogColor2;   // color of secondary fog sphere
+uniform float fogRadius;   // radius of primary fog sphere
+uniform float fogRadius2;  // radius of secondary fog sphere
+uniform float fogDensity;  // density multiplier for primary fog
+uniform float fogDensity2; // density multiplier for secondary fog
 
 // ------------------------------- Attributes ---------------------------------
 
-in vec3 worldPosition;
-in vec3 worldNormal;
-in vec2 theTexCoord;
+in vec3 worldPosition; // fragment position in world space
+in vec3 worldNormal;   // fragment normal in world space (unused by current lighting)
+in vec2 theTexCoord;   // texture coordinates for sprite-sheet sampling
 
-out vec4 fragmentColor;
+out vec4 fragmentColor; // final RGBA output
 
 // ------------------------------- Functions ----------------------------------
 
+// Returns radial density profile for a normalized fog radius.
 float fogRadialDensity(float normalizedRadius) {
     // keep a soft outer boundary for smoother transition to empty space
     return 1.0 - smoothstep(0.72, 1.0, normalizedRadius);
 }
 
+// Approximates integrated fog density along ray segment inside one fog sphere.
 float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec3 center, float radius) {
     vec3 oc = rayOrigin - center;
     float b = dot(oc, rayDirection);
@@ -72,6 +87,7 @@ float fogSegmentLength(vec3 rayOrigin, vec3 rayDirection, float maxDistance, vec
     return segmentLength * densityScale;
 }
 
+// Converts integrated fog amount to blend factor.
 float fogFactorFromAmount(float fogAmount) {
     return 1.0 - exp(-fogAmount);
 }
@@ -85,6 +101,7 @@ void main() {
     vec3 position = worldPosition;
     vec3 normal = normalize(worldNormal);
     
+    // sample flame sprite frame
     vec4 texel = texture(diffuseTex, theTexCoord);
 
     // black background works as a color key with a soft edge
@@ -92,7 +109,7 @@ void main() {
     float colorKeyAlpha = smoothstep(0.0, 1.0, key);
     float alpha = texel.a * colorKeyAlpha;
 
-    // not even drawing transparent enough fragments
+    // skip almost fully transparent fragments to reduce overdraw
     if (alpha < 0.01)
         discard;
 

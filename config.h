@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       config.h
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Application configuration constants.
+ *
+ *  Defines global constants and compile-time configuration values shared across the project.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #pragma once
 
 // ############################################################################
@@ -18,7 +29,7 @@
 
 #define MOUSE_SENSITIVITY   0.25f
 
-#define BOUNDING_SPHERE_RADIUS 750.0f
+#define BOUNDING_SPHERE_RADIUS 500.0f
 
 // ---------------------------------- Camera ----------------------------------
 

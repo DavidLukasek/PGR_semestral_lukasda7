@@ -1,3 +1,14 @@
+//----------------------------------------------------------------------------------------
+/**
+ * \file       sceneGraph.h
+ * \author     David Lukasek
+ * \date       2026/05/09
+ * \brief      Scene graph declarations.
+ *
+ *  Declares scene graph node structures and traversal-related interfaces for hierarchical scene management.
+ *
+*/
+//----------------------------------------------------------------------------------------
 #pragma once
 
 #include <vector>
@@ -7,54 +18,72 @@
 #include "../singlemesh.h"
 #include "square.h"
 
+/**
+ * \brief      Scene graph declarations.
+ */
 typedef struct FogBall {
-    glm::vec3 center = FOG_1_CENTER;
-    glm::vec3 color  = FOG_1_COLOR;
-    float radius     = FOG_1_RADIUS;
-    float density    = FOG_1_DENSITY;
+    glm::vec3 center = FOG_1_CENTER;  ///< Fog sphere center.
+    glm::vec3 color  = FOG_1_COLOR;   ///< Fog color.
+    float radius     = FOG_1_RADIUS;  ///< Fog influence radius.
+    float density    = FOG_1_DENSITY; ///< Fog density.
 } FogBall;
 
-// array holding all shader programs in the application
+/// \brief Array of all shader programs used by the application.
 std::vector<ShaderProgram> shaderPrograms;
 
+/// \brief Shader program for Mandelbrot surface.
 ShaderProgram mandelrotShaderProgram;
+/// \brief Shader program for lit meshes.
 ShaderProgram phongShaderProgram;
+/// \brief Shader program for animated rocket flames.
 ShaderProgram rocketFlameShaderProgram;
+/// \brief Shader program for skydome rendering.
 ShaderProgram skydomeShaderProgram;
+/// \brief Shader program for displacement-rendered objects.
 ShaderProgram displacementShaderProgram;
 
-// root of the scene - all objects are children of it or of other its children
+/// \brief Root node of the scene graph.
 Object sceneRoot;
 
-// cache storing references to all scene lights for faster updates
+/// \brief Cache of scene light pointers for fast uniform updates.
 std::vector<Light*> sceneLightsCache;
-// cache with all stage light mesh nodes controlled by button 2
+/// \brief Cache of stage light mesh nodes controlled by button 2.
 std::vector<SingleMesh*> stageLightsCache;
-// cache with all light holder nodes controlled by button 2
+/// \brief Cache of stage light holder nodes controlled by button 2.
 std::vector<SingleMesh*> lightHoldersCache;
 
-// scene camera
+/// \brief Main scene camera.
 Camera camera;
+/// \brief Cached camera yaw/pitch rotation.
 glm::vec2 cameraRotation = glm::vec2(0.0);
 
+/// \brief Central shared application state.
 GameState gameState;
 
+/// \brief Texture object used as environment map.
 GLuint environmentMapTextureObject = 0;
 
-// holding on moon and planet references to rotate them later in rotateMoonAndPlanet
+/// \brief Pointer to UFO mesh used in orbital animations.
 SingleMesh* ufo           = nullptr;
+/// \brief Pointer to first planet mesh for animation and interaction.
 SingleMesh* planet1       = nullptr;
+/// \brief Pointer to second planet mesh for animation and interaction.
 SingleMesh* planet2       = nullptr;
+/// \brief Pointer to cloud layer mesh of second planet.
 SingleMesh* planet2Clouds = nullptr;
+/// \brief Pointer to moon mesh in planetary system.
 SingleMesh* moon          = nullptr;
+/// \brief Pointer to first rocket flame mesh.
 SingleMesh* rocketFlame1  = nullptr;
+/// \brief Pointer to second rocket flame mesh.
 SingleMesh* rocketFlame2  = nullptr;
 
-// fog ball
+/// \brief First fog sphere around planet 1.
 FogBall fogBall1 = { FOG_1_CENTER, FOG_1_COLOR, FOG_1_RADIUS, FOG_1_DENSITY };
+/// \brief Second fog sphere around planet 2.
 FogBall fogBall2 = { FOG_2_CENTER, FOG_2_COLOR, FOG_2_RADIUS, FOG_2_DENSITY };
 
-// grey material
+/// \brief Gray material for neutral meshes.
 Material greyMaterial = {
     glm::vec3(0.3f),                // ambient
     glm::vec3(0.3f),                // diffuse
@@ -62,7 +91,7 @@ Material greyMaterial = {
     10.0f                            // shininess
 };
 
-// white material
+/// \brief White default material.
 Material whiteMaterial = {
     glm::vec3(1.0f),                // ambient
     glm::vec3(1.0f),                // diffuse
@@ -70,7 +99,7 @@ Material whiteMaterial = {
     10.0f                           // shininess
 };
 
-// red material
+/// \brief Red material for button 1.
 Material redMaterial = {
     glm::vec3(1.0f),                // ambient
     glm::vec3(1.0f, 0.0f, 0.0f),    // diffuse
@@ -78,7 +107,7 @@ Material redMaterial = {
     10.0f                           // shininess
 };
 
-// blue material
+/// \brief Blue material for button 2.
 Material blueMaterial = {
     glm::vec3(1.0f),                // ambient
     glm::vec3(0.0f, 0.0f, 1.0f),    // diffuse
@@ -86,6 +115,9 @@ Material blueMaterial = {
     10.0f                           // shininess
 };
 
+/**
+ * \brief      Scene graph declarations.
+ */
 void createLights() {
     // point light
     Light* pointLight1 = new Light(POINT_LIGHT,         // light type
@@ -123,6 +155,13 @@ void createLights() {
     sceneLightsCache.push_back(sunLight);
 }
 
+/**
+ * \brief      Scene graph declarations.
+ * \param lightStandPosition Position of light stand base.
+ * \param yRotate Rotation of whole hierarchy around y axis.
+ * \param lightColor Spot light color.
+ * \param objectIDs Incremental object ID generator.
+ */
 void createLightStandHierarchy(glm::vec3 lightStandPosition, float yRotate,
                                glm::vec3 lightColor, int& objectIDs) {
     // light stand
@@ -184,6 +223,9 @@ void createLightStandHierarchy(glm::vec3 lightStandPosition, float yRotate,
     sceneLightsCache.push_back(spotLight);
 }
 
+/**
+ * \brief      Scene graph declarations.
+ */
 void createObjects() {
     // variable to assign all object's IDs
     int objectIDs = 1;
